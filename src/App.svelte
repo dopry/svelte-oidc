@@ -1,4 +1,7 @@
 <script>
+import { Highlight } from 'svelte-highlight';
+import { json } from 'svelte-highlight/languages';
+import { arduinoLight as highlightTheme } from "svelte-highlight/styles";
 import {
   OidcContext,
   authError,
@@ -11,6 +14,10 @@ import {
   userInfo,
 } from './components/components.module.js';
 </script>
+
+<svelte:head>
+  {@html highlightTheme}
+</svelte:head>
 
 <div class="container">
 <OidcContext
@@ -31,7 +38,7 @@ import {
       <tr><td>isAuthenticated</td><td>{$isAuthenticated}</td></tr>
       <tr><td>accessToken</td><td>{$accessToken}</td></tr>
       <tr><td>idToken</td><td style="word-break: break-all;">{$idToken}</td></tr>
-      <tr><td>userInfo</td><td><pre>{JSON.stringify($userInfo, null, 2)}<pre></td></tr>
+      <tr><td>userInfo</td><td><Highlight language={json} code={JSON.stringify($userInfo, null, 2) || ''} /></td></tr>
       <tr><td>authError</td><td>{$authError}</td></tr>
     </tbody>
   </table>

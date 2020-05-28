@@ -1,6 +1,6 @@
 {
 	"name": "@dopry/svelte-oidc",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"repository": "https://github.com/dopry/svelte-oidc",
 	"description": "Svelte OIDC Component Library",
 	"keywords": [
@@ -71,7 +71,8 @@
 		"rollup-plugin-terser": "5.2.0",
 		"sirv-cli": "0.4.5",
 		"start-server-and-test": "1.10.6",
-		"svelte": "3.16.7",
+		"svelte": "3.23.0",
+		"svelte-highlight": "0.6.2",
 		"svelte-preprocess": "3.3.0"
 	}
 }
