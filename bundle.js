@@ -2398,7 +2398,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			// added to overcome missing value in auth0 .well-known/openid-configuration
     			// see: https://github.com/IdentityModel/oidc-client-js/issues/1067
     			// see: https://github.com/IdentityModel/oidc-client-js/pull/1068
-    			end_session_endpoint: `https://dev-hvw40i79.auth0.com/v2/logout?client_id=aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP`
+    			end_session_endpoint: `https://dev-hvw40i79.auth0.com/v2/logout?client_id=5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2`
     		};
     	}
 
@@ -2619,7 +2619,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     const file$1 = "src\\App.svelte";
 
-    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"   redirect_uri="https://darrelopry.com/svelte-oidc"   post_logout_redirect_uri="https://darrelopry.com/svelte-oidc" >
+    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2"   redirect_uri="https://darrelopry.com/svelte-oidc"   post_logout_redirect_uri="https://darrelopry.com/svelte-oidc" >
     function create_default_slot(ctx) {
     	let button0;
     	let t1;
@@ -2843,7 +2843,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\" >",
+    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\" >",
     		ctx
     	});
 
@@ -2860,7 +2860,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	const oidccontext = new OidcContext({
     			props: {
     				issuer: "https://dev-hvw40i79.auth0.com",
-    				client_id: "aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP",
+    				client_id: "5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2",
     				redirect_uri: "https://darrelopry.com/svelte-oidc",
     				post_logout_redirect_uri: "https://darrelopry.com/svelte-oidc",
     				$$slots: { default: [create_default_slot] },
