@@ -7,8 +7,8 @@ import svelte from 'rollup-plugin-svelte';
 
 const production = !process.env.ROLLUP_WATCH;
 
-const defaultRedirectUri = production ? 'https://darrelopry.com/svelte-auth0' : 'http://localhost:5000/';
-const defaultPostLogoutRedirectUri = production ? 'https://darrelopry.com/svelte-auth0' : 'http://localhost:5000/';
+const defaultRedirectUri = production ? 'https://darrelopry.com/svelte-oidc' : 'http://localhost:5000/';
+const defaultPostLogoutRedirectUri = production ? 'https://darrelopry.com/svelte-oidc' : 'http://localhost:5000/';
 
 export default {
 	input: 'src/main.js',
