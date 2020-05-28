@@ -2619,7 +2619,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     const file$1 = "src\\App.svelte";
 
-    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"   redirect_uri="https://darrelopry.com/svelte-auth0"   post_logout_redirect_uri="https://darrelopry.com/svelte-auth0" >
+    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"   redirect_uri="https://darrelopry.com/svelte-oidc"   post_logout_redirect_uri="https://darrelopry.com/svelte-oidc" >
     function create_default_slot(ctx) {
     	let button0;
     	let t1;
@@ -2725,36 +2725,36 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			td11 = element("td");
     			t22 = text(/*$authError*/ ctx[5]);
     			attr_dev(button0, "class", "btn");
-    			add_location(button0, file$1, 29, 2, 665);
+    			add_location(button0, file$1, 29, 2, 663);
     			attr_dev(button1, "class", "btn");
-    			add_location(button1, file$1, 30, 2, 745);
+    			add_location(button1, file$1, 30, 2, 743);
     			set_style(th0, "width", "20%");
-    			add_location(th0, file$1, 33, 10, 857);
+    			add_location(th0, file$1, 33, 10, 855);
     			set_style(th1, "width", "80%");
-    			add_location(th1, file$1, 33, 44, 891);
-    			add_location(tr0, file$1, 33, 6, 853);
-    			add_location(thead, file$1, 32, 4, 839);
-    			add_location(td0, file$1, 36, 10, 966);
-    			add_location(td1, file$1, 36, 28, 984);
-    			add_location(tr1, file$1, 36, 6, 962);
-    			add_location(td2, file$1, 37, 10, 1021);
-    			add_location(td3, file$1, 37, 34, 1045);
-    			add_location(tr2, file$1, 37, 6, 1017);
-    			add_location(td4, file$1, 38, 10, 1088);
-    			add_location(td5, file$1, 38, 30, 1108);
-    			add_location(tr3, file$1, 38, 6, 1084);
-    			add_location(td6, file$1, 39, 10, 1147);
+    			add_location(th1, file$1, 33, 44, 889);
+    			add_location(tr0, file$1, 33, 6, 851);
+    			add_location(thead, file$1, 32, 4, 837);
+    			add_location(td0, file$1, 36, 10, 964);
+    			add_location(td1, file$1, 36, 28, 982);
+    			add_location(tr1, file$1, 36, 6, 960);
+    			add_location(td2, file$1, 37, 10, 1019);
+    			add_location(td3, file$1, 37, 34, 1043);
+    			add_location(tr2, file$1, 37, 6, 1015);
+    			add_location(td4, file$1, 38, 10, 1086);
+    			add_location(td5, file$1, 38, 30, 1106);
+    			add_location(tr3, file$1, 38, 6, 1082);
+    			add_location(td6, file$1, 39, 10, 1145);
     			set_style(td7, "word-break", "break-all");
-    			add_location(td7, file$1, 39, 26, 1163);
-    			add_location(tr4, file$1, 39, 6, 1143);
-    			add_location(td8, file$1, 40, 10, 1229);
-    			add_location(td9, file$1, 40, 27, 1246);
-    			add_location(tr5, file$1, 40, 6, 1225);
-    			add_location(td10, file$1, 41, 10, 1348);
-    			add_location(td11, file$1, 41, 28, 1366);
-    			add_location(tr6, file$1, 41, 6, 1344);
-    			add_location(tbody, file$1, 35, 4, 948);
-    			add_location(table, file$1, 31, 2, 827);
+    			add_location(td7, file$1, 39, 26, 1161);
+    			add_location(tr4, file$1, 39, 6, 1141);
+    			add_location(td8, file$1, 40, 10, 1227);
+    			add_location(td9, file$1, 40, 27, 1244);
+    			add_location(tr5, file$1, 40, 6, 1223);
+    			add_location(td10, file$1, 41, 10, 1346);
+    			add_location(td11, file$1, 41, 28, 1364);
+    			add_location(tr6, file$1, 41, 6, 1342);
+    			add_location(tbody, file$1, 35, 4, 946);
+    			add_location(table, file$1, 31, 2, 825);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button0, anchor);
@@ -2843,7 +2843,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\" >",
+    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\" >",
     		ctx
     	});
 
@@ -2861,8 +2861,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			props: {
     				issuer: "https://dev-hvw40i79.auth0.com",
     				client_id: "aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP",
-    				redirect_uri: "https://darrelopry.com/svelte-auth0",
-    				post_logout_redirect_uri: "https://darrelopry.com/svelte-auth0",
+    				redirect_uri: "https://darrelopry.com/svelte-oidc",
+    				post_logout_redirect_uri: "https://darrelopry.com/svelte-oidc",
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
     			},
