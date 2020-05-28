@@ -32,7 +32,12 @@ import {
 } from '@dopry/svelte-oidc';
 </script>
 
-<OidcContext domain="dev-hvw40i79.auth0.com" client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP">
+<OidcContext
+ issuer="https://dev-hvw40i79.auth0.com"
+ client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"
+ redirect_uri="https://darrelopry.com/svelte-oidc/"
+ post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/">
+
   <button on:click|preventDefault='{() => login() }'>Login</button>
   <button on:click|preventDefault='{() => logout() }'>Logout</button><br />
   <pre>isLoading: {$isLoading}</pre>
@@ -50,7 +55,7 @@ import {
 * OidcContext - component to initiate the OIDC client. You only need one instance in your DOM tree at the root.
 
   Attributes:
-  * authority - OIDC Authority/issuer/base url for .well-known/openid-configuration
+  * issuer - OIDC Authority/issuer/base url for .well-known/openid-configuration
   * client_id - OAuth ClientId
   * redirect_uri -  default: window.location.href
   * post_logout_redirect_uri - override the default url that OIDC will redirect to after logout. default: window.location.href
