@@ -1,0 +1,39 @@
+<script>
+import {
+  OidcContext,
+  authError,
+  idToken,
+  accessToken,
+  isAuthenticated,
+  isLoading,
+  login,
+  logout,
+  userInfo,
+} from './components/components.module.js';
+</script>
+
+<div class="container">
+<OidcContext
+  issuer="process.env.OIDC_ISSUER"
+  client_id="process.env.OIDC_CLIENT_ID"
+  redirect_uri="process.env.OIDC_REDIRECT_URI"
+  post_logout_redirect_uri="process.env.OIDC_POST_LOGOUT_REDIRECT_URI"
+>
+
+  <button class="btn" on:click|preventDefault='{() => login() }'>Login</button>
+  <button class="btn" on:click|preventDefault='{() => logout() }'>Logout</button>
+  <table>
+    <thead>
+      <tr><th style="width: 20%;">store</th><th style="width: 80%;">value</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>isLoading</td><td>{$isLoading}</td></tr>
+      <tr><td>isAuthenticated</td><td>{$isAuthenticated}</td></tr>
+      <tr><td>accessToken</td><td>{$accessToken}</td></tr>
+      <tr><td>idToken</td><td style="word-break: break-all;">{$idToken}</td></tr>
+      <tr><td>userInfo</td><td><pre>{JSON.stringify($userInfo, null, 2)}<pre></td></tr>
+      <tr><td>authError</td><td>{$authError}</td></tr>
+    </tbody>
+  </table>
+</OidcContext>
+</div>
