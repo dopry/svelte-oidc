@@ -29,12 +29,15 @@ var app = (function () {
         return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
     }
     function validate_store(store, name) {
-        if (!store || typeof store.subscribe !== 'function') {
+        if (store != null && typeof store.subscribe !== 'function') {
             throw new Error(`'${name}' is not a store with a 'subscribe' method`);
         }
     }
-    function subscribe(store, callback) {
-        const unsub = store.subscribe(callback);
+    function subscribe(store, ...callbacks) {
+        if (store == null) {
+            return noop;
+        }
+        const unsub = store.subscribe(...callbacks);
         return unsub.unsubscribe ? () => unsub.unsubscribe() : unsub;
     }
     function component_subscribe(component, store, callback) {
@@ -54,7 +57,10 @@ var app = (function () {
     function get_slot_changes(definition, $$scope, dirty, fn) {
         if (definition[2] && fn) {
             const lets = definition[2](fn(dirty));
-            if (typeof $$scope.dirty === 'object') {
+            if ($$scope.dirty === undefined) {
+                return lets;
+            }
+            if (typeof lets === 'object') {
                 const merged = [];
                 const len = Math.max($$scope.dirty.length, lets.length);
                 for (let i = 0; i < len; i += 1) {
@@ -65,6 +71,28 @@ var app = (function () {
             return $$scope.dirty | lets;
         }
         return $$scope.dirty;
+    }
+    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
+        const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+        if (slot_changes) {
+            const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
+            slot.p(slot_context, slot_changes);
+        }
+    }
+    function exclude_internal_props(props) {
+        const result = {};
+        for (const k in props)
+            if (k[0] !== '$')
+                result[k] = props[k];
+        return result;
+    }
+    function compute_rest_props(props, keys) {
+        const rest = {};
+        keys = new Set(keys);
+        for (const k in props)
+            if (!keys.has(k) && k[0] !== '$')
+                rest[k] = props[k];
+        return rest;
     }
 
     function append(target, node) {
@@ -85,6 +113,9 @@ var app = (function () {
     function space() {
         return text(' ');
     }
+    function empty() {
+        return text('');
+    }
     function listen(node, event, handler, options) {
         node.addEventListener(event, handler, options);
         return () => node.removeEventListener(event, handler, options);
@@ -102,16 +133,71 @@ var app = (function () {
         else if (node.getAttribute(attribute) !== value)
             node.setAttribute(attribute, value);
     }
+    function set_attributes(node, attributes) {
+        // @ts-ignore
+        const descriptors = Object.getOwnPropertyDescriptors(node.__proto__);
+        for (const key in attributes) {
+            if (attributes[key] == null) {
+                node.removeAttribute(key);
+            }
+            else if (key === 'style') {
+                node.style.cssText = attributes[key];
+            }
+            else if (key === '__value') {
+                node.value = node[key] = attributes[key];
+            }
+            else if (descriptors[key] && descriptors[key].set) {
+                node[key] = attributes[key];
+            }
+            else {
+                attr(node, key, attributes[key]);
+            }
+        }
+    }
     function children(element) {
         return Array.from(element.childNodes);
     }
     function set_style(node, key, value, important) {
         node.style.setProperty(key, value, important ? 'important' : '');
     }
+    function toggle_class(element, name, toggle) {
+        element.classList[toggle ? 'add' : 'remove'](name);
+    }
     function custom_event(type, detail) {
         const e = document.createEvent('CustomEvent');
         e.initCustomEvent(type, false, false, detail);
         return e;
+    }
+    class HtmlTag {
+        constructor(anchor = null) {
+            this.a = anchor;
+            this.e = this.n = null;
+        }
+        m(html, target, anchor = null) {
+            if (!this.e) {
+                this.e = element(target.nodeName);
+                this.t = target;
+                this.h(html);
+            }
+            this.i(anchor);
+        }
+        h(html) {
+            this.e.innerHTML = html;
+            this.n = Array.from(this.e.childNodes);
+        }
+        i(anchor) {
+            for (let i = 0; i < this.n.length; i += 1) {
+                insert(this.t, this.n[i], anchor);
+            }
+        }
+        p(html) {
+            this.d();
+            this.h(html);
+            this.i(this.a);
+        }
+        d() {
+            this.n.forEach(detach);
+        }
     }
 
     let current_component;
@@ -126,14 +212,40 @@ var app = (function () {
     function onMount(fn) {
         get_current_component().$$.on_mount.push(fn);
     }
+    function afterUpdate(fn) {
+        get_current_component().$$.after_update.push(fn);
+    }
     function onDestroy(fn) {
         get_current_component().$$.on_destroy.push(fn);
+    }
+    function createEventDispatcher() {
+        const component = get_current_component();
+        return (type, detail) => {
+            const callbacks = component.$$.callbacks[type];
+            if (callbacks) {
+                // TODO are there situations where events could be dispatched
+                // in a server (non-DOM) environment?
+                const event = custom_event(type, detail);
+                callbacks.slice().forEach(fn => {
+                    fn.call(component, event);
+                });
+            }
+        };
     }
     function setContext(key, context) {
         get_current_component().$$.context.set(key, context);
     }
     function getContext(key) {
         return get_current_component().$$.context.get(key);
+    }
+    // TODO figure out if we still want to support
+    // shorthand events, or if we want to implement
+    // a real bubbling mechanism
+    function bubble(component, event) {
+        const callbacks = component.$$.callbacks[event.type];
+        if (callbacks) {
+            callbacks.slice().forEach(fn => fn(event));
+        }
     }
 
     const dirty_components = [];
@@ -151,16 +263,21 @@ var app = (function () {
     function add_render_callback(fn) {
         render_callbacks.push(fn);
     }
+    let flushing = false;
+    const seen_callbacks = new Set();
     function flush() {
-        const seen_callbacks = new Set();
+        if (flushing)
+            return;
+        flushing = true;
         do {
             // first, call beforeUpdate functions
             // and update components
-            while (dirty_components.length) {
-                const component = dirty_components.shift();
+            for (let i = 0; i < dirty_components.length; i += 1) {
+                const component = dirty_components[i];
                 set_current_component(component);
                 update(component.$$);
             }
+            dirty_components.length = 0;
             while (binding_callbacks.length)
                 binding_callbacks.pop()();
             // then, once components are updated, call
@@ -169,9 +286,9 @@ var app = (function () {
             for (let i = 0; i < render_callbacks.length; i += 1) {
                 const callback = render_callbacks[i];
                 if (!seen_callbacks.has(callback)) {
-                    callback();
                     // ...so guard against infinite loops
                     seen_callbacks.add(callback);
+                    callback();
                 }
             }
             render_callbacks.length = 0;
@@ -180,6 +297,8 @@ var app = (function () {
             flush_callbacks.pop()();
         }
         update_scheduled = false;
+        flushing = false;
+        seen_callbacks.clear();
     }
     function update($$) {
         if ($$.fragment !== null) {
@@ -216,7 +335,45 @@ var app = (function () {
         }
     }
 
-    const globals = (typeof window !== 'undefined' ? window : global);
+    const globals = (typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : global);
+
+    function get_spread_update(levels, updates) {
+        const update = {};
+        const to_null_out = {};
+        const accounted_for = { $$scope: 1 };
+        let i = levels.length;
+        while (i--) {
+            const o = levels[i];
+            const n = updates[i];
+            if (n) {
+                for (const key in o) {
+                    if (!(key in n))
+                        to_null_out[key] = 1;
+                }
+                for (const key in n) {
+                    if (!accounted_for[key]) {
+                        update[key] = n[key];
+                        accounted_for[key] = 1;
+                    }
+                }
+                levels[i] = n;
+            }
+            else {
+                for (const key in o) {
+                    accounted_for[key] = 1;
+                }
+            }
+        }
+        for (const key in to_null_out) {
+            if (!(key in update))
+                update[key] = undefined;
+        }
+        return update;
+    }
     function create_component(block) {
         block && block.c();
     }
@@ -281,7 +438,8 @@ var app = (function () {
         };
         let ready = false;
         $$.ctx = instance
-            ? instance(component, prop_values, (i, ret, value = ret) => {
+            ? instance(component, prop_values, (i, ret, ...rest) => {
+                const value = rest.length ? rest[0] : ret;
                 if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
                     if ($$.bound[i])
                         $$.bound[i](value);
@@ -298,8 +456,10 @@ var app = (function () {
         $$.fragment = create_fragment ? create_fragment($$.ctx) : false;
         if (options.target) {
             if (options.hydrate) {
+                const nodes = children(options.target);
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                $$.fragment && $$.fragment.l(children(options.target));
+                $$.fragment && $$.fragment.l(nodes);
+                nodes.forEach(detach);
             }
             else {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -332,7 +492,7 @@ var app = (function () {
     }
 
     function dispatch_dev(type, detail) {
-        document.dispatchEvent(custom_event(type, detail));
+        document.dispatchEvent(custom_event(type, Object.assign({ version: '3.23.0' }, detail)));
     }
     function append_dev(target, node) {
         dispatch_dev("SvelteDOMInsert", { target, node });
@@ -373,6 +533,13 @@ var app = (function () {
         dispatch_dev("SvelteDOMSetData", { node: text, data });
         text.data = data;
     }
+    function validate_slots(name, slot, keys) {
+        for (const slot_key of Object.keys(slot)) {
+            if (!~keys.indexOf(slot_key)) {
+                console.warn(`<${name}> received an unexpected slot "${slot_key}".`);
+            }
+        }
+    }
     class SvelteComponentDev extends SvelteComponent {
         constructor(options) {
             if (!options || (!options.target && !options.$$inline)) {
@@ -386,7 +553,1611 @@ var app = (function () {
                 console.warn(`Component was already destroyed`); // eslint-disable-line no-console
             };
         }
+        $capture_state() { }
+        $inject_state() { }
     }
+
+    var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+    function unwrapExports (x) {
+    	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+    }
+
+    function createCommonjsModule(fn, module) {
+    	return module = { exports: {} }, fn(module, module.exports), module.exports;
+    }
+
+    var highlight = createCommonjsModule(function (module, exports) {
+    /*
+    Syntax highlighting with language autodetection.
+    https://highlightjs.org/
+    */
+
+    (function(factory) {
+
+      // Find the global object for export to both the browser and web workers.
+      var globalObject = typeof window === 'object' && window ||
+                         typeof self === 'object' && self;
+
+      // Setup highlight.js for different environments. First is Node.js or
+      // CommonJS.
+      // `nodeType` is checked to ensure that `exports` is not a HTML element.
+      if( !exports.nodeType) {
+        factory(exports);
+      } else if(globalObject) {
+        // Export hljs globally even when using AMD for cases when this script
+        // is loaded with others that may still expect a global hljs.
+        globalObject.hljs = factory({});
+      }
+
+    }(function(hljs) {
+      // Convenience variables for build-in objects
+      var ArrayProto = [],
+          objectKeys = Object.keys;
+
+      // Global internal variables used within the highlight.js library.
+      var languages = {},
+          aliases   = {};
+
+      // safe/production mode - swallows more errors, tries to keep running
+      // even if a single syntax or parse hits a fatal error
+      var SAFE_MODE = true;
+
+      // Regular expressions used throughout the highlight.js library.
+      var noHighlightRe    = /^(no-?highlight|plain|text)$/i,
+          languagePrefixRe = /\blang(?:uage)?-([\w-]+)\b/i,
+          fixMarkupRe      = /((^(<[^>]+>|\t|)+|(?:\n)))/gm;
+
+      var spanEndTag = '</span>';
+      var LANGUAGE_NOT_FOUND = "Could not find the language '{}', did you forget to load/include a language module?";
+
+      // Global options used when within external APIs. This is modified when
+      // calling the `hljs.configure` function.
+      var options = {
+        classPrefix: 'hljs-',
+        tabReplace: null,
+        useBR: false,
+        languages: undefined
+      };
+
+      // keywords that should have no default relevance value
+      var COMMON_KEYWORDS = 'of and for in not or if then'.split(' ');
+
+
+      /* Utility functions */
+
+      function escape(value) {
+        return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function tag(node) {
+        return node.nodeName.toLowerCase();
+      }
+
+      function testRe(re, lexeme) {
+        var match = re && re.exec(lexeme);
+        return match && match.index === 0;
+      }
+
+      function isNotHighlighted(language) {
+        return noHighlightRe.test(language);
+      }
+
+      function blockLanguage(block) {
+        var i, match, length, _class;
+        var classes = block.className + ' ';
+
+        classes += block.parentNode ? block.parentNode.className : '';
+
+        // language-* takes precedence over non-prefixed class names.
+        match = languagePrefixRe.exec(classes);
+        if (match) {
+          var language = getLanguage(match[1]);
+          if (!language) {
+            console.warn(LANGUAGE_NOT_FOUND.replace("{}", match[1]));
+            console.warn("Falling back to no-highlight mode for this block.", block);
+          }
+          return language ? match[1] : 'no-highlight';
+        }
+
+        classes = classes.split(/\s+/);
+
+        for (i = 0, length = classes.length; i < length; i++) {
+          _class = classes[i];
+
+          if (isNotHighlighted(_class) || getLanguage(_class)) {
+            return _class;
+          }
+        }
+      }
+
+      /**
+       * performs a shallow merge of multiple objects into one
+       *
+       * @arguments list of objects with properties to merge
+       * @returns a single new object
+       */
+      function inherit(parent) {  // inherit(parent, override_obj, override_obj, ...)
+        var key;
+        var result = {};
+        var objects = Array.prototype.slice.call(arguments, 1);
+
+        for (key in parent)
+          result[key] = parent[key];
+        objects.forEach(function(obj) {
+          for (key in obj)
+            result[key] = obj[key];
+        });
+        return result;
+      }
+
+      /* Stream merging */
+
+      function nodeStream(node) {
+        var result = [];
+        (function _nodeStream(node, offset) {
+          for (var child = node.firstChild; child; child = child.nextSibling) {
+            if (child.nodeType === 3)
+              offset += child.nodeValue.length;
+            else if (child.nodeType === 1) {
+              result.push({
+                event: 'start',
+                offset: offset,
+                node: child
+              });
+              offset = _nodeStream(child, offset);
+              // Prevent void elements from having an end tag that would actually
+              // double them in the output. There are more void elements in HTML
+              // but we list only those realistically expected in code display.
+              if (!tag(child).match(/br|hr|img|input/)) {
+                result.push({
+                  event: 'stop',
+                  offset: offset,
+                  node: child
+                });
+              }
+            }
+          }
+          return offset;
+        })(node, 0);
+        return result;
+      }
+
+      function mergeStreams(original, highlighted, value) {
+        var processed = 0;
+        var result = '';
+        var nodeStack = [];
+
+        function selectStream() {
+          if (!original.length || !highlighted.length) {
+            return original.length ? original : highlighted;
+          }
+          if (original[0].offset !== highlighted[0].offset) {
+            return (original[0].offset < highlighted[0].offset) ? original : highlighted;
+          }
+
+          /*
+          To avoid starting the stream just before it should stop the order is
+          ensured that original always starts first and closes last:
+
+          if (event1 == 'start' && event2 == 'start')
+            return original;
+          if (event1 == 'start' && event2 == 'stop')
+            return highlighted;
+          if (event1 == 'stop' && event2 == 'start')
+            return original;
+          if (event1 == 'stop' && event2 == 'stop')
+            return highlighted;
+
+          ... which is collapsed to:
+          */
+          return highlighted[0].event === 'start' ? original : highlighted;
+        }
+
+        function open(node) {
+          function attr_str(a) {
+            return ' ' + a.nodeName + '="' + escape(a.value).replace(/"/g, '&quot;') + '"';
+          }
+          result += '<' + tag(node) + ArrayProto.map.call(node.attributes, attr_str).join('') + '>';
+        }
+
+        function close(node) {
+          result += '</' + tag(node) + '>';
+        }
+
+        function render(event) {
+          (event.event === 'start' ? open : close)(event.node);
+        }
+
+        while (original.length || highlighted.length) {
+          var stream = selectStream();
+          result += escape(value.substring(processed, stream[0].offset));
+          processed = stream[0].offset;
+          if (stream === original) {
+            /*
+            On any opening or closing tag of the original markup we first close
+            the entire highlighted node stack, then render the original tag along
+            with all the following original tags at the same offset and then
+            reopen all the tags on the highlighted stack.
+            */
+            nodeStack.reverse().forEach(close);
+            do {
+              render(stream.splice(0, 1)[0]);
+              stream = selectStream();
+            } while (stream === original && stream.length && stream[0].offset === processed);
+            nodeStack.reverse().forEach(open);
+          } else {
+            if (stream[0].event === 'start') {
+              nodeStack.push(stream[0].node);
+            } else {
+              nodeStack.pop();
+            }
+            render(stream.splice(0, 1)[0]);
+          }
+        }
+        return result + escape(value.substr(processed));
+      }
+
+      /* Initialization */
+
+      function dependencyOnParent(mode) {
+        if (!mode) return false;
+
+        return mode.endsWithParent || dependencyOnParent(mode.starts);
+      }
+
+      function expand_or_clone_mode(mode) {
+        if (mode.variants && !mode.cached_variants) {
+          mode.cached_variants = mode.variants.map(function(variant) {
+            return inherit(mode, {variants: null}, variant);
+          });
+        }
+
+        // EXPAND
+        // if we have variants then essentially "replace" the mode with the variants
+        // this happens in compileMode, where this function is called from
+        if (mode.cached_variants)
+          return mode.cached_variants;
+
+        // CLONE
+        // if we have dependencies on parents then we need a unique
+        // instance of ourselves, so we can be reused with many
+        // different parents without issue
+        if (dependencyOnParent(mode))
+          return [inherit(mode, { starts: mode.starts ? inherit(mode.starts) : null })];
+
+        if (Object.isFrozen(mode))
+          return [inherit(mode)];
+
+        // no special dependency issues, just return ourselves
+        return [mode];
+      }
+
+      function compileKeywords(rawKeywords, case_insensitive) {
+          var compiled_keywords = {};
+
+          if (typeof rawKeywords === 'string') { // string
+            splitAndCompile('keyword', rawKeywords);
+          } else {
+            objectKeys(rawKeywords).forEach(function (className) {
+              splitAndCompile(className, rawKeywords[className]);
+            });
+          }
+        return compiled_keywords;
+
+        // ---
+
+        function splitAndCompile(className, str) {
+          if (case_insensitive) {
+            str = str.toLowerCase();
+          }
+          str.split(' ').forEach(function(keyword) {
+            var pair = keyword.split('|');
+            compiled_keywords[pair[0]] = [className, scoreForKeyword(pair[0], pair[1])];
+          });
+        }
+      }
+
+      function scoreForKeyword(keyword, providedScore) {
+        // manual scores always win over common keywords
+        // so you can force a score of 1 if you really insist
+        if (providedScore)
+          return Number(providedScore);
+
+        return commonKeyword(keyword) ? 0 : 1;
+      }
+
+      function commonKeyword(word) {
+        return COMMON_KEYWORDS.indexOf(word.toLowerCase()) != -1;
+      }
+
+      function compileLanguage(language) {
+
+        function reStr(re) {
+            return (re && re.source) || re;
+        }
+
+        function langRe(value, global) {
+          return new RegExp(
+            reStr(value),
+            'm' + (language.case_insensitive ? 'i' : '') + (global ? 'g' : '')
+          );
+        }
+
+        function reCountMatchGroups(re) {
+          return (new RegExp(re.toString() + '|')).exec('').length - 1;
+        }
+
+        // joinRe logically computes regexps.join(separator), but fixes the
+        // backreferences so they continue to match.
+        // it also places each individual regular expression into it's own
+        // match group, keeping track of the sequencing of those match groups
+        // is currently an exercise for the caller. :-)
+        function joinRe(regexps, separator) {
+          // backreferenceRe matches an open parenthesis or backreference. To avoid
+          // an incorrect parse, it additionally matches the following:
+          // - [...] elements, where the meaning of parentheses and escapes change
+          // - other escape sequences, so we do not misparse escape sequences as
+          //   interesting elements
+          // - non-matching or lookahead parentheses, which do not capture. These
+          //   follow the '(' with a '?'.
+          var backreferenceRe = /\[(?:[^\\\]]|\\.)*\]|\(\??|\\([1-9][0-9]*)|\\./;
+          var numCaptures = 0;
+          var ret = '';
+          for (var i = 0; i < regexps.length; i++) {
+            numCaptures += 1;
+            var offset = numCaptures;
+            var re = reStr(regexps[i]);
+            if (i > 0) {
+              ret += separator;
+            }
+            ret += "(";
+            while (re.length > 0) {
+              var match = backreferenceRe.exec(re);
+              if (match == null) {
+                ret += re;
+                break;
+              }
+              ret += re.substring(0, match.index);
+              re = re.substring(match.index + match[0].length);
+              if (match[0][0] == '\\' && match[1]) {
+                // Adjust the backreference.
+                ret += '\\' + String(Number(match[1]) + offset);
+              } else {
+                ret += match[0];
+                if (match[0] == '(') {
+                  numCaptures++;
+                }
+              }
+            }
+            ret += ")";
+          }
+          return ret;
+        }
+
+        function buildModeRegex(mode) {
+
+          var matchIndexes = {};
+          var matcherRe;
+          var regexes = [];
+          var matcher = {};
+          var matchAt = 1;
+
+          function addRule(rule, regex) {
+            matchIndexes[matchAt] = rule;
+            regexes.push([rule, regex]);
+            matchAt += reCountMatchGroups(regex) + 1;
+          }
+
+          var term;
+          for (var i=0; i < mode.contains.length; i++) {
+            var re;
+            term = mode.contains[i];
+            if (term.beginKeywords) {
+              re = '\\.?(?:' + term.begin + ')\\.?';
+            } else {
+              re = term.begin;
+            }
+            addRule(term, re);
+          }
+          if (mode.terminator_end)
+            addRule("end", mode.terminator_end);
+          if (mode.illegal)
+            addRule("illegal", mode.illegal);
+
+          var terminators = regexes.map(function(el) { return el[1]; });
+          matcherRe = langRe(joinRe(terminators, '|'), true);
+
+          matcher.lastIndex = 0;
+          matcher.exec = function(s) {
+            var rule;
+
+            if( regexes.length === 0) return null;
+
+            matcherRe.lastIndex = matcher.lastIndex;
+            var match = matcherRe.exec(s);
+            if (!match) { return null; }
+
+            for(var i = 0; i<match.length; i++) {
+              if (match[i] != undefined && matchIndexes["" +i] != undefined ) {
+                rule = matchIndexes[""+i];
+                break;
+              }
+            }
+
+            // illegal or end match
+            if (typeof rule === "string") {
+              match.type = rule;
+              match.extra = [mode.illegal, mode.terminator_end];
+            } else {
+              match.type = "begin";
+              match.rule = rule;
+            }
+            return match;
+          };
+
+          return matcher;
+        }
+
+        function compileMode(mode, parent) {
+          if (mode.compiled)
+            return;
+          mode.compiled = true;
+
+          mode.keywords = mode.keywords || mode.beginKeywords;
+          if (mode.keywords)
+            mode.keywords = compileKeywords(mode.keywords, language.case_insensitive);
+
+          mode.lexemesRe = langRe(mode.lexemes || /\w+/, true);
+
+          if (parent) {
+            if (mode.beginKeywords) {
+              mode.begin = '\\b(' + mode.beginKeywords.split(' ').join('|') + ')\\b';
+            }
+            if (!mode.begin)
+              mode.begin = /\B|\b/;
+            mode.beginRe = langRe(mode.begin);
+            if (mode.endSameAsBegin)
+              mode.end = mode.begin;
+            if (!mode.end && !mode.endsWithParent)
+              mode.end = /\B|\b/;
+            if (mode.end)
+              mode.endRe = langRe(mode.end);
+            mode.terminator_end = reStr(mode.end) || '';
+            if (mode.endsWithParent && parent.terminator_end)
+              mode.terminator_end += (mode.end ? '|' : '') + parent.terminator_end;
+          }
+          if (mode.illegal)
+            mode.illegalRe = langRe(mode.illegal);
+          if (mode.relevance == null)
+            mode.relevance = 1;
+          if (!mode.contains) {
+            mode.contains = [];
+          }
+          mode.contains = Array.prototype.concat.apply([], mode.contains.map(function(c) {
+            return expand_or_clone_mode(c === 'self' ? mode : c);
+          }));
+          mode.contains.forEach(function(c) {compileMode(c, mode);});
+
+          if (mode.starts) {
+            compileMode(mode.starts, parent);
+          }
+
+          mode.terminators = buildModeRegex(mode);
+        }
+
+        // self is not valid at the top-level
+        if (language.contains && language.contains.indexOf('self') != -1) {
+          if (!SAFE_MODE) {
+            throw new Error("ERR: contains `self` is not supported at the top-level of a language.  See documentation.")
+          } else {
+            // silently remove the broken rule (effectively ignoring it), this has historically
+            // been the behavior in the past, so this removal preserves compatibility with broken
+            // grammars when running in Safe Mode
+            language.contains = language.contains.filter(function(mode) { return mode != 'self'; });
+          }
+        }
+        compileMode(language);
+      }
+
+      /*
+      Core highlighting function. Accepts a language name, or an alias, and a
+      string with the code to highlight. Returns an object with the following
+      properties:
+
+      - relevance (int)
+      - value (an HTML string with highlighting markup)
+
+      */
+      function highlight(name, value, ignore_illegals, continuation) {
+
+        function escapeRe(value) {
+          return new RegExp(value.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'm');
+        }
+
+        function endOfMode(mode, lexeme) {
+          if (testRe(mode.endRe, lexeme)) {
+            while (mode.endsParent && mode.parent) {
+              mode = mode.parent;
+            }
+            return mode;
+          }
+          if (mode.endsWithParent) {
+            return endOfMode(mode.parent, lexeme);
+          }
+        }
+
+        function keywordMatch(mode, match) {
+          var match_str = language.case_insensitive ? match[0].toLowerCase() : match[0];
+          return mode.keywords.hasOwnProperty(match_str) && mode.keywords[match_str];
+        }
+
+        function buildSpan(className, insideSpan, leaveOpen, noPrefix) {
+          if (!leaveOpen && insideSpan === '') return '';
+          if (!className) return insideSpan;
+
+          var classPrefix = noPrefix ? '' : options.classPrefix,
+              openSpan    = '<span class="' + classPrefix,
+              closeSpan   = leaveOpen ? '' : spanEndTag;
+
+          openSpan += className + '">';
+
+          return openSpan + insideSpan + closeSpan;
+        }
+
+        function processKeywords() {
+          var keyword_match, last_index, match, result;
+
+          if (!top.keywords)
+            return escape(mode_buffer);
+
+          result = '';
+          last_index = 0;
+          top.lexemesRe.lastIndex = 0;
+          match = top.lexemesRe.exec(mode_buffer);
+
+          while (match) {
+            result += escape(mode_buffer.substring(last_index, match.index));
+            keyword_match = keywordMatch(top, match);
+            if (keyword_match) {
+              relevance += keyword_match[1];
+              result += buildSpan(keyword_match[0], escape(match[0]));
+            } else {
+              result += escape(match[0]);
+            }
+            last_index = top.lexemesRe.lastIndex;
+            match = top.lexemesRe.exec(mode_buffer);
+          }
+          return result + escape(mode_buffer.substr(last_index));
+        }
+
+        function processSubLanguage() {
+          var explicit = typeof top.subLanguage === 'string';
+          if (explicit && !languages[top.subLanguage]) {
+            return escape(mode_buffer);
+          }
+
+          var result = explicit ?
+                       highlight(top.subLanguage, mode_buffer, true, continuations[top.subLanguage]) :
+                       highlightAuto(mode_buffer, top.subLanguage.length ? top.subLanguage : undefined);
+
+          // Counting embedded language score towards the host language may be disabled
+          // with zeroing the containing mode relevance. Use case in point is Markdown that
+          // allows XML everywhere and makes every XML snippet to have a much larger Markdown
+          // score.
+          if (top.relevance > 0) {
+            relevance += result.relevance;
+          }
+          if (explicit) {
+            continuations[top.subLanguage] = result.top;
+          }
+          return buildSpan(result.language, result.value, false, true);
+        }
+
+        function processBuffer() {
+          result += (top.subLanguage != null ? processSubLanguage() : processKeywords());
+          mode_buffer = '';
+        }
+
+        function startNewMode(mode) {
+          result += mode.className? buildSpan(mode.className, '', true): '';
+          top = Object.create(mode, {parent: {value: top}});
+        }
+
+
+        function doBeginMatch(match) {
+          var lexeme = match[0];
+          var new_mode = match.rule;
+
+          if (new_mode && new_mode.endSameAsBegin) {
+            new_mode.endRe = escapeRe( lexeme );
+          }
+
+          if (new_mode.skip) {
+            mode_buffer += lexeme;
+          } else {
+            if (new_mode.excludeBegin) {
+              mode_buffer += lexeme;
+            }
+            processBuffer();
+            if (!new_mode.returnBegin && !new_mode.excludeBegin) {
+              mode_buffer = lexeme;
+            }
+          }
+          startNewMode(new_mode);
+          return new_mode.returnBegin ? 0 : lexeme.length;
+        }
+
+        function doEndMatch(match) {
+          var lexeme = match[0];
+          var matchPlusRemainder = value.substr(match.index);
+          var end_mode = endOfMode(top, matchPlusRemainder);
+          if (!end_mode) { return; }
+
+          var origin = top;
+          if (origin.skip) {
+            mode_buffer += lexeme;
+          } else {
+            if (!(origin.returnEnd || origin.excludeEnd)) {
+              mode_buffer += lexeme;
+            }
+            processBuffer();
+            if (origin.excludeEnd) {
+              mode_buffer = lexeme;
+            }
+          }
+          do {
+            if (top.className) {
+              result += spanEndTag;
+            }
+            if (!top.skip && !top.subLanguage) {
+              relevance += top.relevance;
+            }
+            top = top.parent;
+          } while (top !== end_mode.parent);
+          if (end_mode.starts) {
+            if (end_mode.endSameAsBegin) {
+              end_mode.starts.endRe = end_mode.endRe;
+            }
+            startNewMode(end_mode.starts);
+          }
+          return origin.returnEnd ? 0 : lexeme.length;
+        }
+
+        var lastMatch = {};
+        function processLexeme(text_before_match, match) {
+
+          var lexeme = match && match[0];
+
+          // add non-matched text to the current mode buffer
+          mode_buffer += text_before_match;
+
+          if (lexeme == null) {
+            processBuffer();
+            return 0;
+          }
+
+          // we've found a 0 width match and we're stuck, so we need to advance
+          // this happens when we have badly behaved rules that have optional matchers to the degree that
+          // sometimes they can end up matching nothing at all
+          // Ref: https://github.com/highlightjs/highlight.js/issues/2140
+          if (lastMatch.type=="begin" && match.type=="end" && lastMatch.index == match.index && lexeme === "") {
+            // spit the "skipped" character that our regex choked on back into the output sequence
+            mode_buffer += value.slice(match.index, match.index + 1);
+            return 1;
+          }
+          lastMatch = match;
+
+          if (match.type==="begin") {
+            return doBeginMatch(match);
+          } else if (match.type==="illegal" && !ignore_illegals) {
+            // illegal match, we do not continue processing
+            throw new Error('Illegal lexeme "' + lexeme + '" for mode "' + (top.className || '<unnamed>') + '"');
+          } else if (match.type==="end") {
+            var processed = doEndMatch(match);
+            if (processed != undefined)
+              return processed;
+          }
+
+          /*
+          Why might be find ourselves here?  Only one occasion now.  An end match that was
+          triggered but could not be completed.  When might this happen?  When an `endSameasBegin`
+          rule sets the end rule to a specific match.  Since the overall mode termination rule that's
+          being used to scan the text isn't recompiled that means that any match that LOOKS like
+          the end (but is not, because it is not an exact match to the beginning) will
+          end up here.  A definite end match, but when `doEndMatch` tries to "reapply"
+          the end rule and fails to match, we wind up here, and just silently ignore the end.
+
+          This causes no real harm other than stopping a few times too many.
+          */
+
+          mode_buffer += lexeme;
+          return lexeme.length;
+        }
+
+        var language = getLanguage(name);
+        if (!language) {
+          console.error(LANGUAGE_NOT_FOUND.replace("{}", name));
+          throw new Error('Unknown language: "' + name + '"');
+        }
+
+        compileLanguage(language);
+        var top = continuation || language;
+        var continuations = {}; // keep continuations for sub-languages
+        var result = '', current;
+        for(current = top; current !== language; current = current.parent) {
+          if (current.className) {
+            result = buildSpan(current.className, '', true) + result;
+          }
+        }
+        var mode_buffer = '';
+        var relevance = 0;
+        try {
+          var match, count, index = 0;
+          while (true) {
+            top.terminators.lastIndex = index;
+            match = top.terminators.exec(value);
+            if (!match)
+              break;
+            count = processLexeme(value.substring(index, match.index), match);
+            index = match.index + count;
+          }
+          processLexeme(value.substr(index));
+          for(current = top; current.parent; current = current.parent) { // close dangling modes
+            if (current.className) {
+              result += spanEndTag;
+            }
+          }
+          return {
+            relevance: relevance,
+            value: result,
+            illegal:false,
+            language: name,
+            top: top
+          };
+        } catch (err) {
+          if (err.message && err.message.indexOf('Illegal') !== -1) {
+            return {
+              illegal: true,
+              relevance: 0,
+              value: escape(value)
+            };
+          } else if (SAFE_MODE) {
+            return {
+              relevance: 0,
+              value: escape(value),
+              language: name,
+              top: top,
+              errorRaised: err
+            };
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      /*
+      Highlighting with language detection. Accepts a string with the code to
+      highlight. Returns an object with the following properties:
+
+      - language (detected language)
+      - relevance (int)
+      - value (an HTML string with highlighting markup)
+      - second_best (object with the same structure for second-best heuristically
+        detected language, may be absent)
+
+      */
+      function highlightAuto(text, languageSubset) {
+        languageSubset = languageSubset || options.languages || objectKeys(languages);
+        var result = {
+          relevance: 0,
+          value: escape(text)
+        };
+        var second_best = result;
+        languageSubset.filter(getLanguage).filter(autoDetection).forEach(function(name) {
+          var current = highlight(name, text, false);
+          current.language = name;
+          if (current.relevance > second_best.relevance) {
+            second_best = current;
+          }
+          if (current.relevance > result.relevance) {
+            second_best = result;
+            result = current;
+          }
+        });
+        if (second_best.language) {
+          result.second_best = second_best;
+        }
+        return result;
+      }
+
+      /*
+      Post-processing of the highlighted markup:
+
+      - replace TABs with something more useful
+      - replace real line-breaks with '<br>' for non-pre containers
+
+      */
+      function fixMarkup(value) {
+        if (!(options.tabReplace || options.useBR)) {
+          return value;
+        }
+
+        return value.replace(fixMarkupRe, function(match, p1) {
+            if (options.useBR && match === '\n') {
+              return '<br>';
+            } else if (options.tabReplace) {
+              return p1.replace(/\t/g, options.tabReplace);
+            }
+            return '';
+        });
+      }
+
+      function buildClassName(prevClassName, currentLang, resultLang) {
+        var language = currentLang ? aliases[currentLang] : resultLang,
+            result   = [prevClassName.trim()];
+
+        if (!prevClassName.match(/\bhljs\b/)) {
+          result.push('hljs');
+        }
+
+        if (prevClassName.indexOf(language) === -1) {
+          result.push(language);
+        }
+
+        return result.join(' ').trim();
+      }
+
+      /*
+      Applies highlighting to a DOM node containing code. Accepts a DOM node and
+      two optional parameters for fixMarkup.
+      */
+      function highlightBlock(block) {
+        var node, originalStream, result, resultNode, text;
+        var language = blockLanguage(block);
+
+        if (isNotHighlighted(language))
+            return;
+
+        if (options.useBR) {
+          node = document.createElement('div');
+          node.innerHTML = block.innerHTML.replace(/\n/g, '').replace(/<br[ \/]*>/g, '\n');
+        } else {
+          node = block;
+        }
+        text = node.textContent;
+        result = language ? highlight(language, text, true) : highlightAuto(text);
+
+        originalStream = nodeStream(node);
+        if (originalStream.length) {
+          resultNode = document.createElement('div');
+          resultNode.innerHTML = result.value;
+          result.value = mergeStreams(originalStream, nodeStream(resultNode), text);
+        }
+        result.value = fixMarkup(result.value);
+
+        block.innerHTML = result.value;
+        block.className = buildClassName(block.className, language, result.language);
+        block.result = {
+          language: result.language,
+          re: result.relevance
+        };
+        if (result.second_best) {
+          block.second_best = {
+            language: result.second_best.language,
+            re: result.second_best.relevance
+          };
+        }
+      }
+
+      /*
+      Updates highlight.js global options with values passed in the form of an object.
+      */
+      function configure(user_options) {
+        options = inherit(options, user_options);
+      }
+
+      /*
+      Applies highlighting to all <pre><code>..</code></pre> blocks on a page.
+      */
+      function initHighlighting() {
+        if (initHighlighting.called)
+          return;
+        initHighlighting.called = true;
+
+        var blocks = document.querySelectorAll('pre code');
+        ArrayProto.forEach.call(blocks, highlightBlock);
+      }
+
+      /*
+      Attaches highlighting to the page load event.
+      */
+      function initHighlightingOnLoad() {
+        window.addEventListener('DOMContentLoaded', initHighlighting, false);
+        window.addEventListener('load', initHighlighting, false);
+      }
+
+      var PLAINTEXT_LANGUAGE = { disableAutodetect: true };
+
+      function registerLanguage(name, language) {
+        var lang;
+        try { lang = language(hljs); }
+        catch (error) {
+          console.error("Language definition for '{}' could not be registered.".replace("{}", name));
+          // hard or soft error
+          if (!SAFE_MODE) { throw error; } else { console.error(error); }
+          // languages that have serious errors are replaced with essentially a
+          // "plaintext" stand-in so that the code blocks will still get normal
+          // css classes applied to them - and one bad language won't break the
+          // entire highlighter
+          lang = PLAINTEXT_LANGUAGE;
+        }
+        languages[name] = lang;
+        lang.rawDefinition = language.bind(null,hljs);
+
+        if (lang.aliases) {
+          lang.aliases.forEach(function(alias) {aliases[alias] = name;});
+        }
+      }
+
+      function listLanguages() {
+        return objectKeys(languages);
+      }
+
+      /*
+        intended usage: When one language truly requires another
+
+        Unlike `getLanguage`, this will throw when the requested language
+        is not available.
+      */
+      function requireLanguage(name) {
+        var lang = getLanguage(name);
+        if (lang) { return lang; }
+
+        var err = new Error('The \'{}\' language is required, but not loaded.'.replace('{}',name));
+        throw err;
+      }
+
+      function getLanguage(name) {
+        name = (name || '').toLowerCase();
+        return languages[name] || languages[aliases[name]];
+      }
+
+      function autoDetection(name) {
+        var lang = getLanguage(name);
+        return lang && !lang.disableAutodetect;
+      }
+
+      /* Interface definition */
+
+      hljs.highlight = highlight;
+      hljs.highlightAuto = highlightAuto;
+      hljs.fixMarkup = fixMarkup;
+      hljs.highlightBlock = highlightBlock;
+      hljs.configure = configure;
+      hljs.initHighlighting = initHighlighting;
+      hljs.initHighlightingOnLoad = initHighlightingOnLoad;
+      hljs.registerLanguage = registerLanguage;
+      hljs.listLanguages = listLanguages;
+      hljs.getLanguage = getLanguage;
+      hljs.requireLanguage = requireLanguage;
+      hljs.autoDetection = autoDetection;
+      hljs.inherit = inherit;
+      hljs.debugMode = function() { SAFE_MODE = false; };
+
+      // Common regexps
+      hljs.IDENT_RE = '[a-zA-Z]\\w*';
+      hljs.UNDERSCORE_IDENT_RE = '[a-zA-Z_]\\w*';
+      hljs.NUMBER_RE = '\\b\\d+(\\.\\d+)?';
+      hljs.C_NUMBER_RE = '(-?)(\\b0[xX][a-fA-F0-9]+|(\\b\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)'; // 0x..., 0..., decimal, float
+      hljs.BINARY_NUMBER_RE = '\\b(0b[01]+)'; // 0b...
+      hljs.RE_STARTERS_RE = '!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|-|-=|/=|/|:|;|<<|<<=|<=|<|===|==|=|>>>=|>>=|>=|>>>|>>|>|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~';
+
+      // Common modes
+      hljs.BACKSLASH_ESCAPE = {
+        begin: '\\\\[\\s\\S]', relevance: 0
+      };
+      hljs.APOS_STRING_MODE = {
+        className: 'string',
+        begin: '\'', end: '\'',
+        illegal: '\\n',
+        contains: [hljs.BACKSLASH_ESCAPE]
+      };
+      hljs.QUOTE_STRING_MODE = {
+        className: 'string',
+        begin: '"', end: '"',
+        illegal: '\\n',
+        contains: [hljs.BACKSLASH_ESCAPE]
+      };
+      hljs.PHRASAL_WORDS_MODE = {
+        begin: /\b(a|an|the|are|I'm|isn't|don't|doesn't|won't|but|just|should|pretty|simply|enough|gonna|going|wtf|so|such|will|you|your|they|like|more)\b/
+      };
+      hljs.COMMENT = function (begin, end, inherits) {
+        var mode = hljs.inherit(
+          {
+            className: 'comment',
+            begin: begin, end: end,
+            contains: []
+          },
+          inherits || {}
+        );
+        mode.contains.push(hljs.PHRASAL_WORDS_MODE);
+        mode.contains.push({
+          className: 'doctag',
+          begin: '(?:TODO|FIXME|NOTE|BUG|XXX):',
+          relevance: 0
+        });
+        return mode;
+      };
+      hljs.C_LINE_COMMENT_MODE = hljs.COMMENT('//', '$');
+      hljs.C_BLOCK_COMMENT_MODE = hljs.COMMENT('/\\*', '\\*/');
+      hljs.HASH_COMMENT_MODE = hljs.COMMENT('#', '$');
+      hljs.NUMBER_MODE = {
+        className: 'number',
+        begin: hljs.NUMBER_RE,
+        relevance: 0
+      };
+      hljs.C_NUMBER_MODE = {
+        className: 'number',
+        begin: hljs.C_NUMBER_RE,
+        relevance: 0
+      };
+      hljs.BINARY_NUMBER_MODE = {
+        className: 'number',
+        begin: hljs.BINARY_NUMBER_RE,
+        relevance: 0
+      };
+      hljs.CSS_NUMBER_MODE = {
+        className: 'number',
+        begin: hljs.NUMBER_RE + '(' +
+          '%|em|ex|ch|rem'  +
+          '|vw|vh|vmin|vmax' +
+          '|cm|mm|in|pt|pc|px' +
+          '|deg|grad|rad|turn' +
+          '|s|ms' +
+          '|Hz|kHz' +
+          '|dpi|dpcm|dppx' +
+          ')?',
+        relevance: 0
+      };
+      hljs.REGEXP_MODE = {
+        className: 'regexp',
+        begin: /\//, end: /\/[gimuy]*/,
+        illegal: /\n/,
+        contains: [
+          hljs.BACKSLASH_ESCAPE,
+          {
+            begin: /\[/, end: /\]/,
+            relevance: 0,
+            contains: [hljs.BACKSLASH_ESCAPE]
+          }
+        ]
+      };
+      hljs.TITLE_MODE = {
+        className: 'title',
+        begin: hljs.IDENT_RE,
+        relevance: 0
+      };
+      hljs.UNDERSCORE_TITLE_MODE = {
+        className: 'title',
+        begin: hljs.UNDERSCORE_IDENT_RE,
+        relevance: 0
+      };
+      hljs.METHOD_GUARD = {
+        // excludes method names from keyword processing
+        begin: '\\.\\s*' + hljs.UNDERSCORE_IDENT_RE,
+        relevance: 0
+      };
+
+      var constants = [
+        hljs.BACKSLASH_ESCAPE,
+        hljs.APOS_STRING_MODE,
+        hljs.QUOTE_STRING_MODE,
+        hljs.PHRASAL_WORDS_MODE,
+        hljs.COMMENT,
+        hljs.C_LINE_COMMENT_MODE,
+        hljs.C_BLOCK_COMMENT_MODE,
+        hljs.HASH_COMMENT_MODE,
+        hljs.NUMBER_MODE,
+        hljs.C_NUMBER_MODE,
+        hljs.BINARY_NUMBER_MODE,
+        hljs.CSS_NUMBER_MODE,
+        hljs.REGEXP_MODE,
+        hljs.TITLE_MODE,
+        hljs.UNDERSCORE_TITLE_MODE,
+        hljs.METHOD_GUARD
+      ];
+      constants.forEach(function(obj) { deepFreeze(obj); });
+
+      // https://github.com/substack/deep-freeze/blob/master/index.js
+      function deepFreeze (o) {
+        Object.freeze(o);
+
+        var objIsFunction = typeof o === 'function';
+
+        Object.getOwnPropertyNames(o).forEach(function (prop) {
+          if (o.hasOwnProperty(prop)
+          && o[prop] !== null
+          && (typeof o[prop] === "object" || typeof o[prop] === "function")
+          // IE11 fix: https://github.com/highlightjs/highlight.js/issues/2318
+          // TODO: remove in the future
+          && (objIsFunction ? prop !== 'caller' && prop !== 'callee' && prop !== 'arguments' : true)
+          && !Object.isFrozen(o[prop])) {
+            deepFreeze(o[prop]);
+          }
+        });
+
+        return o;
+      }
+
+      return hljs;
+    }));
+    });
+
+    /* node_modules\svelte-highlight\src\Highlight.svelte generated by Svelte v3.23.0 */
+    const file = "node_modules\\svelte-highlight\\src\\Highlight.svelte";
+    const get_default_slot_changes = dirty => ({ highlighted: dirty & /*highlighted*/ 2 });
+    const get_default_slot_context = ctx => ({ highlighted: /*highlighted*/ ctx[1] });
+
+    // (37:6) {:else}
+    function create_else_block(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text(/*code*/ ctx[0]);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*code*/ 1) set_data_dev(t, /*code*/ ctx[0]);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block.name,
+    		type: "else",
+    		source: "(37:6) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (35:6) {#if highlighted !== undefined}
+    function create_if_block(ctx) {
+    	let html_tag;
+
+    	const block = {
+    		c: function create() {
+    			html_tag = new HtmlTag(null);
+    		},
+    		m: function mount(target, anchor) {
+    			html_tag.m(/*highlighted*/ ctx[1], target, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*highlighted*/ 2) html_tag.p(/*highlighted*/ ctx[1]);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) html_tag.d();
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block.name,
+    		type: "if",
+    		source: "(35:6) {#if highlighted !== undefined}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (24:20)    
+    function fallback_block(ctx) {
+    	let pre;
+    	let code_1;
+    	let mounted;
+    	let dispose;
+
+    	function select_block_type(ctx, dirty) {
+    		if (/*highlighted*/ ctx[1] !== undefined) return create_if_block;
+    		return create_else_block;
+    	}
+
+    	let current_block_type = select_block_type(ctx);
+    	let if_block = current_block_type(ctx);
+    	let pre_levels = [/*$$restProps*/ ctx[2]];
+    	let pre_data = {};
+
+    	for (let i = 0; i < pre_levels.length; i += 1) {
+    		pre_data = assign(pre_data, pre_levels[i]);
+    	}
+
+    	const block = {
+    		c: function create() {
+    			pre = element("pre");
+    			code_1 = element("code");
+    			if_block.c();
+    			add_location(code_1, file, 33, 4, 735);
+    			set_attributes(pre, pre_data);
+    			toggle_class(pre, "hljs", true);
+    			add_location(pre, file, 24, 2, 591);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, pre, anchor);
+    			append_dev(pre, code_1);
+    			if_block.m(code_1, null);
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(pre, "click", /*click_handler*/ ctx[7], false, false, false),
+    					listen_dev(pre, "mouseover", /*mouseover_handler*/ ctx[8], false, false, false),
+    					listen_dev(pre, "mouseenter", /*mouseenter_handler*/ ctx[9], false, false, false),
+    					listen_dev(pre, "mouseleave", /*mouseleave_handler*/ ctx[10], false, false, false),
+    					listen_dev(pre, "focus", /*focus_handler*/ ctx[11], false, false, false),
+    					listen_dev(pre, "blur", /*blur_handler*/ ctx[12], false, false, false)
+    				];
+
+    				mounted = true;
+    			}
+    		},
+    		p: function update(ctx, dirty) {
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block) {
+    				if_block.p(ctx, dirty);
+    			} else {
+    				if_block.d(1);
+    				if_block = current_block_type(ctx);
+
+    				if (if_block) {
+    					if_block.c();
+    					if_block.m(code_1, null);
+    				}
+    			}
+
+    			set_attributes(pre, pre_data = get_spread_update(pre_levels, [dirty & /*$$restProps*/ 4 && /*$$restProps*/ ctx[2]]));
+    			toggle_class(pre, "hljs", true);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(pre);
+    			if_block.d();
+    			mounted = false;
+    			run_all(dispose);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: fallback_block.name,
+    		type: "fallback",
+    		source: "(24:20)    ",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment(ctx) {
+    	let current;
+    	const default_slot_template = /*$$slots*/ ctx[6].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[5], get_default_slot_context);
+    	const default_slot_or_fallback = default_slot || fallback_block(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if (default_slot_or_fallback) default_slot_or_fallback.c();
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			if (default_slot_or_fallback) {
+    				default_slot_or_fallback.m(target, anchor);
+    			}
+
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope, highlighted*/ 34) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[5], dirty, get_default_slot_changes, get_default_slot_context);
+    				}
+    			} else {
+    				if (default_slot_or_fallback && default_slot_or_fallback.p && dirty & /*highlighted, code*/ 3) {
+    					default_slot_or_fallback.p(ctx, dirty);
+    				}
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(default_slot_or_fallback, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(default_slot_or_fallback, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			if (default_slot_or_fallback) default_slot_or_fallback.d(detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance($$self, $$props, $$invalidate) {
+    	const omit_props_names = ["language","code"];
+    	let $$restProps = compute_rest_props($$props, omit_props_names);
+    	let { language = { name: undefined, register: undefined } } = $$props;
+    	let { code = undefined } = $$props;
+    	const dispatch = createEventDispatcher();
+    	let highlighted = undefined;
+
+    	afterUpdate(() => {
+    		if (highlighted) {
+    			dispatch("highlight");
+    		}
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("Highlight", $$slots, ['default']);
+
+    	function click_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function mouseover_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function mouseenter_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function mouseleave_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function focus_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	function blur_handler(event) {
+    		bubble($$self, event);
+    	}
+
+    	$$self.$set = $$new_props => {
+    		$$props = assign(assign({}, $$props), exclude_internal_props($$new_props));
+    		$$invalidate(2, $$restProps = compute_rest_props($$props, omit_props_names));
+    		if ("language" in $$new_props) $$invalidate(3, language = $$new_props.language);
+    		if ("code" in $$new_props) $$invalidate(0, code = $$new_props.code);
+    		if ("$$scope" in $$new_props) $$invalidate(5, $$scope = $$new_props.$$scope);
+    	};
+
+    	$$self.$capture_state = () => ({
+    		language,
+    		code,
+    		hljs: highlight,
+    		createEventDispatcher,
+    		afterUpdate,
+    		dispatch,
+    		highlighted
+    	});
+
+    	$$self.$inject_state = $$new_props => {
+    		if ("language" in $$props) $$invalidate(3, language = $$new_props.language);
+    		if ("code" in $$props) $$invalidate(0, code = $$new_props.code);
+    		if ("highlighted" in $$props) $$invalidate(1, highlighted = $$new_props.highlighted);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	$$self.$$.update = () => {
+    		if ($$self.$$.dirty & /*language, code*/ 9) {
+    			 if (language.name && language.register) {
+    				highlight.registerLanguage(language.name, language.register);
+    				$$invalidate(1, highlighted = highlight.highlight(language.name, code).value);
+    			}
+    		}
+    	};
+
+    	return [
+    		code,
+    		highlighted,
+    		$$restProps,
+    		language,
+    		dispatch,
+    		$$scope,
+    		$$slots,
+    		click_handler,
+    		mouseover_handler,
+    		mouseenter_handler,
+    		mouseleave_handler,
+    		focus_handler,
+    		blur_handler
+    	];
+    }
+
+    class Highlight extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance, create_fragment, safe_not_equal, { language: 3, code: 0 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Highlight",
+    			options,
+    			id: create_fragment.name
+    		});
+    	}
+
+    	get language() {
+    		throw new Error("<Highlight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set language(value) {
+    		throw new Error("<Highlight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get code() {
+    		throw new Error("<Highlight>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set code(value) {
+    		throw new Error("<Highlight>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    var json = function(hljs) {
+      var LITERALS = {literal: 'true false null'};
+      var ALLOWED_COMMENTS = [
+        hljs.C_LINE_COMMENT_MODE,
+        hljs.C_BLOCK_COMMENT_MODE
+      ];
+      var TYPES = [
+        hljs.QUOTE_STRING_MODE,
+        hljs.C_NUMBER_MODE
+      ];
+      var VALUE_CONTAINER = {
+        end: ',', endsWithParent: true, excludeEnd: true,
+        contains: TYPES,
+        keywords: LITERALS
+      };
+      var OBJECT = {
+        begin: '{', end: '}',
+        contains: [
+          {
+            className: 'attr',
+            begin: /"/, end: /"/,
+            contains: [hljs.BACKSLASH_ESCAPE],
+            illegal: '\\n',
+          },
+          hljs.inherit(VALUE_CONTAINER, {begin: /:/})
+        ].concat(ALLOWED_COMMENTS),
+        illegal: '\\S'
+      };
+      var ARRAY = {
+        begin: '\\[', end: '\\]',
+        contains: [hljs.inherit(VALUE_CONTAINER)], // inherit is a workaround for a bug that makes shared modes with endsWithParent compile only the ending of one of the parents
+        illegal: '\\S'
+      };
+      TYPES.push(OBJECT, ARRAY);
+      ALLOWED_COMMENTS.forEach(function(rule) {
+        TYPES.push(rule);
+      });
+      return {
+        contains: TYPES,
+        keywords: LITERALS,
+        illegal: '\\S'
+      };
+    };
+
+    var json$1 = { name: 'json', register: json };
+
+    const arduinoLight = `<style>/*
+
+ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
+
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #FFFFFF;
+}
+
+.hljs,
+.hljs-subst {
+  color: #434f54;
+}
+
+.hljs-keyword,
+.hljs-attribute,
+.hljs-selector-tag,
+.hljs-doctag,
+.hljs-name {
+  color: #00979D;
+}
+
+.hljs-built_in,
+.hljs-literal,
+.hljs-bullet,
+.hljs-code,
+.hljs-addition {
+  color: #D35400;
+}
+
+.hljs-regexp,
+.hljs-symbol,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-link,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #00979D;
+}
+
+.hljs-type,
+.hljs-string,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-quote,
+.hljs-template-tag,
+.hljs-deletion {
+  color: #005C5F;
+}
+
+.hljs-title,
+.hljs-section {
+  color: #880000;
+  font-weight: bold;
+}
+
+.hljs-comment {
+  color: rgba(149,165,166,.8);
+}
+
+.hljs-meta-keyword {
+  color: #728E00;
+}
+
+.hljs-meta {
+  color: #434f54;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-function {
+  color: #728E00;
+}
+
+.hljs-number {
+  color: #8A7B52;  
+}
+</style>`;
 
     const subscriber_queue = [];
     /**
@@ -490,16 +2261,6 @@ var app = (function () {
         oidc.signoutRedirect({ returnTo });
     }
 
-    var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-    function unwrapExports (x) {
-    	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-    }
-
-    function createCommonjsModule(fn, module) {
-    	return module = { exports: {} }, fn(module, module.exports), module.exports;
-    }
-
     var oidcClient_min = createCommonjsModule(function (module, exports) {
     !function t(e,r){module.exports=r();}(commonjsGlobal,function(){return function(t){var e={};function r(n){if(e[n])return e[n].exports;var i=e[n]={i:n,l:!1,exports:{}};return t[n].call(i.exports,i,i.exports,r),i.l=!0,i.exports}return r.m=t,r.c=e,r.d=function(t,e,n){r.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:n});},r.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0});},r.t=function(t,e){if(1&e&&(t=r(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var n=Object.create(null);if(r.r(n),Object.defineProperty(n,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var i in t)r.d(n,i,function(e){return t[e]}.bind(null,i));return n},r.n=function(t){var e=t&&t.__esModule?function e(){return t.default}:function e(){return t};return r.d(e,"a",e),e},r.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},r.p="",r(r.s=22)}([function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}();var i={debug:function t(){},info:function t(){},warn:function t(){},error:function t(){}},o=void 0,s=void 0;(e.Log=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.reset=function t(){s=3,o=i;},t.debug=function t(){if(s>=4){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.debug.apply(o,Array.from(r));}},t.info=function t(){if(s>=3){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.info.apply(o,Array.from(r));}},t.warn=function t(){if(s>=2){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.warn.apply(o,Array.from(r));}},t.error=function t(){if(s>=1){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.error.apply(o,Array.from(r));}},n(t,null,[{key:"NONE",get:function t(){return 0}},{key:"ERROR",get:function t(){return 1}},{key:"WARN",get:function t(){return 2}},{key:"INFO",get:function t(){return 3}},{key:"DEBUG",get:function t(){return 4}},{key:"level",get:function t(){return s},set:function t(e){if(!(0<=e&&e<=4))throw new Error("Invalid log level");s=e;}},{key:"logger",get:function t(){return o},set:function t(e){if(!e.debug&&e.info&&(e.debug=e.info),!(e.debug&&e.info&&e.warn&&e.error))throw new Error("Invalid logger");o=e;}}]),t}()).reset();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}();var i={setInterval:function(t){function e(e,r){return t.apply(this,arguments)}return e.toString=function(){return t.toString()},e}(function(t,e){return setInterval(t,e)}),clearInterval:function(t){function e(e){return t.apply(this,arguments)}return e.toString=function(){return t.toString()},e}(function(t){return clearInterval(t)})},o=!1,s=null;e.Global=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t._testing=function t(){o=!0;},t.setXMLHttpRequest=function t(e){s=e;},n(t,null,[{key:"location",get:function t(){if(!o)return location}},{key:"localStorage",get:function t(){if(!o&&"undefined"!=typeof window)return localStorage}},{key:"sessionStorage",get:function t(){if(!o&&"undefined"!=typeof window)return sessionStorage}},{key:"XMLHttpRequest",get:function t(){if(!o&&"undefined"!=typeof window)return s||XMLHttpRequest}},{key:"timer",get:function t(){if(!o)return i}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.MetadataService=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(7);e.MetadataService=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.JsonService;if(function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("MetadataService: No settings passed to MetadataService"),new Error("settings");this._settings=e,this._jsonService=new r(["application/jwk-set+json"]),this._metadata_promise;}return t.prototype.getMetadata=function t(){var e=this;return !this.metadataUrl&&this._settings.metadata?(i.Log.debug("MetadataService.getMetadata: Returning metadata from settings"),Promise.resolve(this._settings.metadata)):this.metadataUrl?this._metadata_promise?(i.Log.debug("MetadataService.getMetadata: getting metadata from cache promise",this.metadataUrl),this._metadata_promise):(i.Log.debug("MetadataService.getMetadata: getting metadata from",this.metadataUrl),this._metadata_promise=this._jsonService.getJson(this.metadataUrl).then(function(t){return i.Log.debug("MetadataService.getMetadata: json received"),e._settings.metadata||(e._settings.metadata={}),Object.assign(e._settings.metadata,t),e._settings.metadata}),this._metadata_promise):(i.Log.error("MetadataService.getMetadata: No authority or metadataUrl configured on settings"),Promise.reject(new Error("No authority or metadataUrl configured on settings")))},t.prototype.getIssuer=function t(){return this._getMetadataProperty("issuer")},t.prototype.getAuthorizationEndpoint=function t(){return this._getMetadataProperty("authorization_endpoint")},t.prototype.getUserInfoEndpoint=function t(){return this._getMetadataProperty("userinfo_endpoint")},t.prototype.getTokenEndpoint=function t(){var e=!(arguments.length>0&&void 0!==arguments[0])||arguments[0];return this._getMetadataProperty("token_endpoint",e)},t.prototype.getCheckSessionIframe=function t(){return this._getMetadataProperty("check_session_iframe",!0)},t.prototype.getEndSessionEndpoint=function t(){return this._getMetadataProperty("end_session_endpoint",!0)},t.prototype.getRevocationEndpoint=function t(){return this._getMetadataProperty("revocation_endpoint",!0)},t.prototype.getKeysEndpoint=function t(){return this._getMetadataProperty("jwks_uri",!0)},t.prototype._getMetadataProperty=function t(e){var r=arguments.length>1&&void 0!==arguments[1]&&arguments[1];return i.Log.debug("MetadataService.getMetadataProperty for: "+e),this.getMetadata().then(function(t){if(i.Log.debug("MetadataService.getMetadataProperty: metadata recieved"),void 0===t[e]){if(!0===r)return void i.Log.warn("MetadataService.getMetadataProperty: Metadata does not contain optional property "+e);throw i.Log.error("MetadataService.getMetadataProperty: Metadata does not contain property "+e),new Error("Metadata does not contain property "+e)}return t[e]})},t.prototype.getSigningKeys=function t(){var e=this;return this._settings.signingKeys?(i.Log.debug("MetadataService.getSigningKeys: Returning signingKeys from settings"),Promise.resolve(this._settings.signingKeys)):this._getMetadataProperty("jwks_uri").then(function(t){return i.Log.debug("MetadataService.getSigningKeys: jwks_uri received",t),e._jsonService.getJson(t).then(function(t){if(i.Log.debug("MetadataService.getSigningKeys: key set received",t),!t.keys)throw i.Log.error("MetadataService.getSigningKeys: Missing keys on keyset"),new Error("Missing keys on keyset");return e._settings.signingKeys=t.keys,e._settings.signingKeys})})},n(t,[{key:"metadataUrl",get:function t(){return this._metadataUrl||(this._settings.metadataUrl?this._metadataUrl=this._settings.metadataUrl:(this._metadataUrl=this._settings.authority,this._metadataUrl&&this._metadataUrl.indexOf(".well-known/openid-configuration")<0&&("/"!==this._metadataUrl[this._metadataUrl.length-1]&&(this._metadataUrl+="/"),this._metadataUrl+=".well-known/openid-configuration"))),this._metadataUrl}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UrlUtility=void 0;var n=r(0),i=r(1);e.UrlUtility=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.addQueryParam=function t(e,r,n){return e.indexOf("?")<0&&(e+="?"),"?"!==e[e.length-1]&&(e+="&"),e+=encodeURIComponent(r),e+="=",e+=encodeURIComponent(n)},t.parseUrlFragment=function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"#",o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.Global;"string"!=typeof e&&(e=o.location.href);var s=e.lastIndexOf(r);s>=0&&(e=e.substr(s+1)),"?"===r&&(s=e.indexOf("#"))>=0&&(e=e.substr(0,s));for(var a,u={},c=/([^&=]+)=([^&]*)/g,h=0;a=c.exec(e);)if(u[decodeURIComponent(a[1])]=decodeURIComponent(a[2]),h++>50)return n.Log.error("UrlUtility.parseUrlFragment: response exceeded expected number of parameters",e),{error:"Response exceeded expected number of parameters"};for(var l in u)return u;return {}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.JoseUtil=void 0;var n=r(25),i=function o(t){return t&&t.__esModule?t:{default:t}}(r(32));e.JoseUtil=(0, i.default)({jws:n.jws,KeyUtil:n.KeyUtil,X509:n.X509,crypto:n.crypto,hextob64u:n.hextob64u,b64tohex:n.b64tohex,AllowedSigningAlgs:n.AllowedSigningAlgs});},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.OidcClientSettings=void 0;var n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),o=r(0),s=r(6),a=r(23),u=r(2);var c="id_token",h="openid",l=900,f=300;e.OidcClientSettings=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.authority,i=e.metadataUrl,o=e.metadata,d=e.signingKeys,g=e.client_id,p=e.client_secret,v=e.response_type,y=void 0===v?c:v,m=e.scope,_=void 0===m?h:m,S=e.redirect_uri,F=e.post_logout_redirect_uri,b=e.prompt,w=e.display,E=e.max_age,x=e.ui_locales,k=e.acr_values,A=e.resource,P=e.response_mode,C=e.filterProtocolClaims,T=void 0===C||C,R=e.loadUserInfo,I=void 0===R||R,D=e.staleStateAge,U=void 0===D?l:D,L=e.clockSkew,B=void 0===L?f:L,N=e.userInfoJwtIssuer,O=void 0===N?"OP":N,j=e.stateStore,M=void 0===j?new s.WebStorageStateStore:j,H=e.ResponseValidatorCtor,K=void 0===H?a.ResponseValidator:H,V=e.MetadataServiceCtor,q=void 0===V?u.MetadataService:V,J=e.extraQueryParams,W=void 0===J?{}:J,z=e.extraTokenParams,Y=void 0===z?{}:z;!function G(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._authority=r,this._metadataUrl=i,this._metadata=o,this._signingKeys=d,this._client_id=g,this._client_secret=p,this._response_type=y,this._scope=_,this._redirect_uri=S,this._post_logout_redirect_uri=F,this._prompt=b,this._display=w,this._max_age=E,this._ui_locales=x,this._acr_values=k,this._resource=A,this._response_mode=P,this._filterProtocolClaims=!!T,this._loadUserInfo=!!I,this._staleStateAge=U,this._clockSkew=B,this._userInfoJwtIssuer=O,this._stateStore=M,this._validator=new K(this),this._metadataService=new q(this),this._extraQueryParams="object"===(void 0===W?"undefined":n(W))?W:{},this._extraTokenParams="object"===(void 0===Y?"undefined":n(Y))?Y:{};}return i(t,[{key:"client_id",get:function t(){return this._client_id},set:function t(e){if(this._client_id)throw o.Log.error("OidcClientSettings.set_client_id: client_id has already been assigned."),new Error("client_id has already been assigned.");this._client_id=e;}},{key:"client_secret",get:function t(){return this._client_secret}},{key:"response_type",get:function t(){return this._response_type}},{key:"scope",get:function t(){return this._scope}},{key:"redirect_uri",get:function t(){return this._redirect_uri}},{key:"post_logout_redirect_uri",get:function t(){return this._post_logout_redirect_uri}},{key:"prompt",get:function t(){return this._prompt}},{key:"display",get:function t(){return this._display}},{key:"max_age",get:function t(){return this._max_age}},{key:"ui_locales",get:function t(){return this._ui_locales}},{key:"acr_values",get:function t(){return this._acr_values}},{key:"resource",get:function t(){return this._resource}},{key:"response_mode",get:function t(){return this._response_mode}},{key:"authority",get:function t(){return this._authority},set:function t(e){if(this._authority)throw o.Log.error("OidcClientSettings.set_authority: authority has already been assigned."),new Error("authority has already been assigned.");this._authority=e;}},{key:"metadataUrl",get:function t(){return this._metadataUrl||(this._metadataUrl=this.authority,this._metadataUrl&&this._metadataUrl.indexOf(".well-known/openid-configuration")<0&&("/"!==this._metadataUrl[this._metadataUrl.length-1]&&(this._metadataUrl+="/"),this._metadataUrl+=".well-known/openid-configuration")),this._metadataUrl}},{key:"metadata",get:function t(){return this._metadata},set:function t(e){this._metadata=e;}},{key:"signingKeys",get:function t(){return this._signingKeys},set:function t(e){this._signingKeys=e;}},{key:"filterProtocolClaims",get:function t(){return this._filterProtocolClaims}},{key:"loadUserInfo",get:function t(){return this._loadUserInfo}},{key:"staleStateAge",get:function t(){return this._staleStateAge}},{key:"clockSkew",get:function t(){return this._clockSkew}},{key:"userInfoJwtIssuer",get:function t(){return this._userInfoJwtIssuer}},{key:"stateStore",get:function t(){return this._stateStore}},{key:"validator",get:function t(){return this._validator}},{key:"metadataService",get:function t(){return this._metadataService}},{key:"extraQueryParams",get:function t(){return this._extraQueryParams},set:function t(e){"object"===(void 0===e?"undefined":n(e))?this._extraQueryParams=e:this._extraQueryParams={};}},{key:"extraTokenParams",get:function t(){return this._extraTokenParams},set:function t(e){"object"===(void 0===e?"undefined":n(e))?this._extraTokenParams=e:this._extraTokenParams={};}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.WebStorageStateStore=void 0;var n=r(0),i=r(1);e.WebStorageStateStore=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.prefix,n=void 0===r?"oidc.":r,o=e.store,s=void 0===o?i.Global.localStorage:o;!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._store=s,this._prefix=n;}return t.prototype.set=function t(e,r){return n.Log.debug("WebStorageStateStore.set",e),e=this._prefix+e,this._store.setItem(e,r),Promise.resolve()},t.prototype.get=function t(e){n.Log.debug("WebStorageStateStore.get",e),e=this._prefix+e;var r=this._store.getItem(e);return Promise.resolve(r)},t.prototype.remove=function t(e){n.Log.debug("WebStorageStateStore.remove",e),e=this._prefix+e;var r=this._store.getItem(e);return this._store.removeItem(e),Promise.resolve(r)},t.prototype.getAllKeys=function t(){n.Log.debug("WebStorageStateStore.getAllKeys");for(var e=[],r=0;r<this._store.length;r++){var i=this._store.key(r);0===i.indexOf(this._prefix)&&e.push(i.substr(this._prefix.length));}return Promise.resolve(e)},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.JsonService=void 0;var n=r(0),i=r(1);e.JsonService=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:null,r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:i.Global.XMLHttpRequest,n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:null;!function o(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),e&&Array.isArray(e)?this._contentTypes=e.slice():this._contentTypes=[],this._contentTypes.push("application/json"),n&&this._contentTypes.push("application/jwt"),this._XMLHttpRequest=r,this._jwtHandler=n;}return t.prototype.getJson=function t(e,r){var i=this;if(!e)throw n.Log.error("JsonService.getJson: No url passed"),new Error("url");return n.Log.debug("JsonService.getJson, url: ",e),new Promise(function(t,o){var s=new i._XMLHttpRequest;s.open("GET",e);var a=i._contentTypes,u=i._jwtHandler;s.onload=function(){if(n.Log.debug("JsonService.getJson: HTTP response received, status",s.status),200===s.status){var r=s.getResponseHeader("Content-Type");if(r){var i=a.find(function(t){if(r.startsWith(t))return !0});if("application/jwt"==i)return void u(s).then(t,o);if(i)try{return void t(JSON.parse(s.responseText))}catch(t){return n.Log.error("JsonService.getJson: Error parsing JSON response",t.message),void o(t)}}o(Error("Invalid response Content-Type: "+r+", from URL: "+e));}else o(Error(s.statusText+" ("+s.status+")"));},s.onerror=function(){n.Log.error("JsonService.getJson: network error"),o(Error("Network Error"));},r&&(n.Log.debug("JsonService.getJson: token passed, setting Authorization header"),s.setRequestHeader("Authorization","Bearer "+r)),s.send();})},t.prototype.postForm=function t(e,r){var i=this;if(!e)throw n.Log.error("JsonService.postForm: No url passed"),new Error("url");return n.Log.debug("JsonService.postForm, url: ",e),new Promise(function(t,o){var s=new i._XMLHttpRequest;s.open("POST",e);var a=i._contentTypes;s.onload=function(){if(n.Log.debug("JsonService.postForm: HTTP response received, status",s.status),200!==s.status){if(400===s.status)if(i=s.getResponseHeader("Content-Type"))if(a.find(function(t){if(i.startsWith(t))return !0}))try{var r=JSON.parse(s.responseText);if(r&&r.error)return n.Log.error("JsonService.postForm: Error from server: ",r.error),void o(new Error(r.error))}catch(t){return n.Log.error("JsonService.postForm: Error parsing JSON response",t.message),void o(t)}o(Error(s.statusText+" ("+s.status+")"));}else{var i;if((i=s.getResponseHeader("Content-Type"))&&a.find(function(t){if(i.startsWith(t))return !0}))try{return void t(JSON.parse(s.responseText))}catch(t){return n.Log.error("JsonService.postForm: Error parsing JSON response",t.message),void o(t)}o(Error("Invalid response Content-Type: "+i+", from URL: "+e));}},s.onerror=function(){n.Log.error("JsonService.postForm: network error"),o(Error("Network Error"));};var u="";for(var c in r){var h=r[c];h&&(u.length>0&&(u+="&"),u+=encodeURIComponent(c),u+="=",u+=encodeURIComponent(h));}s.setRequestHeader("Content-Type","application/x-www-form-urlencoded"),s.send(u);})},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.State=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=function s(t){return t&&t.__esModule?t:{default:t}}(r(14));e.State=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.id,n=e.data,i=e.created,s=e.request_type;!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._id=r||(0, o.default)(),this._data=n,this._created="number"==typeof i&&i>0?i:parseInt(Date.now()/1e3),this._request_type=s;}return t.prototype.toStorageString=function t(){return i.Log.debug("State.toStorageString"),JSON.stringify({id:this.id,data:this.data,created:this.created,request_type:this.request_type})},t.fromStorageString=function e(r){return i.Log.debug("State.fromStorageString"),new t(JSON.parse(r))},t.clearStaleState=function e(r,n){var o=Date.now()/1e3-n;return r.getAllKeys().then(function(e){i.Log.debug("State.clearStaleState: got keys",e);for(var n=[],s=function s(a){var c=e[a];u=r.get(c).then(function(e){var n=!1;if(e)try{var s=t.fromStorageString(e);i.Log.debug("State.clearStaleState: got item from key: ",c,s.created),s.created<=o&&(n=!0);}catch(t){i.Log.error("State.clearStaleState: Error parsing state for key",c,t.message),n=!0;}else i.Log.debug("State.clearStaleState: no item in storage for key: ",c),n=!0;if(n)return i.Log.debug("State.clearStaleState: removed item for key: ",c),r.remove(c)}),n.push(u);},a=0;a<e.length;a++){var u;s(a);}return i.Log.debug("State.clearStaleState: waiting on promise count:",n.length),Promise.all(n)})},n(t,[{key:"id",get:function t(){return this._id}},{key:"data",get:function t(){return this._data}},{key:"created",get:function t(){return this._created}},{key:"request_type",get:function t(){return this._request_type}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.OidcClient=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(5),s=r(11),a=r(12),u=r(36),c=r(37),h=r(38),l=r(13),f=r(8);e.OidcClient=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),e instanceof o.OidcClientSettings?this._settings=e:this._settings=new o.OidcClientSettings(e);}return t.prototype.createSigninRequest=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.response_type,o=r.scope,s=r.redirect_uri,u=r.data,c=r.state,h=r.prompt,l=r.display,f=r.max_age,d=r.ui_locales,g=r.id_token_hint,p=r.login_hint,v=r.acr_values,y=r.resource,m=r.request,_=r.request_uri,S=r.response_mode,F=r.extraQueryParams,b=r.extraTokenParams,w=r.request_type,E=r.skipUserInfo,x=arguments[1];i.Log.debug("OidcClient.createSigninRequest");var k=this._settings.client_id;n=n||this._settings.response_type,o=o||this._settings.scope,s=s||this._settings.redirect_uri,h=h||this._settings.prompt,l=l||this._settings.display,f=f||this._settings.max_age,d=d||this._settings.ui_locales,v=v||this._settings.acr_values,y=y||this._settings.resource,S=S||this._settings.response_mode,F=F||this._settings.extraQueryParams,b=b||this._settings.extraTokenParams;var A=this._settings.authority;return a.SigninRequest.isCode(n)&&"code"!==n?Promise.reject(new Error("OpenID Connect hybrid flow is not supported")):this._metadataService.getAuthorizationEndpoint().then(function(t){i.Log.debug("OidcClient.createSigninRequest: Received authorization endpoint",t);var r=new a.SigninRequest({url:t,client_id:k,redirect_uri:s,response_type:n,scope:o,data:u||c,authority:A,prompt:h,display:l,max_age:f,ui_locales:d,id_token_hint:g,login_hint:p,acr_values:v,resource:y,request:m,request_uri:_,extraQueryParams:F,extraTokenParams:b,request_type:w,response_mode:S,client_secret:e._settings.client_secret,skipUserInfo:E}),P=r.state;return (x=x||e._stateStore).set(P.id,P.toStorageString()).then(function(){return r})})},t.prototype.readSigninResponseState=function t(e,r){var n=arguments.length>2&&void 0!==arguments[2]&&arguments[2];i.Log.debug("OidcClient.readSigninResponseState");var o="query"===this._settings.response_mode||!this._settings.response_mode&&a.SigninRequest.isCode(this._settings.response_type)?"?":"#",s=new u.SigninResponse(e,o);return s.state?(r=r||this._stateStore,(n?r.remove.bind(r):r.get.bind(r))(s.state).then(function(t){if(!t)throw i.Log.error("OidcClient.readSigninResponseState: No matching state found in storage"),new Error("No matching state found in storage");return {state:l.SigninState.fromStorageString(t),response:s}})):(i.Log.error("OidcClient.readSigninResponseState: No state in response"),Promise.reject(new Error("No state in response")))},t.prototype.processSigninResponse=function t(e,r){var n=this;return i.Log.debug("OidcClient.processSigninResponse"),this.readSigninResponseState(e,r,!0).then(function(t){var e=t.state,r=t.response;return i.Log.debug("OidcClient.processSigninResponse: Received state from storage; validating response"),n._validator.validateSigninResponse(e,r)})},t.prototype.createSignoutRequest=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.id_token_hint,o=r.data,s=r.state,a=r.post_logout_redirect_uri,u=r.extraQueryParams,h=r.request_type,l=arguments[1];return i.Log.debug("OidcClient.createSignoutRequest"),a=a||this._settings.post_logout_redirect_uri,u=u||this._settings.extraQueryParams,this._metadataService.getEndSessionEndpoint().then(function(t){if(!t)throw i.Log.error("OidcClient.createSignoutRequest: No end session endpoint url returned"),new Error("no end session endpoint");i.Log.debug("OidcClient.createSignoutRequest: Received end session endpoint",t);var r=new c.SignoutRequest({url:t,id_token_hint:n,post_logout_redirect_uri:a,data:o||s,extraQueryParams:u,request_type:h}),f=r.state;return f&&(i.Log.debug("OidcClient.createSignoutRequest: Signout request has state to persist"),(l=l||e._stateStore).set(f.id,f.toStorageString())),r})},t.prototype.readSignoutResponseState=function t(e,r){var n=arguments.length>2&&void 0!==arguments[2]&&arguments[2];i.Log.debug("OidcClient.readSignoutResponseState");var o=new h.SignoutResponse(e);if(!o.state)return i.Log.debug("OidcClient.readSignoutResponseState: No state in response"),o.error?(i.Log.warn("OidcClient.readSignoutResponseState: Response was error: ",o.error),Promise.reject(new s.ErrorResponse(o))):Promise.resolve({undefined:void 0,response:o});var a=o.state;return r=r||this._stateStore,(n?r.remove.bind(r):r.get.bind(r))(a).then(function(t){if(!t)throw i.Log.error("OidcClient.readSignoutResponseState: No matching state found in storage"),new Error("No matching state found in storage");return {state:f.State.fromStorageString(t),response:o}})},t.prototype.processSignoutResponse=function t(e,r){var n=this;return i.Log.debug("OidcClient.processSignoutResponse"),this.readSignoutResponseState(e,r,!0).then(function(t){var e=t.state,r=t.response;return e?(i.Log.debug("OidcClient.processSignoutResponse: Received state from storage; validating response"),n._validator.validateSignoutResponse(e,r)):(i.Log.debug("OidcClient.processSignoutResponse: No state from storage; skipping validating response"),r)})},t.prototype.clearStaleState=function t(e){return i.Log.debug("OidcClient.clearStaleState"),e=e||this._stateStore,f.State.clearStaleState(e,this.settings.staleStateAge)},n(t,[{key:"_stateStore",get:function t(){return this.settings.stateStore}},{key:"_validator",get:function t(){return this.settings.validator}},{key:"_metadataService",get:function t(){return this.settings.metadataService}},{key:"settings",get:function t(){return this._settings}},{key:"metadataService",get:function t(){return this._metadataService}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.TokenClient=void 0;var n=r(7),i=r(2),o=r(0);e.TokenClient=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:n.JsonService,s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService;if(function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw o.Log.error("TokenClient.ctor: No settings passed"),new Error("settings");this._settings=e,this._jsonService=new r,this._metadataService=new s(this._settings);}return t.prototype.exchangeCode=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return (r=Object.assign({},r)).grant_type=r.grant_type||"authorization_code",r.client_id=r.client_id||this._settings.client_id,r.redirect_uri=r.redirect_uri||this._settings.redirect_uri,r.code?r.redirect_uri?r.code_verifier?r.client_id?this._metadataService.getTokenEndpoint(!1).then(function(t){return o.Log.debug("TokenClient.exchangeCode: Received token endpoint"),e._jsonService.postForm(t,r).then(function(t){return o.Log.debug("TokenClient.exchangeCode: response received"),t})}):(o.Log.error("TokenClient.exchangeCode: No client_id passed"),Promise.reject(new Error("A client_id is required"))):(o.Log.error("TokenClient.exchangeCode: No code_verifier passed"),Promise.reject(new Error("A code_verifier is required"))):(o.Log.error("TokenClient.exchangeCode: No redirect_uri passed"),Promise.reject(new Error("A redirect_uri is required"))):(o.Log.error("TokenClient.exchangeCode: No code passed"),Promise.reject(new Error("A code is required")))},t.prototype.exchangeRefreshToken=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return (r=Object.assign({},r)).grant_type=r.grant_type||"refresh_token",r.client_id=r.client_id||this._settings.client_id,r.client_secret=r.client_secret||this._settings.client_secret,r.refresh_token?r.client_id?this._metadataService.getTokenEndpoint(!1).then(function(t){return o.Log.debug("TokenClient.exchangeRefreshToken: Received token endpoint"),e._jsonService.postForm(t,r).then(function(t){return o.Log.debug("TokenClient.exchangeRefreshToken: response received"),t})}):(o.Log.error("TokenClient.exchangeRefreshToken: No client_id passed"),Promise.reject(new Error("A client_id is required"))):(o.Log.error("TokenClient.exchangeRefreshToken: No refresh_token passed"),Promise.reject(new Error("A refresh_token is required")))},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.ErrorResponse=void 0;var n=r(0);e.ErrorResponse=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},i=r.error,o=r.error_description,s=r.error_uri,a=r.state,u=r.session_state;if(function c(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),!i)throw n.Log.error("No error passed to ErrorResponse"),new Error("error");var h=function l(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,o||i));return h.name="ErrorResponse",h.error=i,h.error_description=o,h.error_uri=s,h.state=a,h.session_state=u,h}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e}(Error);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SigninRequest=void 0;var n=r(0),i=r(3),o=r(13);e.SigninRequest=function(){function t(e){var r=e.url,s=e.client_id,a=e.redirect_uri,u=e.response_type,c=e.scope,h=e.authority,l=e.data,f=e.prompt,d=e.display,g=e.max_age,p=e.ui_locales,v=e.id_token_hint,y=e.login_hint,m=e.acr_values,_=e.resource,S=e.response_mode,F=e.request,b=e.request_uri,w=e.extraQueryParams,E=e.request_type,x=e.client_secret,k=e.extraTokenParams,A=e.skipUserInfo;if(function P(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!r)throw n.Log.error("SigninRequest.ctor: No url passed"),new Error("url");if(!s)throw n.Log.error("SigninRequest.ctor: No client_id passed"),new Error("client_id");if(!a)throw n.Log.error("SigninRequest.ctor: No redirect_uri passed"),new Error("redirect_uri");if(!u)throw n.Log.error("SigninRequest.ctor: No response_type passed"),new Error("response_type");if(!c)throw n.Log.error("SigninRequest.ctor: No scope passed"),new Error("scope");if(!h)throw n.Log.error("SigninRequest.ctor: No authority passed"),new Error("authority");var C=t.isOidc(u),T=t.isCode(u);S||(S=t.isCode(u)?"query":null),this.state=new o.SigninState({nonce:C,data:l,client_id:s,authority:h,redirect_uri:a,code_verifier:T,request_type:E,response_mode:S,client_secret:x,scope:c,extraTokenParams:k,skipUserInfo:A}),r=i.UrlUtility.addQueryParam(r,"client_id",s),r=i.UrlUtility.addQueryParam(r,"redirect_uri",a),r=i.UrlUtility.addQueryParam(r,"response_type",u),r=i.UrlUtility.addQueryParam(r,"scope",c),r=i.UrlUtility.addQueryParam(r,"state",this.state.id),C&&(r=i.UrlUtility.addQueryParam(r,"nonce",this.state.nonce)),T&&(r=i.UrlUtility.addQueryParam(r,"code_challenge",this.state.code_challenge),r=i.UrlUtility.addQueryParam(r,"code_challenge_method","S256"));var R={prompt:f,display:d,max_age:g,ui_locales:p,id_token_hint:v,login_hint:y,acr_values:m,resource:_,request:F,request_uri:b,response_mode:S};for(var I in R)R[I]&&(r=i.UrlUtility.addQueryParam(r,I,R[I]));for(var D in w)r=i.UrlUtility.addQueryParam(r,D,w[D]);this.url=r;}return t.isOidc=function t(e){return !!e.split(/\s+/g).filter(function(t){return "id_token"===t})[0]},t.isOAuth=function t(e){return !!e.split(/\s+/g).filter(function(t){return "token"===t})[0]},t.isCode=function t(e){return !!e.split(/\s+/g).filter(function(t){return "code"===t})[0]},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SigninState=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(8),s=r(4),a=function u(t){return t&&t.__esModule?t:{default:t}}(r(14));e.SigninState=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.nonce,i=r.authority,o=r.client_id,u=r.redirect_uri,c=r.code_verifier,h=r.response_mode,l=r.client_secret,f=r.scope,d=r.extraTokenParams,g=r.skipUserInfo;!function p(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var v=function y(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,arguments[0]));if(!0===n?v._nonce=(0, a.default)():n&&(v._nonce=n),!0===c?v._code_verifier=(0, a.default)()+(0, a.default)()+(0, a.default)():c&&(v._code_verifier=c),v.code_verifier){var m=s.JoseUtil.hashString(v.code_verifier,"SHA256");v._code_challenge=s.JoseUtil.hexToBase64Url(m);}return v._redirect_uri=u,v._authority=i,v._client_id=o,v._response_mode=h,v._client_secret=l,v._scope=f,v._extraTokenParams=d,v._skipUserInfo=g,v}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e.prototype.toStorageString=function t(){return i.Log.debug("SigninState.toStorageString"),JSON.stringify({id:this.id,data:this.data,created:this.created,request_type:this.request_type,nonce:this.nonce,code_verifier:this.code_verifier,redirect_uri:this.redirect_uri,authority:this.authority,client_id:this.client_id,response_mode:this.response_mode,client_secret:this.client_secret,scope:this.scope,extraTokenParams:this.extraTokenParams,skipUserInfo:this.skipUserInfo})},e.fromStorageString=function t(r){return i.Log.debug("SigninState.fromStorageString"),new e(JSON.parse(r))},n(e,[{key:"nonce",get:function t(){return this._nonce}},{key:"authority",get:function t(){return this._authority}},{key:"client_id",get:function t(){return this._client_id}},{key:"redirect_uri",get:function t(){return this._redirect_uri}},{key:"code_verifier",get:function t(){return this._code_verifier}},{key:"code_challenge",get:function t(){return this._code_challenge}},{key:"response_mode",get:function t(){return this._response_mode}},{key:"client_secret",get:function t(){return this._client_secret}},{key:"scope",get:function t(){return this._scope}},{key:"extraTokenParams",get:function t(){return this._extraTokenParams}},{key:"skipUserInfo",get:function t(){return this._skipUserInfo}}]),e}(o.State);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function n(){return (0, i.default)().replace(/-/g,"")};var i=function o(t){return t&&t.__esModule?t:{default:t}}(r(33));t.exports=e.default;},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.User=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);e.User=function(){function t(e){var r=e.id_token,n=e.session_state,i=e.access_token,o=e.refresh_token,s=e.token_type,a=e.scope,u=e.profile,c=e.expires_at,h=e.state;!function l(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.id_token=r,this.session_state=n,this.access_token=i,this.refresh_token=o,this.token_type=s,this.scope=a,this.profile=u,this.expires_at=c,this.state=h;}return t.prototype.toStorageString=function t(){return i.Log.debug("User.toStorageString"),JSON.stringify({id_token:this.id_token,session_state:this.session_state,access_token:this.access_token,refresh_token:this.refresh_token,token_type:this.token_type,scope:this.scope,profile:this.profile,expires_at:this.expires_at})},t.fromStorageString=function e(r){return i.Log.debug("User.fromStorageString"),new t(JSON.parse(r))},n(t,[{key:"expires_in",get:function t(){if(this.expires_at){var e=parseInt(Date.now()/1e3);return this.expires_at-e}},set:function t(e){var r=parseInt(e);if("number"==typeof r&&r>0){var n=parseInt(Date.now()/1e3);this.expires_at=n+r;}}},{key:"expired",get:function t(){var e=this.expires_in;if(void 0!==e)return e<=0}},{key:"scopes",get:function t(){return (this.scope||"").split(" ")}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.AccessTokenEvents=void 0;var n=r(0),i=r(48);var o=60;e.AccessTokenEvents=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.accessTokenExpiringNotificationTime,n=void 0===r?o:r,s=e.accessTokenExpiringTimer,a=void 0===s?new i.Timer("Access token expiring"):s,u=e.accessTokenExpiredTimer,c=void 0===u?new i.Timer("Access token expired"):u;!function h(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._accessTokenExpiringNotificationTime=n,this._accessTokenExpiring=a,this._accessTokenExpired=c;}return t.prototype.load=function t(e){if(e.access_token&&void 0!==e.expires_in){var r=e.expires_in;if(n.Log.debug("AccessTokenEvents.load: access token present, remaining duration:",r),r>0){var i=r-this._accessTokenExpiringNotificationTime;i<=0&&(i=1),n.Log.debug("AccessTokenEvents.load: registering expiring timer in:",i),this._accessTokenExpiring.init(i);}else n.Log.debug("AccessTokenEvents.load: canceling existing expiring timer becase we're past expiration."),this._accessTokenExpiring.cancel();var o=r+1;n.Log.debug("AccessTokenEvents.load: registering expired timer in:",o),this._accessTokenExpired.init(o);}else this._accessTokenExpiring.cancel(),this._accessTokenExpired.cancel();},t.prototype.unload=function t(){n.Log.debug("AccessTokenEvents.unload: canceling existing access token timers"),this._accessTokenExpiring.cancel(),this._accessTokenExpired.cancel();},t.prototype.addAccessTokenExpiring=function t(e){this._accessTokenExpiring.addHandler(e);},t.prototype.removeAccessTokenExpiring=function t(e){this._accessTokenExpiring.removeHandler(e);},t.prototype.addAccessTokenExpired=function t(e){this._accessTokenExpired.addHandler(e);},t.prototype.removeAccessTokenExpired=function t(e){this._accessTokenExpired.removeHandler(e);},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.Event=void 0;var n=r(0);e.Event=function(){function t(e){!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._name=e,this._callbacks=[];}return t.prototype.addHandler=function t(e){this._callbacks.push(e);},t.prototype.removeHandler=function t(e){var r=this._callbacks.findIndex(function(t){return t===e});r>=0&&this._callbacks.splice(r,1);},t.prototype.raise=function t(){n.Log.debug("Event: Raising event: "+this._name);for(var e=0;e<this._callbacks.length;e++){var r;(r=this._callbacks)[e].apply(r,arguments);}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SessionMonitor=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(19),s=r(1);e.SessionMonitor=function(){function t(e){var r=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.CheckSessionIFrame,a=arguments.length>2&&void 0!==arguments[2]?arguments[2]:s.Global.timer;if(function u(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("SessionMonitor.ctor: No user manager passed to SessionMonitor"),new Error("userManager");this._userManager=e,this._CheckSessionIFrameCtor=n,this._timer=a,this._userManager.events.addUserLoaded(this._start.bind(this)),this._userManager.events.addUserUnloaded(this._stop.bind(this)),this._userManager.getUser().then(function(t){t?r._start(t):r._settings.monitorAnonymousSession&&r._userManager.querySessionStatus().then(function(t){var e={session_state:t.session_state};t.sub&&t.sid&&(e.profile={sub:t.sub,sid:t.sid}),r._start(e);}).catch(function(t){i.Log.error("SessionMonitor ctor: error from querySessionStatus:",t.message);});}).catch(function(t){i.Log.error("SessionMonitor ctor: error from getUser:",t.message);});}return t.prototype._start=function t(e){var r=this,n=e.session_state;n&&(e.profile?(this._sub=e.profile.sub,this._sid=e.profile.sid,i.Log.debug("SessionMonitor._start: session_state:",n,", sub:",this._sub)):(this._sub=void 0,this._sid=void 0,i.Log.debug("SessionMonitor._start: session_state:",n,", anonymous user")),this._checkSessionIFrame?this._checkSessionIFrame.start(n):this._metadataService.getCheckSessionIframe().then(function(t){if(t){i.Log.debug("SessionMonitor._start: Initializing check session iframe");var e=r._client_id,o=r._checkSessionInterval,s=r._stopCheckSessionOnError;r._checkSessionIFrame=new r._CheckSessionIFrameCtor(r._callback.bind(r),e,t,o,s),r._checkSessionIFrame.load().then(function(){r._checkSessionIFrame.start(n);});}else i.Log.warn("SessionMonitor._start: No check session iframe found in the metadata");}).catch(function(t){i.Log.error("SessionMonitor._start: Error from getCheckSessionIframe:",t.message);}));},t.prototype._stop=function t(){var e=this;if(this._sub=void 0,this._sid=void 0,this._checkSessionIFrame&&(i.Log.debug("SessionMonitor._stop"),this._checkSessionIFrame.stop()),this._settings.monitorAnonymousSession)var r=this._timer.setInterval(function(){e._timer.clearInterval(r),e._userManager.querySessionStatus().then(function(t){var r={session_state:t.session_state};t.sub&&t.sid&&(r.profile={sub:t.sub,sid:t.sid}),e._start(r);}).catch(function(t){i.Log.error("SessionMonitor: error from querySessionStatus:",t.message);});},1e3);},t.prototype._callback=function t(){var e=this;this._userManager.querySessionStatus().then(function(t){var r=!0;t?t.sub===e._sub?(r=!1,e._checkSessionIFrame.start(t.session_state),t.sid===e._sid?i.Log.debug("SessionMonitor._callback: Same sub still logged in at OP, restarting check session iframe; session_state:",t.session_state):(i.Log.debug("SessionMonitor._callback: Same sub still logged in at OP, session state has changed, restarting check session iframe; session_state:",t.session_state),e._userManager.events._raiseUserSessionChanged())):i.Log.debug("SessionMonitor._callback: Different subject signed into OP:",t.sub):i.Log.debug("SessionMonitor._callback: Subject no longer signed into OP"),r&&(e._sub?(i.Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed out event"),e._userManager.events._raiseUserSignedOut()):(i.Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed in event"),e._userManager.events._raiseUserSignedIn()));}).catch(function(t){e._sub&&(i.Log.debug("SessionMonitor._callback: Error calling queryCurrentSigninSession; raising signed out event",t.message),e._userManager.events._raiseUserSignedOut());});},n(t,[{key:"_settings",get:function t(){return this._userManager.settings}},{key:"_metadataService",get:function t(){return this._userManager.metadataService}},{key:"_client_id",get:function t(){return this._settings.client_id}},{key:"_checkSessionInterval",get:function t(){return this._settings.checkSessionInterval}},{key:"_stopCheckSessionOnError",get:function t(){return this._settings.stopCheckSessionOnError}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CheckSessionIFrame=void 0;var n=r(0);var i=2e3;e.CheckSessionIFrame=function(){function t(e,r,n,o){var s=!(arguments.length>4&&void 0!==arguments[4])||arguments[4];!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._callback=e,this._client_id=r,this._url=n,this._interval=o||i,this._stopOnError=s;var u=n.indexOf("/",n.indexOf("//")+2);this._frame_origin=n.substr(0,u),this._frame=window.document.createElement("iframe"),this._frame.style.visibility="hidden",this._frame.style.position="absolute",this._frame.style.display="none",this._frame.style.width=0,this._frame.style.height=0,this._frame.src=n;}return t.prototype.load=function t(){var e=this;return new Promise(function(t){e._frame.onload=function(){t();},window.document.body.appendChild(e._frame),e._boundMessageEvent=e._message.bind(e),window.addEventListener("message",e._boundMessageEvent,!1);})},t.prototype._message=function t(e){e.origin===this._frame_origin&&e.source===this._frame.contentWindow&&("error"===e.data?(n.Log.error("CheckSessionIFrame: error message from check session op iframe"),this._stopOnError&&this.stop()):"changed"===e.data?(n.Log.debug("CheckSessionIFrame: changed message from check session op iframe"),this.stop(),this._callback()):n.Log.debug("CheckSessionIFrame: "+e.data+" message from check session op iframe"));},t.prototype.start=function t(e){var r=this;if(this._session_state!==e){n.Log.debug("CheckSessionIFrame.start"),this.stop(),this._session_state=e;var i=function t(){r._frame.contentWindow.postMessage(r._client_id+" "+r._session_state,r._frame_origin);};i(),this._timer=window.setInterval(i,this._interval);}},t.prototype.stop=function t(){this._session_state=null,this._timer&&(n.Log.debug("CheckSessionIFrame.stop"),window.clearInterval(this._timer),this._timer=null);},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.TokenRevocationClient=void 0;var n=r(0),i=r(2),o=r(1);e.TokenRevocationClient=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.Global.XMLHttpRequest,s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService;if(function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw n.Log.error("TokenRevocationClient.ctor: No settings provided"),new Error("No settings provided.");this._settings=e,this._XMLHttpRequestCtor=r,this._metadataService=new s(this._settings);}return t.prototype.revoke=function t(e,r){var i=this,o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"access_token";if(!e)throw n.Log.error("TokenRevocationClient.revoke: No token provided"),new Error("No token provided.");if("access_token"!==o&&"refresh_token"!=o)throw n.Log.error("TokenRevocationClient.revoke: Invalid token type"),new Error("Invalid token type.");return this._metadataService.getRevocationEndpoint().then(function(t){if(t){n.Log.debug("TokenRevocationClient.revoke: Revoking "+o);var s=i._settings.client_id,a=i._settings.client_secret;return i._revoke(t,s,a,e,o)}if(r)throw n.Log.error("TokenRevocationClient.revoke: Revocation not supported"),new Error("Revocation not supported")})},t.prototype._revoke=function t(e,r,i,o,s){var a=this;return new Promise(function(t,u){var c=new a._XMLHttpRequestCtor;c.open("POST",e),c.onload=function(){n.Log.debug("TokenRevocationClient.revoke: HTTP response received, status",c.status),200===c.status?t():u(Error(c.statusText+" ("+c.status+")"));},c.onerror=function(){n.Log.debug("TokenRevocationClient.revoke: Network Error."),u("Network Error");};var h="client_id="+encodeURIComponent(r);i&&(h+="&client_secret="+encodeURIComponent(i)),h+="&token_type_hint="+encodeURIComponent(s),h+="&token="+encodeURIComponent(o),c.setRequestHeader("Content-Type","application/x-www-form-urlencoded"),c.send(h);})},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CordovaPopupWindow=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);var o="location=no,toolbar=no,zoom=no",s="_blank";e.CordovaPopupWindow=function(){function t(e){var r=this;!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._promise=new Promise(function(t,e){r._resolve=t,r._reject=e;}),this.features=e.popupWindowFeatures||o,this.target=e.popupWindowTarget||s,this.redirect_uri=e.startUrl,i.Log.debug("CordovaPopupWindow.ctor: redirect_uri: "+this.redirect_uri);}return t.prototype._isInAppBrowserInstalled=function t(e){return ["cordova-plugin-inappbrowser","cordova-plugin-inappbrowser.inappbrowser","org.apache.cordova.inappbrowser"].some(function(t){return e.hasOwnProperty(t)})},t.prototype.navigate=function t(e){if(e&&e.url){if(!window.cordova)return this._error("cordova is undefined");var r=window.cordova.require("cordova/plugin_list").metadata;if(!1===this._isInAppBrowserInstalled(r))return this._error("InAppBrowser plugin not found");this._popup=cordova.InAppBrowser.open(e.url,this.target,this.features),this._popup?(i.Log.debug("CordovaPopupWindow.navigate: popup successfully created"),this._exitCallbackEvent=this._exitCallback.bind(this),this._loadStartCallbackEvent=this._loadStartCallback.bind(this),this._popup.addEventListener("exit",this._exitCallbackEvent,!1),this._popup.addEventListener("loadstart",this._loadStartCallbackEvent,!1)):this._error("Error opening popup window");}else this._error("No url provided");return this.promise},t.prototype._loadStartCallback=function t(e){0===e.url.indexOf(this.redirect_uri)&&this._success({url:e.url});},t.prototype._exitCallback=function t(e){this._error(e);},t.prototype._success=function t(e){this._cleanup(),i.Log.debug("CordovaPopupWindow: Successful response from cordova popup window"),this._resolve(e);},t.prototype._error=function t(e){this._cleanup(),i.Log.error(e),this._reject(new Error(e));},t.prototype.close=function t(){this._cleanup();},t.prototype._cleanup=function t(){this._popup&&(i.Log.debug("CordovaPopupWindow: cleaning up popup"),this._popup.removeEventListener("exit",this._exitCallbackEvent,!1),this._popup.removeEventListener("loadstart",this._loadStartCallbackEvent,!1),this._popup.close()),this._popup=null;},n(t,[{key:"promise",get:function t(){return this._promise}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=r(0),i=r(9),o=r(5),s=r(6),a=r(39),u=r(40),c=r(16),h=r(2),l=r(50),f=r(51),d=r(19),g=r(20),p=r(18),v=r(1),y=r(15),m=r(52);e.default={Version:m.Version,Log:n.Log,OidcClient:i.OidcClient,OidcClientSettings:o.OidcClientSettings,WebStorageStateStore:s.WebStorageStateStore,InMemoryWebStorage:a.InMemoryWebStorage,UserManager:u.UserManager,AccessTokenEvents:c.AccessTokenEvents,MetadataService:h.MetadataService,CordovaPopupNavigator:l.CordovaPopupNavigator,CordovaIFrameNavigator:f.CordovaIFrameNavigator,CheckSessionIFrame:d.CheckSessionIFrame,TokenRevocationClient:g.TokenRevocationClient,SessionMonitor:p.SessionMonitor,Global:v.Global,User:y.User},t.exports=e.default;},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.ResponseValidator=void 0;var n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=r(0),o=r(2),s=r(24),a=r(10),u=r(11),c=r(4);var h=["nonce","at_hash","iat","nbf","exp","aud","iss","c_hash"];e.ResponseValidator=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.MetadataService,n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:s.UserInfoService,u=arguments.length>3&&void 0!==arguments[3]?arguments[3]:c.JoseUtil,h=arguments.length>4&&void 0!==arguments[4]?arguments[4]:a.TokenClient;if(function l(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("ResponseValidator.ctor: No settings passed to ResponseValidator"),new Error("settings");this._settings=e,this._metadataService=new r(this._settings),this._userInfoService=new n(this._settings),this._joseUtil=u,this._tokenClient=new h(this._settings);}return t.prototype.validateSigninResponse=function t(e,r){var n=this;return i.Log.debug("ResponseValidator.validateSigninResponse"),this._processSigninParams(e,r).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: state processed"),n._validateTokens(e,t).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: tokens validated"),n._processClaims(e,t).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: claims processed"),t})})})},t.prototype.validateSignoutResponse=function t(e,r){return e.id!==r.state?(i.Log.error("ResponseValidator.validateSignoutResponse: State does not match"),Promise.reject(new Error("State does not match"))):(i.Log.debug("ResponseValidator.validateSignoutResponse: state validated"),r.state=e.data,r.error?(i.Log.warn("ResponseValidator.validateSignoutResponse: Response was error",r.error),Promise.reject(new u.ErrorResponse(r))):Promise.resolve(r))},t.prototype._processSigninParams=function t(e,r){if(e.id!==r.state)return i.Log.error("ResponseValidator._processSigninParams: State does not match"),Promise.reject(new Error("State does not match"));if(!e.client_id)return i.Log.error("ResponseValidator._processSigninParams: No client_id on state"),Promise.reject(new Error("No client_id on state"));if(!e.authority)return i.Log.error("ResponseValidator._processSigninParams: No authority on state"),Promise.reject(new Error("No authority on state"));if(this._settings.authority){if(this._settings.authority&&this._settings.authority!==e.authority)return i.Log.error("ResponseValidator._processSigninParams: authority mismatch on settings vs. signin state"),Promise.reject(new Error("authority mismatch on settings vs. signin state"))}else this._settings.authority=e.authority;if(this._settings.client_id){if(this._settings.client_id&&this._settings.client_id!==e.client_id)return i.Log.error("ResponseValidator._processSigninParams: client_id mismatch on settings vs. signin state"),Promise.reject(new Error("client_id mismatch on settings vs. signin state"))}else this._settings.client_id=e.client_id;return i.Log.debug("ResponseValidator._processSigninParams: state validated"),r.state=e.data,r.error?(i.Log.warn("ResponseValidator._processSigninParams: Response was error",r.error),Promise.reject(new u.ErrorResponse(r))):e.nonce&&!r.id_token?(i.Log.error("ResponseValidator._processSigninParams: Expecting id_token in response"),Promise.reject(new Error("No id_token in response"))):!e.nonce&&r.id_token?(i.Log.error("ResponseValidator._processSigninParams: Not expecting id_token in response"),Promise.reject(new Error("Unexpected id_token in response"))):e.code_verifier&&!r.code?(i.Log.error("ResponseValidator._processSigninParams: Expecting code in response"),Promise.reject(new Error("No code in response"))):!e.code_verifier&&r.code?(i.Log.error("ResponseValidator._processSigninParams: Not expecting code in response"),Promise.reject(new Error("Unexpected code in response"))):(r.scope||(r.scope=e.scope),Promise.resolve(r))},t.prototype._processClaims=function t(e,r){var n=this;if(r.isOpenIdConnect){if(i.Log.debug("ResponseValidator._processClaims: response is OIDC, processing claims"),r.profile=this._filterProtocolClaims(r.profile),!0!==e.skipUserInfo&&this._settings.loadUserInfo&&r.access_token)return i.Log.debug("ResponseValidator._processClaims: loading user info"),this._userInfoService.getClaims(r.access_token).then(function(t){return i.Log.debug("ResponseValidator._processClaims: user info claims received from user info endpoint"),t.sub!==r.profile.sub?(i.Log.error("ResponseValidator._processClaims: sub from user info endpoint does not match sub in access_token"),Promise.reject(new Error("sub from user info endpoint does not match sub in access_token"))):(r.profile=n._mergeClaims(r.profile,t),i.Log.debug("ResponseValidator._processClaims: user info claims received, updated profile:",r.profile),r)});i.Log.debug("ResponseValidator._processClaims: not loading user info");}else i.Log.debug("ResponseValidator._processClaims: response is not OIDC, not processing claims");return Promise.resolve(r)},t.prototype._mergeClaims=function t(e,r){var i=Object.assign({},e);for(var o in r){var s=r[o];Array.isArray(s)||(s=[s]);for(var a=0;a<s.length;a++){var u=s[a];i[o]?Array.isArray(i[o])?i[o].indexOf(u)<0&&i[o].push(u):i[o]!==u&&("object"===(void 0===u?"undefined":n(u))?i[o]=this._mergeClaims(i[o],u):i[o]=[i[o],u]):i[o]=u;}}return i},t.prototype._filterProtocolClaims=function t(e){i.Log.debug("ResponseValidator._filterProtocolClaims, incoming claims:",e);var r=Object.assign({},e);return this._settings._filterProtocolClaims?(h.forEach(function(t){delete r[t];}),i.Log.debug("ResponseValidator._filterProtocolClaims: protocol claims filtered",r)):i.Log.debug("ResponseValidator._filterProtocolClaims: protocol claims not filtered"),r},t.prototype._validateTokens=function t(e,r){return r.code?(i.Log.debug("ResponseValidator._validateTokens: Validating code"),this._processCode(e,r)):r.id_token?r.access_token?(i.Log.debug("ResponseValidator._validateTokens: Validating id_token and access_token"),this._validateIdTokenAndAccessToken(e,r)):(i.Log.debug("ResponseValidator._validateTokens: Validating id_token"),this._validateIdToken(e,r)):(i.Log.debug("ResponseValidator._validateTokens: No code to process or id_token to validate"),Promise.resolve(r))},t.prototype._processCode=function t(e,r){var o=this,s={client_id:e.client_id,client_secret:e.client_secret,code:r.code,redirect_uri:e.redirect_uri,code_verifier:e.code_verifier};return e.extraTokenParams&&"object"===n(e.extraTokenParams)&&Object.assign(s,e.extraTokenParams),this._tokenClient.exchangeCode(s).then(function(t){for(var n in t)r[n]=t[n];return r.id_token?(i.Log.debug("ResponseValidator._processCode: token response successful, processing id_token"),o._validateIdTokenAttributes(e,r)):(i.Log.debug("ResponseValidator._processCode: token response successful, returning response"),r)})},t.prototype._validateIdTokenAttributes=function t(e,r){var n=this;return this._metadataService.getIssuer().then(function(t){var o=e.client_id,s=n._settings.clockSkew;return i.Log.debug("ResponseValidator._validateIdTokenAttributes: Validaing JWT attributes; using clock skew (in seconds) of: ",s),n._joseUtil.validateJwtAttributes(r.id_token,t,o,s).then(function(t){return e.nonce&&e.nonce!==t.nonce?(i.Log.error("ResponseValidator._validateIdTokenAttributes: Invalid nonce in id_token"),Promise.reject(new Error("Invalid nonce in id_token"))):t.sub?(r.profile=t,r):(i.Log.error("ResponseValidator._validateIdTokenAttributes: No sub present in id_token"),Promise.reject(new Error("No sub present in id_token")))})})},t.prototype._validateIdTokenAndAccessToken=function t(e,r){var n=this;return this._validateIdToken(e,r).then(function(t){return n._validateAccessToken(t)})},t.prototype._validateIdToken=function t(e,r){var n=this;if(!e.nonce)return i.Log.error("ResponseValidator._validateIdToken: No nonce on state"),Promise.reject(new Error("No nonce on state"));var o=this._joseUtil.parseJwt(r.id_token);if(!o||!o.header||!o.payload)return i.Log.error("ResponseValidator._validateIdToken: Failed to parse id_token",o),Promise.reject(new Error("Failed to parse id_token"));if(e.nonce!==o.payload.nonce)return i.Log.error("ResponseValidator._validateIdToken: Invalid nonce in id_token"),Promise.reject(new Error("Invalid nonce in id_token"));var s=o.header.kid;return this._metadataService.getIssuer().then(function(t){return i.Log.debug("ResponseValidator._validateIdToken: Received issuer"),n._metadataService.getSigningKeys().then(function(a){if(!a)return i.Log.error("ResponseValidator._validateIdToken: No signing keys from metadata"),Promise.reject(new Error("No signing keys from metadata"));i.Log.debug("ResponseValidator._validateIdToken: Received signing keys");var u=void 0;if(s)u=a.filter(function(t){return t.kid===s})[0];else{if((a=n._filterByAlg(a,o.header.alg)).length>1)return i.Log.error("ResponseValidator._validateIdToken: No kid found in id_token and more than one key found in metadata"),Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));u=a[0];}if(!u)return i.Log.error("ResponseValidator._validateIdToken: No key matching kid or alg found in signing keys"),Promise.reject(new Error("No key matching kid or alg found in signing keys"));var c=e.client_id,h=n._settings.clockSkew;return i.Log.debug("ResponseValidator._validateIdToken: Validaing JWT; using clock skew (in seconds) of: ",h),n._joseUtil.validateJwt(r.id_token,u,t,c,h).then(function(){return i.Log.debug("ResponseValidator._validateIdToken: JWT validation successful"),o.payload.sub?(r.profile=o.payload,r):(i.Log.error("ResponseValidator._validateIdToken: No sub present in id_token"),Promise.reject(new Error("No sub present in id_token")))})})})},t.prototype._filterByAlg=function t(e,r){var n=null;if(r.startsWith("RS"))n="RSA";else if(r.startsWith("PS"))n="PS";else{if(!r.startsWith("ES"))return i.Log.debug("ResponseValidator._filterByAlg: alg not supported: ",r),[];n="EC";}return i.Log.debug("ResponseValidator._filterByAlg: Looking for keys that match kty: ",n),e=e.filter(function(t){return t.kty===n}),i.Log.debug("ResponseValidator._filterByAlg: Number of keys that match kty: ",n,e.length),e},t.prototype._validateAccessToken=function t(e){if(!e.profile)return i.Log.error("ResponseValidator._validateAccessToken: No profile loaded from id_token"),Promise.reject(new Error("No profile loaded from id_token"));if(!e.profile.at_hash)return i.Log.error("ResponseValidator._validateAccessToken: No at_hash in id_token"),Promise.reject(new Error("No at_hash in id_token"));if(!e.id_token)return i.Log.error("ResponseValidator._validateAccessToken: No id_token"),Promise.reject(new Error("No id_token"));var r=this._joseUtil.parseJwt(e.id_token);if(!r||!r.header)return i.Log.error("ResponseValidator._validateAccessToken: Failed to parse id_token",r),Promise.reject(new Error("Failed to parse id_token"));var n=r.header.alg;if(!n||5!==n.length)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n),Promise.reject(new Error("Unsupported alg: "+n));var o=n.substr(2,3);if(!o)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n,o),Promise.reject(new Error("Unsupported alg: "+n));if(256!==(o=parseInt(o))&&384!==o&&512!==o)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n,o),Promise.reject(new Error("Unsupported alg: "+n));var s="sha"+o,a=this._joseUtil.hashString(e.access_token,s);if(!a)return i.Log.error("ResponseValidator._validateAccessToken: access_token hash failed:",s),Promise.reject(new Error("Failed to validate at_hash"));var u=a.substr(0,a.length/2),c=this._joseUtil.hexToBase64Url(u);return c!==e.profile.at_hash?(i.Log.error("ResponseValidator._validateAccessToken: Failed to validate at_hash",c,e.profile.at_hash),Promise.reject(new Error("Failed to validate at_hash"))):(i.Log.debug("ResponseValidator._validateAccessToken: success"),Promise.resolve(e))},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UserInfoService=void 0;var n=r(7),i=r(2),o=r(0),s=r(4);e.UserInfoService=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:n.JsonService,a=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService,u=arguments.length>3&&void 0!==arguments[3]?arguments[3]:s.JoseUtil;if(function c(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw o.Log.error("UserInfoService.ctor: No settings passed"),new Error("settings");this._settings=e,this._jsonService=new r(void 0,void 0,this._getClaimsFromJwt.bind(this)),this._metadataService=new a(this._settings),this._joseUtil=u;}return t.prototype.getClaims=function t(e){var r=this;return e?this._metadataService.getUserInfoEndpoint().then(function(t){return o.Log.debug("UserInfoService.getClaims: received userinfo url",t),r._jsonService.getJson(t,e).then(function(t){return o.Log.debug("UserInfoService.getClaims: claims received",t),t})}):(o.Log.error("UserInfoService.getClaims: No token passed"),Promise.reject(new Error("A token is required")))},t.prototype._getClaimsFromJwt=function t(e){var r=this;try{var n=this._joseUtil.parseJwt(e.responseText);if(!n||!n.header||!n.payload)return o.Log.error("UserInfoService._getClaimsFromJwt: Failed to parse JWT",n),Promise.reject(new Error("Failed to parse id_token"));var i=n.header.kid,s=void 0;switch(this._settings.userInfoJwtIssuer){case"OP":s=this._metadataService.getIssuer();break;case"ANY":s=Promise.resolve(n.payload.iss);break;default:s=Promise.resolve(this._settings.userInfoJwtIssuer);}return s.then(function(t){return o.Log.debug("UserInfoService._getClaimsFromJwt: Received issuer:"+t),r._metadataService.getSigningKeys().then(function(s){if(!s)return o.Log.error("UserInfoService._getClaimsFromJwt: No signing keys from metadata"),Promise.reject(new Error("No signing keys from metadata"));o.Log.debug("UserInfoService._getClaimsFromJwt: Received signing keys");var a=void 0;if(i)a=s.filter(function(t){return t.kid===i})[0];else{if((s=r._filterByAlg(s,n.header.alg)).length>1)return o.Log.error("UserInfoService._getClaimsFromJwt: No kid found in id_token and more than one key found in metadata"),Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));a=s[0];}if(!a)return o.Log.error("UserInfoService._getClaimsFromJwt: No key matching kid or alg found in signing keys"),Promise.reject(new Error("No key matching kid or alg found in signing keys"));var u=r._settings.client_id,c=r._settings.clockSkew;return o.Log.debug("UserInfoService._getClaimsFromJwt: Validaing JWT; using clock skew (in seconds) of: ",c),r._joseUtil.validateJwt(e.responseText,a,t,u,c,void 0,!0).then(function(){return o.Log.debug("UserInfoService._getClaimsFromJwt: JWT validation successful"),n.payload})})})}catch(t){return o.Log.error("UserInfoService._getClaimsFromJwt: Error parsing JWT response",t.message),void reject(t)}},t.prototype._filterByAlg=function t(e,r){var n=null;if(r.startsWith("RS"))n="RSA";else if(r.startsWith("PS"))n="PS";else{if(!r.startsWith("ES"))return o.Log.debug("UserInfoService._filterByAlg: alg not supported: ",r),[];n="EC";}return o.Log.debug("UserInfoService._filterByAlg: Looking for keys that match kty: ",n),e=e.filter(function(t){return t.kty===n}),o.Log.debug("UserInfoService._filterByAlg: Number of keys that match kty: ",n,e.length),e},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.AllowedSigningAlgs=e.b64tohex=e.hextob64u=e.crypto=e.X509=e.KeyUtil=e.jws=void 0;var n=r(26);e.jws=n.jws,e.KeyUtil=n.KEYUTIL,e.X509=n.X509,e.crypto=n.crypto,e.hextob64u=n.hextob64u,e.b64tohex=n.b64tohex,e.AllowedSigningAlgs=["RS256","RS384","RS512","PS256","PS384","PS512","ES256","ES384","ES512"];},function(t,e,r){(function(t){Object.defineProperty(e,"__esModule",{value:!0});var r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n={userAgent:!1},i={};
     /*!
@@ -552,11 +2313,11 @@ var app = (function () {
 
     var oidcClient = unwrapExports(oidcClient_min);
 
-    /* src\components\OidcContext.svelte generated by Svelte v3.16.7 */
+    /* src\components\OidcContext.svelte generated by Svelte v3.23.0 */
 
-    const { Error: Error_1 } = globals;
+    const { Error: Error_1, console: console_1 } = globals;
 
-    function create_fragment(ctx) {
+    function create_fragment$1(ctx) {
     	let current;
     	const default_slot_template = /*$$slots*/ ctx[10].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], null);
@@ -576,8 +2337,10 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (default_slot && default_slot.p && dirty & /*$$scope*/ 512) {
-    				default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[9], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[9], dirty, null));
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 512) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[9], dirty, null, null);
+    				}
     			}
     		},
     		i: function intro(local) {
@@ -596,7 +2359,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment.name,
+    		id: create_fragment$1.name,
     		type: "component",
     		source: "",
     		ctx
@@ -609,7 +2372,7 @@ var app = (function () {
     	
     }
 
-    function instance($$self, $$props, $$invalidate) {
+    function instance$1($$self, $$props, $$invalidate) {
     	const { UserManager } = oidcClient;
     	let { issuer } = $$props;
     	let { client_id } = $$props;
@@ -618,6 +2381,7 @@ var app = (function () {
     	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
     	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
 
+    	// getContext doesn't seem to return a value in OnMount, so we'll pass the oidcPromise around by reference.
     	const settings = {
     		authority: issuer,
     		client_id,
@@ -631,6 +2395,9 @@ var app = (function () {
 
     	if (issuer.includes("auth0.com")) {
     		settings.metadata = {
+    			// added to overcome missing value in auth0 .well-known/openid-configuration
+    			// see: https://github.com/IdentityModel/oidc-client-js/issues/1067
+    			// see: https://github.com/IdentityModel/oidc-client-js/pull/1068
     			end_session_endpoint: `https://dev-hvw40i79.auth0.com/v2/logout?client_id=aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP`
     		};
     	}
@@ -657,31 +2424,50 @@ var app = (function () {
     	setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
 
     	async function handleOnMount() {
+    		// on run onMount after oidc
     		const oidc = await oidcPromise;
+
+    		// Not all browsers support this, please program defensively!
     		const params = new URLSearchParams(window.location.search);
 
+    		// Check if something went wrong during login redirect
+    		// and extract the error message
     		if (params.has("error")) {
     			authError.set(new Error(params.get("error_description")));
     		}
 
+    		// if code then login success
     		if (params.has("code")) {
+    			// handle the redirect response.
     			const response = await oidc.signinRedirectCallback();
-    			let state = response && response.state || ({});
 
+    			let state = response && response.state || {};
+
+    			// Can be smart here and redirect to original path instead of root
     			const url = state && state.targetUrl
     			? state.targetUrl
     			: window.location.pathname;
 
     			state = { ...state, isRedirectCallback: true };
+
+    			// redirect to the last page we were on when login was configured if it was passed.
     			history.replaceState(state, "", url);
+
+    			// location.href = url;
+    			// clear errors on login.
     			authError.set(null);
     		}
 
     		const user = await oidc.getUser();
-    		isAuthenticated.set(!!user);
-    		accessToken.set(user.access_token);
-    		idToken.set(user.id_token);
-    		userInfo.set(user.profile);
+
+    		if (user && !!user) {
+    			isAuthenticated.set(true);
+    			console.log("user", user);
+    			accessToken.set(user.access_token);
+    			idToken.set(user.id_token);
+    			userInfo.set(user.profile);
+    		}
+
     		isLoading.set(false);
     	}
 
@@ -690,10 +2476,11 @@ var app = (function () {
     	const writable_props = ["issuer", "client_id", "redirect_uri", "post_logout_redirect_uri"];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<OidcContext> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<OidcContext> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("OidcContext", $$slots, ['default']);
 
     	$$self.$set = $$props => {
     		if ("issuer" in $$props) $$invalidate(0, issuer = $$props.issuer);
@@ -703,15 +2490,32 @@ var app = (function () {
     		if ("$$scope" in $$props) $$invalidate(9, $$scope = $$props.$$scope);
     	};
 
-    	$$self.$capture_state = () => {
-    		return {
-    			issuer,
-    			client_id,
-    			redirect_uri,
-    			post_logout_redirect_uri,
-    			oidcPromise
-    		};
-    	};
+    	$$self.$capture_state = () => ({
+    		oidcClient,
+    		UserManager,
+    		onMount,
+    		onDestroy,
+    		setContext,
+    		getContext,
+    		OIDC_CONTEXT_REDIRECT_URI,
+    		OIDC_CONTEXT_CLIENT_PROMISE,
+    		OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI,
+    		idToken,
+    		accessToken,
+    		isAuthenticated,
+    		isLoading,
+    		authError,
+    		userInfo,
+    		issuer,
+    		client_id,
+    		redirect_uri,
+    		post_logout_redirect_uri,
+    		settings,
+    		userManager,
+    		oidcPromise,
+    		handleOnMount,
+    		handleOnDestroy
+    	});
 
     	$$self.$inject_state = $$props => {
     		if ("issuer" in $$props) $$invalidate(0, issuer = $$props.issuer);
@@ -720,6 +2524,10 @@ var app = (function () {
     		if ("post_logout_redirect_uri" in $$props) $$invalidate(3, post_logout_redirect_uri = $$props.post_logout_redirect_uri);
     		if ("oidcPromise" in $$props) oidcPromise = $$props.oidcPromise;
     	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
 
     	return [
     		issuer,
@@ -740,7 +2548,7 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance, create_fragment, safe_not_equal, {
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
     			issuer: 0,
     			client_id: 1,
     			redirect_uri: 2,
@@ -751,26 +2559,26 @@ var app = (function () {
     			component: this,
     			tagName: "OidcContext",
     			options,
-    			id: create_fragment.name
+    			id: create_fragment$1.name
     		});
 
     		const { ctx } = this.$$;
-    		const props = options.props || ({});
+    		const props = options.props || {};
 
     		if (/*issuer*/ ctx[0] === undefined && !("issuer" in props)) {
-    			console.warn("<OidcContext> was created without expected prop 'issuer'");
+    			console_1.warn("<OidcContext> was created without expected prop 'issuer'");
     		}
 
     		if (/*client_id*/ ctx[1] === undefined && !("client_id" in props)) {
-    			console.warn("<OidcContext> was created without expected prop 'client_id'");
+    			console_1.warn("<OidcContext> was created without expected prop 'client_id'");
     		}
 
     		if (/*redirect_uri*/ ctx[2] === undefined && !("redirect_uri" in props)) {
-    			console.warn("<OidcContext> was created without expected prop 'redirect_uri'");
+    			console_1.warn("<OidcContext> was created without expected prop 'redirect_uri'");
     		}
 
     		if (/*post_logout_redirect_uri*/ ctx[3] === undefined && !("post_logout_redirect_uri" in props)) {
-    			console.warn("<OidcContext> was created without expected prop 'post_logout_redirect_uri'");
+    			console_1.warn("<OidcContext> was created without expected prop 'post_logout_redirect_uri'");
     		}
     	}
 
@@ -807,11 +2615,11 @@ var app = (function () {
     	}
     }
 
-    /* src\App.svelte generated by Svelte v3.16.7 */
+    /* src\App.svelte generated by Svelte v3.23.0 */
 
-    const file = "src\\App.svelte";
+    const file$1 = "src\\App.svelte";
 
-    // (16:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"   redirect_uri="https://darrelopry.com/svelte-auth0"   post_logout_redirect_uri="https://darrelopry.com/svelte-auth0" >
+    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"   redirect_uri="https://darrelopry.com/svelte-auth0"   post_logout_redirect_uri="https://darrelopry.com/svelte-auth0" >
     function create_default_slot(ctx) {
     	let button0;
     	let t1;
@@ -847,16 +2655,22 @@ var app = (function () {
     	let tr5;
     	let td8;
     	let td9;
-    	let pre1;
-    	let t20_value = JSON.stringify(/*$userInfo*/ ctx[4], null, 2) + "";
     	let t20;
-    	let pre0;
-    	let t21;
     	let tr6;
     	let td10;
     	let td11;
-    	let t23;
+    	let t22;
+    	let current;
+    	let mounted;
     	let dispose;
+
+    	const highlight = new Highlight({
+    			props: {
+    				language: json$1,
+    				code: JSON.stringify(/*$userInfo*/ ctx[4], null, 2) || ""
+    			},
+    			$$inline: true
+    		});
 
     	const block = {
     		c: function create() {
@@ -903,53 +2717,44 @@ var app = (function () {
     			td8 = element("td");
     			td8.textContent = "userInfo";
     			td9 = element("td");
-    			pre1 = element("pre");
-    			t20 = text(t20_value);
-    			pre0 = element("pre");
-    			t21 = space();
+    			create_component(highlight.$$.fragment);
+    			t20 = space();
     			tr6 = element("tr");
     			td10 = element("td");
     			td10.textContent = "authError";
     			td11 = element("td");
-    			t23 = text(/*$authError*/ ctx[5]);
+    			t22 = text(/*$authError*/ ctx[5]);
     			attr_dev(button0, "class", "btn");
-    			add_location(button0, file, 22, 2, 439);
+    			add_location(button0, file$1, 29, 2, 665);
     			attr_dev(button1, "class", "btn");
-    			add_location(button1, file, 23, 2, 519);
+    			add_location(button1, file$1, 30, 2, 745);
     			set_style(th0, "width", "20%");
-    			add_location(th0, file, 26, 10, 631);
+    			add_location(th0, file$1, 33, 10, 857);
     			set_style(th1, "width", "80%");
-    			add_location(th1, file, 26, 44, 665);
-    			add_location(tr0, file, 26, 6, 627);
-    			add_location(thead, file, 25, 4, 613);
-    			add_location(td0, file, 29, 10, 740);
-    			add_location(td1, file, 29, 28, 758);
-    			add_location(tr1, file, 29, 6, 736);
-    			add_location(td2, file, 30, 10, 795);
-    			add_location(td3, file, 30, 34, 819);
-    			add_location(tr2, file, 30, 6, 791);
-    			add_location(td4, file, 31, 10, 862);
-    			add_location(td5, file, 31, 30, 882);
-    			add_location(tr3, file, 31, 6, 858);
-    			add_location(td6, file, 32, 10, 921);
+    			add_location(th1, file$1, 33, 44, 891);
+    			add_location(tr0, file$1, 33, 6, 853);
+    			add_location(thead, file$1, 32, 4, 839);
+    			add_location(td0, file$1, 36, 10, 966);
+    			add_location(td1, file$1, 36, 28, 984);
+    			add_location(tr1, file$1, 36, 6, 962);
+    			add_location(td2, file$1, 37, 10, 1021);
+    			add_location(td3, file$1, 37, 34, 1045);
+    			add_location(tr2, file$1, 37, 6, 1017);
+    			add_location(td4, file$1, 38, 10, 1088);
+    			add_location(td5, file$1, 38, 30, 1108);
+    			add_location(tr3, file$1, 38, 6, 1084);
+    			add_location(td6, file$1, 39, 10, 1147);
     			set_style(td7, "word-break", "break-all");
-    			add_location(td7, file, 32, 26, 937);
-    			add_location(tr4, file, 32, 6, 917);
-    			add_location(td8, file, 33, 10, 1003);
-    			add_location(pre0, file, 33, 72, 1065);
-    			add_location(pre1, file, 33, 31, 1024);
-    			add_location(td9, file, 33, 27, 1020);
-    			add_location(tr5, file, 33, 6, 999);
-    			add_location(td10, file, 34, 10, 1091);
-    			add_location(td11, file, 34, 28, 1109);
-    			add_location(tr6, file, 34, 6, 1087);
-    			add_location(tbody, file, 28, 4, 722);
-    			add_location(table, file, 24, 2, 601);
-
-    			dispose = [
-    				listen_dev(button0, "click", prevent_default(/*click_handler*/ ctx[6]), false, true, false),
-    				listen_dev(button1, "click", prevent_default(/*click_handler_1*/ ctx[7]), false, true, false)
-    			];
+    			add_location(td7, file$1, 39, 26, 1163);
+    			add_location(tr4, file$1, 39, 6, 1143);
+    			add_location(td8, file$1, 40, 10, 1229);
+    			add_location(td9, file$1, 40, 27, 1246);
+    			add_location(tr5, file$1, 40, 6, 1225);
+    			add_location(td10, file$1, 41, 10, 1348);
+    			add_location(td11, file$1, 41, 28, 1366);
+    			add_location(tr6, file$1, 41, 6, 1344);
+    			add_location(tbody, file$1, 35, 4, 948);
+    			add_location(table, file$1, 31, 2, 827);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button0, anchor);
@@ -986,22 +2791,41 @@ var app = (function () {
     			append_dev(tbody, tr5);
     			append_dev(tr5, td8);
     			append_dev(tr5, td9);
-    			append_dev(td9, pre1);
-    			append_dev(pre1, t20);
-    			append_dev(pre1, pre0);
-    			append_dev(tbody, t21);
+    			mount_component(highlight, td9, null);
+    			append_dev(tbody, t20);
     			append_dev(tbody, tr6);
     			append_dev(tr6, td10);
     			append_dev(tr6, td11);
-    			append_dev(td11, t23);
+    			append_dev(td11, t22);
+    			current = true;
+
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(button0, "click", prevent_default(/*click_handler*/ ctx[6]), false, true, false),
+    					listen_dev(button1, "click", prevent_default(/*click_handler_1*/ ctx[7]), false, true, false)
+    				];
+
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*$isLoading*/ 1) set_data_dev(t8, /*$isLoading*/ ctx[0]);
-    			if (dirty & /*$isAuthenticated*/ 2) set_data_dev(t11, /*$isAuthenticated*/ ctx[1]);
-    			if (dirty & /*$accessToken*/ 4) set_data_dev(t14, /*$accessToken*/ ctx[2]);
-    			if (dirty & /*$idToken*/ 8) set_data_dev(t17, /*$idToken*/ ctx[3]);
-    			if (dirty & /*$userInfo*/ 16 && t20_value !== (t20_value = JSON.stringify(/*$userInfo*/ ctx[4], null, 2) + "")) set_data_dev(t20, t20_value);
-    			if (dirty & /*$authError*/ 32) set_data_dev(t23, /*$authError*/ ctx[5]);
+    			if (!current || dirty & /*$isLoading*/ 1) set_data_dev(t8, /*$isLoading*/ ctx[0]);
+    			if (!current || dirty & /*$isAuthenticated*/ 2) set_data_dev(t11, /*$isAuthenticated*/ ctx[1]);
+    			if (!current || dirty & /*$accessToken*/ 4) set_data_dev(t14, /*$accessToken*/ ctx[2]);
+    			if (!current || dirty & /*$idToken*/ 8) set_data_dev(t17, /*$idToken*/ ctx[3]);
+    			const highlight_changes = {};
+    			if (dirty & /*$userInfo*/ 16) highlight_changes.code = JSON.stringify(/*$userInfo*/ ctx[4], null, 2) || "";
+    			highlight.$set(highlight_changes);
+    			if (!current || dirty & /*$authError*/ 32) set_data_dev(t22, /*$authError*/ ctx[5]);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(highlight.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(highlight.$$.fragment, local);
+    			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(button0);
@@ -1009,6 +2833,8 @@ var app = (function () {
     			if (detaching) detach_dev(button1);
     			if (detaching) detach_dev(t3);
     			if (detaching) detach_dev(table);
+    			destroy_component(highlight);
+    			mounted = false;
     			run_all(dispose);
     		}
     	};
@@ -1017,14 +2843,17 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(16:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\" >",
+    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-auth0\\\" >",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$1(ctx) {
+    function create_fragment$2(ctx) {
+    	let html_tag;
+    	let html_anchor;
+    	let t;
     	let div;
     	let current;
 
@@ -1042,15 +2871,21 @@ var app = (function () {
 
     	const block = {
     		c: function create() {
+    			html_anchor = empty();
+    			t = space();
     			div = element("div");
     			create_component(oidccontext.$$.fragment);
+    			html_tag = new HtmlTag(null);
     			attr_dev(div, "class", "container");
-    			add_location(div, file, 14, 0, 190);
+    			add_location(div, file$1, 21, 0, 416);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
+    			html_tag.m(arduinoLight, document.head);
+    			append_dev(document.head, html_anchor);
+    			insert_dev(target, t, anchor);
     			insert_dev(target, div, anchor);
     			mount_component(oidccontext, div, null);
     			current = true;
@@ -1074,6 +2909,9 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
+    			detach_dev(html_anchor);
+    			if (detaching) html_tag.d();
+    			if (detaching) detach_dev(t);
     			if (detaching) detach_dev(div);
     			destroy_component(oidccontext);
     		}
@@ -1081,7 +2919,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$2.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1090,7 +2928,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$2($$self, $$props, $$invalidate) {
     	let $isLoading;
     	let $isAuthenticated;
     	let $accessToken;
@@ -1109,21 +2947,37 @@ var app = (function () {
     	component_subscribe($$self, userInfo, $$value => $$invalidate(4, $userInfo = $$value));
     	validate_store(authError, "authError");
     	component_subscribe($$self, authError, $$value => $$invalidate(5, $authError = $$value));
+    	const writable_props = [];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
+    	});
+
+    	let { $$slots = {}, $$scope } = $$props;
+    	validate_slots("App", $$slots, []);
     	const click_handler = () => login();
     	const click_handler_1 = () => logout();
 
-    	$$self.$capture_state = () => {
-    		return {};
-    	};
-
-    	$$self.$inject_state = $$props => {
-    		if ("$isLoading" in $$props) isLoading.set($isLoading = $$props.$isLoading);
-    		if ("$isAuthenticated" in $$props) isAuthenticated.set($isAuthenticated = $$props.$isAuthenticated);
-    		if ("$accessToken" in $$props) accessToken.set($accessToken = $$props.$accessToken);
-    		if ("$idToken" in $$props) idToken.set($idToken = $$props.$idToken);
-    		if ("$userInfo" in $$props) userInfo.set($userInfo = $$props.$userInfo);
-    		if ("$authError" in $$props) authError.set($authError = $$props.$authError);
-    	};
+    	$$self.$capture_state = () => ({
+    		Highlight,
+    		json: json$1,
+    		highlightTheme: arduinoLight,
+    		OidcContext,
+    		authError,
+    		idToken,
+    		accessToken,
+    		isAuthenticated,
+    		isLoading,
+    		login,
+    		logout,
+    		userInfo,
+    		$isLoading,
+    		$isAuthenticated,
+    		$accessToken,
+    		$idToken,
+    		$userInfo,
+    		$authError
+    	});
 
     	return [
     		$isLoading,
@@ -1140,13 +2994,13 @@ var app = (function () {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "App",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$2.name
     		});
     	}
     }
