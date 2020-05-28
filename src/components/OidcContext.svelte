@@ -95,10 +95,14 @@
         }
 
         const user = await oidc.getUser();
-        isAuthenticated.set(!!user);
-        accessToken.set(user.access_token);
-        idToken.set(user.id_token);
-        userInfo.set(user.profile);
+
+        if (user && !!user) {
+            isAuthenticated.set(true);
+            console.log('user', user);
+            accessToken.set(user.access_token);
+            idToken.set(user.id_token);
+            userInfo.set(user.profile);
+        }
         isLoading.set(false);
     }
     async function handleOnDestroy() {}
