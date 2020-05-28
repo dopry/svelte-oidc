@@ -16,7 +16,7 @@ export default {
 	plugins: [
 		replace({
 			'process.env.OIDC_ISSUER': process.env.OIDC_ISSUER || "https://dev-hvw40i79.auth0.com",
-			'process.env.OIDC_CLIENT_ID': process.env.OIDC_CLIENT_ID || "aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP",
+			'process.env.OIDC_CLIENT_ID': process.env.OIDC_CLIENT_ID || "5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2",
 			'process.env.OIDC_REDIRECT_URI': process.env.OIDC_REDIRECT_URI ||  defaultRedirectUri,
 			'process.env.OIDC_POST_LOGOUT_REDIRECT_URI': process.env.OIDC_POST_LOGOUT_REDIRECT_URI ||  defaultPostLogoutRedirectUri,
 			'pkg.version': pkg.version
