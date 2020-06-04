@@ -11,6 +11,7 @@ import {
   isLoading,
   login,
   logout,
+  refreshToken,
   userInfo,
 } from './components/components.module.js';
 </script>
@@ -29,6 +30,7 @@ import {
 
   <button class="btn" on:click|preventDefault='{() => login() }'>Login</button>
   <button class="btn" on:click|preventDefault='{() => logout() }'>Logout</button>
+  <button class="btn" on:click|preventDefault='{() => refreshToken() }'>refreshToken</button>
   <table>
     <thead>
       <tr><th style="width: 20%;">store</th><th style="width: 80%;">value</th></tr>
