@@ -11,7 +11,7 @@
         isAuthenticated,
         isLoading,
         authError,
-        userInfo
+        userInfo,
     } from './oidc';
 
     // props.

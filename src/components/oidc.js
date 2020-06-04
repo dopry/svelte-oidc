@@ -54,7 +54,6 @@ export async function login(preserveRoute = true, callback_url = null) {
  * @param {string} logout_url - specify the url to return to after login.
  */
 export async function logout(logout_url = null) {
-    // getContext(OIDC_CONTEXT_CLIENT_PROMISE) returns a promise.
     const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE)
     const returnTo = logout_url || getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI) || window.location.href;
     accessToken.set('');

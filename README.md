@@ -30,20 +30,29 @@ import {
   logout,
   userInfo,
 } from '@dopry/svelte-oidc';
+
+const metadata = {
+            // added to overcome missing value in auth0 .well-known/openid-configuration
+            // see: https://github.com/IdentityModel/oidc-client-js/issues/1067
+            // see: https://github.com/IdentityModel/oidc-client-js/pull/1068
+            end_session_endpoint: `process.env.OIDC_ISSUER/v2/logout?client_id=process.env.OIDC_CLIENT_ID`,
+        };
 </script>
 
 <OidcContext
  issuer="https://dev-hvw40i79.auth0.com"
  client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"
  redirect_uri="https://darrelopry.com/svelte-oidc/"
- post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/">
+ post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/"
+ metdata={metadata}
+ >
 
   <button on:click|preventDefault='{() => login() }'>Login</button>
   <button on:click|preventDefault='{() => logout() }'>Logout</button><br />
   <pre>isLoading: {$isLoading}</pre>
   <pre>isAuthenticated: {$isAuthenticated}</pre>
-  <pre>authToken: {$authToken}</pre>
-  <pre>idToken: {$authToken}</pre>
+  <pre>authToken: {$accessToken}</pre>
+  <pre>idToken: {$idToken}</pre>
   <pre>userInfo: {JSON.stringify($userInfo, null, 2)}</pre>
   <pre>authError: {$authError}</pre>
 </OidcContext>
@@ -59,6 +68,7 @@ import {
   * client_id - OAuth ClientId
   * redirect_uri -  default: window.location.href
   * post_logout_redirect_uri - override the default url that OIDC will redirect to after logout. default: window.location.href
+  * metadata - set default metadata or metadata missing from authority.
 
 ### Functions
 * login(preseveRoute = true, callback_url = null) - begin a user login.
@@ -68,12 +78,13 @@ import {
 ### Stores
 * isLoading - if true OIDC Context is still loading.
 * isAuthenticated - true if user is currently authenticated
-* authToken - api token
-* userInfo - the currently logged in user's info from OIDC
+* accessToken - access token for connecting to apis.
+* idToken - identity token for getting user info easily.
+* userInfo - the currently logged in user's info from OIDC userInfo endpoint
 * authError - the last authentication error.
 
 ### Constants
-* OIDC_CONTEXT_CALLBACK_URL,
+* OIDC_CONTEXT_CALLBACK_URL
 * OIDC_CONTEXT_CLIENT_PROMISE - key for the OIDC client in setContext/getContext.
 * OIDC_CONTEXT_LOGOUT_URL,
 

@@ -38,7 +38,7 @@ import {
     <tbody>
       <tr><td>isLoading</td><td>{$isLoading}</td></tr>
       <tr><td>isAuthenticated</td><td>{$isAuthenticated}</td></tr>
-      <tr><td>accessToken</td><td>{$accessToken}</td></tr>
+      <tr><td>accessToken</td><td style="word-break: break-all;">{$accessToken}</td></tr>
       <tr><td>idToken</td><td style="word-break: break-all;">{$idToken}</td></tr>
       <tr><td>userInfo</td><td><Highlight language={json} code={JSON.stringify($userInfo, null, 2) || ''} /></td></tr>
       <tr><td>authError</td><td>{$authError}</td></tr>
