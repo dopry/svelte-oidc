@@ -19,6 +19,7 @@
     export let client_id;
     export let redirect_uri;
     export let post_logout_redirect_uri;
+    export let metadata = {};
 
     setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
     setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
@@ -33,16 +34,9 @@
         response_type: 'code',
         scope: 'openid profile email',
         automaticSilentRenew: true,
+        metadata
     };
 
-    if (issuer.includes('auth0.com')) {
-        settings.metadata = {
-            // added to overcome missing value in auth0 .well-known/openid-configuration
-            // see: https://github.com/IdentityModel/oidc-client-js/issues/1067
-            // see: https://github.com/IdentityModel/oidc-client-js/pull/1068
-            end_session_endpoint: `process.env.OIDC_ISSUER/v2/logout?client_id=process.env.OIDC_CLIENT_ID`,
-        };
-    }
     const userManager = new UserManager(settings);
     userManager.events.addUserLoaded(function () {
         const user = userManager.getUser();
