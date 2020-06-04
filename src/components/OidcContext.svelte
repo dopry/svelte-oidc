@@ -38,16 +38,18 @@
     };
 
     const userManager = new UserManager(settings);
-    userManager.events.addUserLoaded(function () {
-        const user = userManager.getUser();
+    userManager.events.addUserLoaded(function (user) {
+        isAuthenticated.set(true);
         accessToken.set(user.access_token);
         idToken.set(user.id_token);
         userInfo.set(user.profile);
     });
 
     userManager.events.addUserUnloaded(function () {
+        isAuthenticated.set(false);
         idToken.set('');
         accessToken.set('');
+        userInfo.set({});
     });
 
     userManager.events.addSilentRenewError(function (e) {
@@ -86,16 +88,6 @@
             // location.href = url;
             // clear errors on login.
             authError.set(null);
-        }
-
-        const user = await oidc.getUser();
-
-        if (user && !!user) {
-            isAuthenticated.set(true);
-            console.log('user', user);
-            accessToken.set(user.access_token);
-            idToken.set(user.id_token);
-            userInfo.set(user.profile);
         }
         isLoading.set(false);
     }
