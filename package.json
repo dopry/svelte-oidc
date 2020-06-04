@@ -18,7 +18,7 @@
 		"showcase:dev": "rollup -c rollup.config.showcase.js -w ",
 		"lint": "eslint --color --ignore-path .gitignore .",
 		"prepublishOnly": "npm run build",
-		"start": "sirv public",
+		"start": "sirv public -s",
 		"test": "start-server-and-test showcase:dev http://localhost:5000 cy:run"
 	},
 	"browserslist": [
