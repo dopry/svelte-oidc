@@ -76,8 +76,8 @@
 
         // if code then login success
         if (params.has('code')) {
-            // handle the redirect response.
-            const response = await oidc.signinRedirectCallback();
+            // handle the callback
+            const response = await oidc.signinCallback();
             let state = (response && response.state) || {}
             // Can be smart here and redirect to original path instead of root
             const url = state && state.targetUrl ? state.targetUrl : window.location.pathname;
