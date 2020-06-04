@@ -557,12 +557,6 @@ var app = (function () {
         $inject_state() { }
     }
 
-    var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-    function unwrapExports (x) {
-    	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-    }
-
     function createCommonjsModule(fn, module) {
     	return module = { exports: {} }, fn(module, module.exports), module.exports;
     }
@@ -2233,6 +2227,16 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     const OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI = {};
 
     /**
+     * Refresh the accessToken store.
+     */
+    async function refreshToken() {
+        const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
+        const token = await oidc.signinSilent();
+        accessToken.set(token.accessToken);
+        idToken.set(token.idToken);
+    }
+
+    /**
      * Initiate Register/Login flow.
      *
      * @param {boolean} preserveRoute - store current location so callback handler will navigate back to it.
@@ -2254,22 +2258,574 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
      * @param {string} logout_url - specify the url to return to after login.
      */
     async function logout(logout_url = null) {
-        // getContext(OIDC_CONTEXT_CLIENT_PROMISE) returns a promise.
         const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
         const returnTo = logout_url || getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI) || window.location.href;
         accessToken.set('');
         oidc.signoutRedirect({ returnTo });
     }
 
-    var oidcClient_min = createCommonjsModule(function (module, exports) {
-    !function t(e,r){module.exports=r();}(commonjsGlobal,function(){return function(t){var e={};function r(n){if(e[n])return e[n].exports;var i=e[n]={i:n,l:!1,exports:{}};return t[n].call(i.exports,i,i.exports,r),i.l=!0,i.exports}return r.m=t,r.c=e,r.d=function(t,e,n){r.o(t,e)||Object.defineProperty(t,e,{enumerable:!0,get:n});},r.r=function(t){"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(t,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(t,"__esModule",{value:!0});},r.t=function(t,e){if(1&e&&(t=r(t)),8&e)return t;if(4&e&&"object"==typeof t&&t&&t.__esModule)return t;var n=Object.create(null);if(r.r(n),Object.defineProperty(n,"default",{enumerable:!0,value:t}),2&e&&"string"!=typeof t)for(var i in t)r.d(n,i,function(e){return t[e]}.bind(null,i));return n},r.n=function(t){var e=t&&t.__esModule?function e(){return t.default}:function e(){return t};return r.d(e,"a",e),e},r.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},r.p="",r(r.s=22)}([function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}();var i={debug:function t(){},info:function t(){},warn:function t(){},error:function t(){}},o=void 0,s=void 0;(e.Log=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.reset=function t(){s=3,o=i;},t.debug=function t(){if(s>=4){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.debug.apply(o,Array.from(r));}},t.info=function t(){if(s>=3){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.info.apply(o,Array.from(r));}},t.warn=function t(){if(s>=2){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.warn.apply(o,Array.from(r));}},t.error=function t(){if(s>=1){for(var e=arguments.length,r=Array(e),n=0;n<e;n++)r[n]=arguments[n];o.error.apply(o,Array.from(r));}},n(t,null,[{key:"NONE",get:function t(){return 0}},{key:"ERROR",get:function t(){return 1}},{key:"WARN",get:function t(){return 2}},{key:"INFO",get:function t(){return 3}},{key:"DEBUG",get:function t(){return 4}},{key:"level",get:function t(){return s},set:function t(e){if(!(0<=e&&e<=4))throw new Error("Invalid log level");s=e;}},{key:"logger",get:function t(){return o},set:function t(e){if(!e.debug&&e.info&&(e.debug=e.info),!(e.debug&&e.info&&e.warn&&e.error))throw new Error("Invalid logger");o=e;}}]),t}()).reset();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}();var i={setInterval:function(t){function e(e,r){return t.apply(this,arguments)}return e.toString=function(){return t.toString()},e}(function(t,e){return setInterval(t,e)}),clearInterval:function(t){function e(e){return t.apply(this,arguments)}return e.toString=function(){return t.toString()},e}(function(t){return clearInterval(t)})},o=!1,s=null;e.Global=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t._testing=function t(){o=!0;},t.setXMLHttpRequest=function t(e){s=e;},n(t,null,[{key:"location",get:function t(){if(!o)return location}},{key:"localStorage",get:function t(){if(!o&&"undefined"!=typeof window)return localStorage}},{key:"sessionStorage",get:function t(){if(!o&&"undefined"!=typeof window)return sessionStorage}},{key:"XMLHttpRequest",get:function t(){if(!o&&"undefined"!=typeof window)return s||XMLHttpRequest}},{key:"timer",get:function t(){if(!o)return i}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.MetadataService=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(7);e.MetadataService=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.JsonService;if(function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("MetadataService: No settings passed to MetadataService"),new Error("settings");this._settings=e,this._jsonService=new r(["application/jwk-set+json"]),this._metadata_promise;}return t.prototype.getMetadata=function t(){var e=this;return !this.metadataUrl&&this._settings.metadata?(i.Log.debug("MetadataService.getMetadata: Returning metadata from settings"),Promise.resolve(this._settings.metadata)):this.metadataUrl?this._metadata_promise?(i.Log.debug("MetadataService.getMetadata: getting metadata from cache promise",this.metadataUrl),this._metadata_promise):(i.Log.debug("MetadataService.getMetadata: getting metadata from",this.metadataUrl),this._metadata_promise=this._jsonService.getJson(this.metadataUrl).then(function(t){return i.Log.debug("MetadataService.getMetadata: json received"),e._settings.metadata||(e._settings.metadata={}),Object.assign(e._settings.metadata,t),e._settings.metadata}),this._metadata_promise):(i.Log.error("MetadataService.getMetadata: No authority or metadataUrl configured on settings"),Promise.reject(new Error("No authority or metadataUrl configured on settings")))},t.prototype.getIssuer=function t(){return this._getMetadataProperty("issuer")},t.prototype.getAuthorizationEndpoint=function t(){return this._getMetadataProperty("authorization_endpoint")},t.prototype.getUserInfoEndpoint=function t(){return this._getMetadataProperty("userinfo_endpoint")},t.prototype.getTokenEndpoint=function t(){var e=!(arguments.length>0&&void 0!==arguments[0])||arguments[0];return this._getMetadataProperty("token_endpoint",e)},t.prototype.getCheckSessionIframe=function t(){return this._getMetadataProperty("check_session_iframe",!0)},t.prototype.getEndSessionEndpoint=function t(){return this._getMetadataProperty("end_session_endpoint",!0)},t.prototype.getRevocationEndpoint=function t(){return this._getMetadataProperty("revocation_endpoint",!0)},t.prototype.getKeysEndpoint=function t(){return this._getMetadataProperty("jwks_uri",!0)},t.prototype._getMetadataProperty=function t(e){var r=arguments.length>1&&void 0!==arguments[1]&&arguments[1];return i.Log.debug("MetadataService.getMetadataProperty for: "+e),this.getMetadata().then(function(t){if(i.Log.debug("MetadataService.getMetadataProperty: metadata recieved"),void 0===t[e]){if(!0===r)return void i.Log.warn("MetadataService.getMetadataProperty: Metadata does not contain optional property "+e);throw i.Log.error("MetadataService.getMetadataProperty: Metadata does not contain property "+e),new Error("Metadata does not contain property "+e)}return t[e]})},t.prototype.getSigningKeys=function t(){var e=this;return this._settings.signingKeys?(i.Log.debug("MetadataService.getSigningKeys: Returning signingKeys from settings"),Promise.resolve(this._settings.signingKeys)):this._getMetadataProperty("jwks_uri").then(function(t){return i.Log.debug("MetadataService.getSigningKeys: jwks_uri received",t),e._jsonService.getJson(t).then(function(t){if(i.Log.debug("MetadataService.getSigningKeys: key set received",t),!t.keys)throw i.Log.error("MetadataService.getSigningKeys: Missing keys on keyset"),new Error("Missing keys on keyset");return e._settings.signingKeys=t.keys,e._settings.signingKeys})})},n(t,[{key:"metadataUrl",get:function t(){return this._metadataUrl||(this._settings.metadataUrl?this._metadataUrl=this._settings.metadataUrl:(this._metadataUrl=this._settings.authority,this._metadataUrl&&this._metadataUrl.indexOf(".well-known/openid-configuration")<0&&("/"!==this._metadataUrl[this._metadataUrl.length-1]&&(this._metadataUrl+="/"),this._metadataUrl+=".well-known/openid-configuration"))),this._metadataUrl}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UrlUtility=void 0;var n=r(0),i=r(1);e.UrlUtility=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.addQueryParam=function t(e,r,n){return e.indexOf("?")<0&&(e+="?"),"?"!==e[e.length-1]&&(e+="&"),e+=encodeURIComponent(r),e+="=",e+=encodeURIComponent(n)},t.parseUrlFragment=function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"#",o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.Global;"string"!=typeof e&&(e=o.location.href);var s=e.lastIndexOf(r);s>=0&&(e=e.substr(s+1)),"?"===r&&(s=e.indexOf("#"))>=0&&(e=e.substr(0,s));for(var a,u={},c=/([^&=]+)=([^&]*)/g,h=0;a=c.exec(e);)if(u[decodeURIComponent(a[1])]=decodeURIComponent(a[2]),h++>50)return n.Log.error("UrlUtility.parseUrlFragment: response exceeded expected number of parameters",e),{error:"Response exceeded expected number of parameters"};for(var l in u)return u;return {}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.JoseUtil=void 0;var n=r(25),i=function o(t){return t&&t.__esModule?t:{default:t}}(r(32));e.JoseUtil=(0, i.default)({jws:n.jws,KeyUtil:n.KeyUtil,X509:n.X509,crypto:n.crypto,hextob64u:n.hextob64u,b64tohex:n.b64tohex,AllowedSigningAlgs:n.AllowedSigningAlgs});},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.OidcClientSettings=void 0;var n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),o=r(0),s=r(6),a=r(23),u=r(2);var c="id_token",h="openid",l=900,f=300;e.OidcClientSettings=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.authority,i=e.metadataUrl,o=e.metadata,d=e.signingKeys,g=e.client_id,p=e.client_secret,v=e.response_type,y=void 0===v?c:v,m=e.scope,_=void 0===m?h:m,S=e.redirect_uri,F=e.post_logout_redirect_uri,b=e.prompt,w=e.display,E=e.max_age,x=e.ui_locales,k=e.acr_values,A=e.resource,P=e.response_mode,C=e.filterProtocolClaims,T=void 0===C||C,R=e.loadUserInfo,I=void 0===R||R,D=e.staleStateAge,U=void 0===D?l:D,L=e.clockSkew,B=void 0===L?f:L,N=e.userInfoJwtIssuer,O=void 0===N?"OP":N,j=e.stateStore,M=void 0===j?new s.WebStorageStateStore:j,H=e.ResponseValidatorCtor,K=void 0===H?a.ResponseValidator:H,V=e.MetadataServiceCtor,q=void 0===V?u.MetadataService:V,J=e.extraQueryParams,W=void 0===J?{}:J,z=e.extraTokenParams,Y=void 0===z?{}:z;!function G(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._authority=r,this._metadataUrl=i,this._metadata=o,this._signingKeys=d,this._client_id=g,this._client_secret=p,this._response_type=y,this._scope=_,this._redirect_uri=S,this._post_logout_redirect_uri=F,this._prompt=b,this._display=w,this._max_age=E,this._ui_locales=x,this._acr_values=k,this._resource=A,this._response_mode=P,this._filterProtocolClaims=!!T,this._loadUserInfo=!!I,this._staleStateAge=U,this._clockSkew=B,this._userInfoJwtIssuer=O,this._stateStore=M,this._validator=new K(this),this._metadataService=new q(this),this._extraQueryParams="object"===(void 0===W?"undefined":n(W))?W:{},this._extraTokenParams="object"===(void 0===Y?"undefined":n(Y))?Y:{};}return i(t,[{key:"client_id",get:function t(){return this._client_id},set:function t(e){if(this._client_id)throw o.Log.error("OidcClientSettings.set_client_id: client_id has already been assigned."),new Error("client_id has already been assigned.");this._client_id=e;}},{key:"client_secret",get:function t(){return this._client_secret}},{key:"response_type",get:function t(){return this._response_type}},{key:"scope",get:function t(){return this._scope}},{key:"redirect_uri",get:function t(){return this._redirect_uri}},{key:"post_logout_redirect_uri",get:function t(){return this._post_logout_redirect_uri}},{key:"prompt",get:function t(){return this._prompt}},{key:"display",get:function t(){return this._display}},{key:"max_age",get:function t(){return this._max_age}},{key:"ui_locales",get:function t(){return this._ui_locales}},{key:"acr_values",get:function t(){return this._acr_values}},{key:"resource",get:function t(){return this._resource}},{key:"response_mode",get:function t(){return this._response_mode}},{key:"authority",get:function t(){return this._authority},set:function t(e){if(this._authority)throw o.Log.error("OidcClientSettings.set_authority: authority has already been assigned."),new Error("authority has already been assigned.");this._authority=e;}},{key:"metadataUrl",get:function t(){return this._metadataUrl||(this._metadataUrl=this.authority,this._metadataUrl&&this._metadataUrl.indexOf(".well-known/openid-configuration")<0&&("/"!==this._metadataUrl[this._metadataUrl.length-1]&&(this._metadataUrl+="/"),this._metadataUrl+=".well-known/openid-configuration")),this._metadataUrl}},{key:"metadata",get:function t(){return this._metadata},set:function t(e){this._metadata=e;}},{key:"signingKeys",get:function t(){return this._signingKeys},set:function t(e){this._signingKeys=e;}},{key:"filterProtocolClaims",get:function t(){return this._filterProtocolClaims}},{key:"loadUserInfo",get:function t(){return this._loadUserInfo}},{key:"staleStateAge",get:function t(){return this._staleStateAge}},{key:"clockSkew",get:function t(){return this._clockSkew}},{key:"userInfoJwtIssuer",get:function t(){return this._userInfoJwtIssuer}},{key:"stateStore",get:function t(){return this._stateStore}},{key:"validator",get:function t(){return this._validator}},{key:"metadataService",get:function t(){return this._metadataService}},{key:"extraQueryParams",get:function t(){return this._extraQueryParams},set:function t(e){"object"===(void 0===e?"undefined":n(e))?this._extraQueryParams=e:this._extraQueryParams={};}},{key:"extraTokenParams",get:function t(){return this._extraTokenParams},set:function t(e){"object"===(void 0===e?"undefined":n(e))?this._extraTokenParams=e:this._extraTokenParams={};}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.WebStorageStateStore=void 0;var n=r(0),i=r(1);e.WebStorageStateStore=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.prefix,n=void 0===r?"oidc.":r,o=e.store,s=void 0===o?i.Global.localStorage:o;!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._store=s,this._prefix=n;}return t.prototype.set=function t(e,r){return n.Log.debug("WebStorageStateStore.set",e),e=this._prefix+e,this._store.setItem(e,r),Promise.resolve()},t.prototype.get=function t(e){n.Log.debug("WebStorageStateStore.get",e),e=this._prefix+e;var r=this._store.getItem(e);return Promise.resolve(r)},t.prototype.remove=function t(e){n.Log.debug("WebStorageStateStore.remove",e),e=this._prefix+e;var r=this._store.getItem(e);return this._store.removeItem(e),Promise.resolve(r)},t.prototype.getAllKeys=function t(){n.Log.debug("WebStorageStateStore.getAllKeys");for(var e=[],r=0;r<this._store.length;r++){var i=this._store.key(r);0===i.indexOf(this._prefix)&&e.push(i.substr(this._prefix.length));}return Promise.resolve(e)},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.JsonService=void 0;var n=r(0),i=r(1);e.JsonService=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:null,r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:i.Global.XMLHttpRequest,n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:null;!function o(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),e&&Array.isArray(e)?this._contentTypes=e.slice():this._contentTypes=[],this._contentTypes.push("application/json"),n&&this._contentTypes.push("application/jwt"),this._XMLHttpRequest=r,this._jwtHandler=n;}return t.prototype.getJson=function t(e,r){var i=this;if(!e)throw n.Log.error("JsonService.getJson: No url passed"),new Error("url");return n.Log.debug("JsonService.getJson, url: ",e),new Promise(function(t,o){var s=new i._XMLHttpRequest;s.open("GET",e);var a=i._contentTypes,u=i._jwtHandler;s.onload=function(){if(n.Log.debug("JsonService.getJson: HTTP response received, status",s.status),200===s.status){var r=s.getResponseHeader("Content-Type");if(r){var i=a.find(function(t){if(r.startsWith(t))return !0});if("application/jwt"==i)return void u(s).then(t,o);if(i)try{return void t(JSON.parse(s.responseText))}catch(t){return n.Log.error("JsonService.getJson: Error parsing JSON response",t.message),void o(t)}}o(Error("Invalid response Content-Type: "+r+", from URL: "+e));}else o(Error(s.statusText+" ("+s.status+")"));},s.onerror=function(){n.Log.error("JsonService.getJson: network error"),o(Error("Network Error"));},r&&(n.Log.debug("JsonService.getJson: token passed, setting Authorization header"),s.setRequestHeader("Authorization","Bearer "+r)),s.send();})},t.prototype.postForm=function t(e,r){var i=this;if(!e)throw n.Log.error("JsonService.postForm: No url passed"),new Error("url");return n.Log.debug("JsonService.postForm, url: ",e),new Promise(function(t,o){var s=new i._XMLHttpRequest;s.open("POST",e);var a=i._contentTypes;s.onload=function(){if(n.Log.debug("JsonService.postForm: HTTP response received, status",s.status),200!==s.status){if(400===s.status)if(i=s.getResponseHeader("Content-Type"))if(a.find(function(t){if(i.startsWith(t))return !0}))try{var r=JSON.parse(s.responseText);if(r&&r.error)return n.Log.error("JsonService.postForm: Error from server: ",r.error),void o(new Error(r.error))}catch(t){return n.Log.error("JsonService.postForm: Error parsing JSON response",t.message),void o(t)}o(Error(s.statusText+" ("+s.status+")"));}else{var i;if((i=s.getResponseHeader("Content-Type"))&&a.find(function(t){if(i.startsWith(t))return !0}))try{return void t(JSON.parse(s.responseText))}catch(t){return n.Log.error("JsonService.postForm: Error parsing JSON response",t.message),void o(t)}o(Error("Invalid response Content-Type: "+i+", from URL: "+e));}},s.onerror=function(){n.Log.error("JsonService.postForm: network error"),o(Error("Network Error"));};var u="";for(var c in r){var h=r[c];h&&(u.length>0&&(u+="&"),u+=encodeURIComponent(c),u+="=",u+=encodeURIComponent(h));}s.setRequestHeader("Content-Type","application/x-www-form-urlencoded"),s.send(u);})},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.State=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=function s(t){return t&&t.__esModule?t:{default:t}}(r(14));e.State=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.id,n=e.data,i=e.created,s=e.request_type;!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._id=r||(0, o.default)(),this._data=n,this._created="number"==typeof i&&i>0?i:parseInt(Date.now()/1e3),this._request_type=s;}return t.prototype.toStorageString=function t(){return i.Log.debug("State.toStorageString"),JSON.stringify({id:this.id,data:this.data,created:this.created,request_type:this.request_type})},t.fromStorageString=function e(r){return i.Log.debug("State.fromStorageString"),new t(JSON.parse(r))},t.clearStaleState=function e(r,n){var o=Date.now()/1e3-n;return r.getAllKeys().then(function(e){i.Log.debug("State.clearStaleState: got keys",e);for(var n=[],s=function s(a){var c=e[a];u=r.get(c).then(function(e){var n=!1;if(e)try{var s=t.fromStorageString(e);i.Log.debug("State.clearStaleState: got item from key: ",c,s.created),s.created<=o&&(n=!0);}catch(t){i.Log.error("State.clearStaleState: Error parsing state for key",c,t.message),n=!0;}else i.Log.debug("State.clearStaleState: no item in storage for key: ",c),n=!0;if(n)return i.Log.debug("State.clearStaleState: removed item for key: ",c),r.remove(c)}),n.push(u);},a=0;a<e.length;a++){var u;s(a);}return i.Log.debug("State.clearStaleState: waiting on promise count:",n.length),Promise.all(n)})},n(t,[{key:"id",get:function t(){return this._id}},{key:"data",get:function t(){return this._data}},{key:"created",get:function t(){return this._created}},{key:"request_type",get:function t(){return this._request_type}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.OidcClient=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(5),s=r(11),a=r(12),u=r(36),c=r(37),h=r(38),l=r(13),f=r(8);e.OidcClient=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),e instanceof o.OidcClientSettings?this._settings=e:this._settings=new o.OidcClientSettings(e);}return t.prototype.createSigninRequest=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.response_type,o=r.scope,s=r.redirect_uri,u=r.data,c=r.state,h=r.prompt,l=r.display,f=r.max_age,d=r.ui_locales,g=r.id_token_hint,p=r.login_hint,v=r.acr_values,y=r.resource,m=r.request,_=r.request_uri,S=r.response_mode,F=r.extraQueryParams,b=r.extraTokenParams,w=r.request_type,E=r.skipUserInfo,x=arguments[1];i.Log.debug("OidcClient.createSigninRequest");var k=this._settings.client_id;n=n||this._settings.response_type,o=o||this._settings.scope,s=s||this._settings.redirect_uri,h=h||this._settings.prompt,l=l||this._settings.display,f=f||this._settings.max_age,d=d||this._settings.ui_locales,v=v||this._settings.acr_values,y=y||this._settings.resource,S=S||this._settings.response_mode,F=F||this._settings.extraQueryParams,b=b||this._settings.extraTokenParams;var A=this._settings.authority;return a.SigninRequest.isCode(n)&&"code"!==n?Promise.reject(new Error("OpenID Connect hybrid flow is not supported")):this._metadataService.getAuthorizationEndpoint().then(function(t){i.Log.debug("OidcClient.createSigninRequest: Received authorization endpoint",t);var r=new a.SigninRequest({url:t,client_id:k,redirect_uri:s,response_type:n,scope:o,data:u||c,authority:A,prompt:h,display:l,max_age:f,ui_locales:d,id_token_hint:g,login_hint:p,acr_values:v,resource:y,request:m,request_uri:_,extraQueryParams:F,extraTokenParams:b,request_type:w,response_mode:S,client_secret:e._settings.client_secret,skipUserInfo:E}),P=r.state;return (x=x||e._stateStore).set(P.id,P.toStorageString()).then(function(){return r})})},t.prototype.readSigninResponseState=function t(e,r){var n=arguments.length>2&&void 0!==arguments[2]&&arguments[2];i.Log.debug("OidcClient.readSigninResponseState");var o="query"===this._settings.response_mode||!this._settings.response_mode&&a.SigninRequest.isCode(this._settings.response_type)?"?":"#",s=new u.SigninResponse(e,o);return s.state?(r=r||this._stateStore,(n?r.remove.bind(r):r.get.bind(r))(s.state).then(function(t){if(!t)throw i.Log.error("OidcClient.readSigninResponseState: No matching state found in storage"),new Error("No matching state found in storage");return {state:l.SigninState.fromStorageString(t),response:s}})):(i.Log.error("OidcClient.readSigninResponseState: No state in response"),Promise.reject(new Error("No state in response")))},t.prototype.processSigninResponse=function t(e,r){var n=this;return i.Log.debug("OidcClient.processSigninResponse"),this.readSigninResponseState(e,r,!0).then(function(t){var e=t.state,r=t.response;return i.Log.debug("OidcClient.processSigninResponse: Received state from storage; validating response"),n._validator.validateSigninResponse(e,r)})},t.prototype.createSignoutRequest=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.id_token_hint,o=r.data,s=r.state,a=r.post_logout_redirect_uri,u=r.extraQueryParams,h=r.request_type,l=arguments[1];return i.Log.debug("OidcClient.createSignoutRequest"),a=a||this._settings.post_logout_redirect_uri,u=u||this._settings.extraQueryParams,this._metadataService.getEndSessionEndpoint().then(function(t){if(!t)throw i.Log.error("OidcClient.createSignoutRequest: No end session endpoint url returned"),new Error("no end session endpoint");i.Log.debug("OidcClient.createSignoutRequest: Received end session endpoint",t);var r=new c.SignoutRequest({url:t,id_token_hint:n,post_logout_redirect_uri:a,data:o||s,extraQueryParams:u,request_type:h}),f=r.state;return f&&(i.Log.debug("OidcClient.createSignoutRequest: Signout request has state to persist"),(l=l||e._stateStore).set(f.id,f.toStorageString())),r})},t.prototype.readSignoutResponseState=function t(e,r){var n=arguments.length>2&&void 0!==arguments[2]&&arguments[2];i.Log.debug("OidcClient.readSignoutResponseState");var o=new h.SignoutResponse(e);if(!o.state)return i.Log.debug("OidcClient.readSignoutResponseState: No state in response"),o.error?(i.Log.warn("OidcClient.readSignoutResponseState: Response was error: ",o.error),Promise.reject(new s.ErrorResponse(o))):Promise.resolve({undefined:void 0,response:o});var a=o.state;return r=r||this._stateStore,(n?r.remove.bind(r):r.get.bind(r))(a).then(function(t){if(!t)throw i.Log.error("OidcClient.readSignoutResponseState: No matching state found in storage"),new Error("No matching state found in storage");return {state:f.State.fromStorageString(t),response:o}})},t.prototype.processSignoutResponse=function t(e,r){var n=this;return i.Log.debug("OidcClient.processSignoutResponse"),this.readSignoutResponseState(e,r,!0).then(function(t){var e=t.state,r=t.response;return e?(i.Log.debug("OidcClient.processSignoutResponse: Received state from storage; validating response"),n._validator.validateSignoutResponse(e,r)):(i.Log.debug("OidcClient.processSignoutResponse: No state from storage; skipping validating response"),r)})},t.prototype.clearStaleState=function t(e){return i.Log.debug("OidcClient.clearStaleState"),e=e||this._stateStore,f.State.clearStaleState(e,this.settings.staleStateAge)},n(t,[{key:"_stateStore",get:function t(){return this.settings.stateStore}},{key:"_validator",get:function t(){return this.settings.validator}},{key:"_metadataService",get:function t(){return this.settings.metadataService}},{key:"settings",get:function t(){return this._settings}},{key:"metadataService",get:function t(){return this._metadataService}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.TokenClient=void 0;var n=r(7),i=r(2),o=r(0);e.TokenClient=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:n.JsonService,s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService;if(function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw o.Log.error("TokenClient.ctor: No settings passed"),new Error("settings");this._settings=e,this._jsonService=new r,this._metadataService=new s(this._settings);}return t.prototype.exchangeCode=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return (r=Object.assign({},r)).grant_type=r.grant_type||"authorization_code",r.client_id=r.client_id||this._settings.client_id,r.redirect_uri=r.redirect_uri||this._settings.redirect_uri,r.code?r.redirect_uri?r.code_verifier?r.client_id?this._metadataService.getTokenEndpoint(!1).then(function(t){return o.Log.debug("TokenClient.exchangeCode: Received token endpoint"),e._jsonService.postForm(t,r).then(function(t){return o.Log.debug("TokenClient.exchangeCode: response received"),t})}):(o.Log.error("TokenClient.exchangeCode: No client_id passed"),Promise.reject(new Error("A client_id is required"))):(o.Log.error("TokenClient.exchangeCode: No code_verifier passed"),Promise.reject(new Error("A code_verifier is required"))):(o.Log.error("TokenClient.exchangeCode: No redirect_uri passed"),Promise.reject(new Error("A redirect_uri is required"))):(o.Log.error("TokenClient.exchangeCode: No code passed"),Promise.reject(new Error("A code is required")))},t.prototype.exchangeRefreshToken=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return (r=Object.assign({},r)).grant_type=r.grant_type||"refresh_token",r.client_id=r.client_id||this._settings.client_id,r.client_secret=r.client_secret||this._settings.client_secret,r.refresh_token?r.client_id?this._metadataService.getTokenEndpoint(!1).then(function(t){return o.Log.debug("TokenClient.exchangeRefreshToken: Received token endpoint"),e._jsonService.postForm(t,r).then(function(t){return o.Log.debug("TokenClient.exchangeRefreshToken: response received"),t})}):(o.Log.error("TokenClient.exchangeRefreshToken: No client_id passed"),Promise.reject(new Error("A client_id is required"))):(o.Log.error("TokenClient.exchangeRefreshToken: No refresh_token passed"),Promise.reject(new Error("A refresh_token is required")))},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.ErrorResponse=void 0;var n=r(0);e.ErrorResponse=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},i=r.error,o=r.error_description,s=r.error_uri,a=r.state,u=r.session_state;if(function c(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),!i)throw n.Log.error("No error passed to ErrorResponse"),new Error("error");var h=function l(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,o||i));return h.name="ErrorResponse",h.error=i,h.error_description=o,h.error_uri=s,h.state=a,h.session_state=u,h}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e}(Error);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SigninRequest=void 0;var n=r(0),i=r(3),o=r(13);e.SigninRequest=function(){function t(e){var r=e.url,s=e.client_id,a=e.redirect_uri,u=e.response_type,c=e.scope,h=e.authority,l=e.data,f=e.prompt,d=e.display,g=e.max_age,p=e.ui_locales,v=e.id_token_hint,y=e.login_hint,m=e.acr_values,_=e.resource,S=e.response_mode,F=e.request,b=e.request_uri,w=e.extraQueryParams,E=e.request_type,x=e.client_secret,k=e.extraTokenParams,A=e.skipUserInfo;if(function P(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!r)throw n.Log.error("SigninRequest.ctor: No url passed"),new Error("url");if(!s)throw n.Log.error("SigninRequest.ctor: No client_id passed"),new Error("client_id");if(!a)throw n.Log.error("SigninRequest.ctor: No redirect_uri passed"),new Error("redirect_uri");if(!u)throw n.Log.error("SigninRequest.ctor: No response_type passed"),new Error("response_type");if(!c)throw n.Log.error("SigninRequest.ctor: No scope passed"),new Error("scope");if(!h)throw n.Log.error("SigninRequest.ctor: No authority passed"),new Error("authority");var C=t.isOidc(u),T=t.isCode(u);S||(S=t.isCode(u)?"query":null),this.state=new o.SigninState({nonce:C,data:l,client_id:s,authority:h,redirect_uri:a,code_verifier:T,request_type:E,response_mode:S,client_secret:x,scope:c,extraTokenParams:k,skipUserInfo:A}),r=i.UrlUtility.addQueryParam(r,"client_id",s),r=i.UrlUtility.addQueryParam(r,"redirect_uri",a),r=i.UrlUtility.addQueryParam(r,"response_type",u),r=i.UrlUtility.addQueryParam(r,"scope",c),r=i.UrlUtility.addQueryParam(r,"state",this.state.id),C&&(r=i.UrlUtility.addQueryParam(r,"nonce",this.state.nonce)),T&&(r=i.UrlUtility.addQueryParam(r,"code_challenge",this.state.code_challenge),r=i.UrlUtility.addQueryParam(r,"code_challenge_method","S256"));var R={prompt:f,display:d,max_age:g,ui_locales:p,id_token_hint:v,login_hint:y,acr_values:m,resource:_,request:F,request_uri:b,response_mode:S};for(var I in R)R[I]&&(r=i.UrlUtility.addQueryParam(r,I,R[I]));for(var D in w)r=i.UrlUtility.addQueryParam(r,D,w[D]);this.url=r;}return t.isOidc=function t(e){return !!e.split(/\s+/g).filter(function(t){return "id_token"===t})[0]},t.isOAuth=function t(e){return !!e.split(/\s+/g).filter(function(t){return "token"===t})[0]},t.isCode=function t(e){return !!e.split(/\s+/g).filter(function(t){return "code"===t})[0]},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SigninState=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(8),s=r(4),a=function u(t){return t&&t.__esModule?t:{default:t}}(r(14));e.SigninState=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.nonce,i=r.authority,o=r.client_id,u=r.redirect_uri,c=r.code_verifier,h=r.response_mode,l=r.client_secret,f=r.scope,d=r.extraTokenParams,g=r.skipUserInfo;!function p(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var v=function y(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,arguments[0]));if(!0===n?v._nonce=(0, a.default)():n&&(v._nonce=n),!0===c?v._code_verifier=(0, a.default)()+(0, a.default)()+(0, a.default)():c&&(v._code_verifier=c),v.code_verifier){var m=s.JoseUtil.hashString(v.code_verifier,"SHA256");v._code_challenge=s.JoseUtil.hexToBase64Url(m);}return v._redirect_uri=u,v._authority=i,v._client_id=o,v._response_mode=h,v._client_secret=l,v._scope=f,v._extraTokenParams=d,v._skipUserInfo=g,v}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e.prototype.toStorageString=function t(){return i.Log.debug("SigninState.toStorageString"),JSON.stringify({id:this.id,data:this.data,created:this.created,request_type:this.request_type,nonce:this.nonce,code_verifier:this.code_verifier,redirect_uri:this.redirect_uri,authority:this.authority,client_id:this.client_id,response_mode:this.response_mode,client_secret:this.client_secret,scope:this.scope,extraTokenParams:this.extraTokenParams,skipUserInfo:this.skipUserInfo})},e.fromStorageString=function t(r){return i.Log.debug("SigninState.fromStorageString"),new e(JSON.parse(r))},n(e,[{key:"nonce",get:function t(){return this._nonce}},{key:"authority",get:function t(){return this._authority}},{key:"client_id",get:function t(){return this._client_id}},{key:"redirect_uri",get:function t(){return this._redirect_uri}},{key:"code_verifier",get:function t(){return this._code_verifier}},{key:"code_challenge",get:function t(){return this._code_challenge}},{key:"response_mode",get:function t(){return this._response_mode}},{key:"client_secret",get:function t(){return this._client_secret}},{key:"scope",get:function t(){return this._scope}},{key:"extraTokenParams",get:function t(){return this._extraTokenParams}},{key:"skipUserInfo",get:function t(){return this._skipUserInfo}}]),e}(o.State);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function n(){return (0, i.default)().replace(/-/g,"")};var i=function o(t){return t&&t.__esModule?t:{default:t}}(r(33));t.exports=e.default;},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.User=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);e.User=function(){function t(e){var r=e.id_token,n=e.session_state,i=e.access_token,o=e.refresh_token,s=e.token_type,a=e.scope,u=e.profile,c=e.expires_at,h=e.state;!function l(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this.id_token=r,this.session_state=n,this.access_token=i,this.refresh_token=o,this.token_type=s,this.scope=a,this.profile=u,this.expires_at=c,this.state=h;}return t.prototype.toStorageString=function t(){return i.Log.debug("User.toStorageString"),JSON.stringify({id_token:this.id_token,session_state:this.session_state,access_token:this.access_token,refresh_token:this.refresh_token,token_type:this.token_type,scope:this.scope,profile:this.profile,expires_at:this.expires_at})},t.fromStorageString=function e(r){return i.Log.debug("User.fromStorageString"),new t(JSON.parse(r))},n(t,[{key:"expires_in",get:function t(){if(this.expires_at){var e=parseInt(Date.now()/1e3);return this.expires_at-e}},set:function t(e){var r=parseInt(e);if("number"==typeof r&&r>0){var n=parseInt(Date.now()/1e3);this.expires_at=n+r;}}},{key:"expired",get:function t(){var e=this.expires_in;if(void 0!==e)return e<=0}},{key:"scopes",get:function t(){return (this.scope||"").split(" ")}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.AccessTokenEvents=void 0;var n=r(0),i=r(48);var o=60;e.AccessTokenEvents=function(){function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.accessTokenExpiringNotificationTime,n=void 0===r?o:r,s=e.accessTokenExpiringTimer,a=void 0===s?new i.Timer("Access token expiring"):s,u=e.accessTokenExpiredTimer,c=void 0===u?new i.Timer("Access token expired"):u;!function h(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._accessTokenExpiringNotificationTime=n,this._accessTokenExpiring=a,this._accessTokenExpired=c;}return t.prototype.load=function t(e){if(e.access_token&&void 0!==e.expires_in){var r=e.expires_in;if(n.Log.debug("AccessTokenEvents.load: access token present, remaining duration:",r),r>0){var i=r-this._accessTokenExpiringNotificationTime;i<=0&&(i=1),n.Log.debug("AccessTokenEvents.load: registering expiring timer in:",i),this._accessTokenExpiring.init(i);}else n.Log.debug("AccessTokenEvents.load: canceling existing expiring timer becase we're past expiration."),this._accessTokenExpiring.cancel();var o=r+1;n.Log.debug("AccessTokenEvents.load: registering expired timer in:",o),this._accessTokenExpired.init(o);}else this._accessTokenExpiring.cancel(),this._accessTokenExpired.cancel();},t.prototype.unload=function t(){n.Log.debug("AccessTokenEvents.unload: canceling existing access token timers"),this._accessTokenExpiring.cancel(),this._accessTokenExpired.cancel();},t.prototype.addAccessTokenExpiring=function t(e){this._accessTokenExpiring.addHandler(e);},t.prototype.removeAccessTokenExpiring=function t(e){this._accessTokenExpiring.removeHandler(e);},t.prototype.addAccessTokenExpired=function t(e){this._accessTokenExpired.addHandler(e);},t.prototype.removeAccessTokenExpired=function t(e){this._accessTokenExpired.removeHandler(e);},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.Event=void 0;var n=r(0);e.Event=function(){function t(e){!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._name=e,this._callbacks=[];}return t.prototype.addHandler=function t(e){this._callbacks.push(e);},t.prototype.removeHandler=function t(e){var r=this._callbacks.findIndex(function(t){return t===e});r>=0&&this._callbacks.splice(r,1);},t.prototype.raise=function t(){n.Log.debug("Event: Raising event: "+this._name);for(var e=0;e<this._callbacks.length;e++){var r;(r=this._callbacks)[e].apply(r,arguments);}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SessionMonitor=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(19),s=r(1);e.SessionMonitor=function(){function t(e){var r=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.CheckSessionIFrame,a=arguments.length>2&&void 0!==arguments[2]?arguments[2]:s.Global.timer;if(function u(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("SessionMonitor.ctor: No user manager passed to SessionMonitor"),new Error("userManager");this._userManager=e,this._CheckSessionIFrameCtor=n,this._timer=a,this._userManager.events.addUserLoaded(this._start.bind(this)),this._userManager.events.addUserUnloaded(this._stop.bind(this)),this._userManager.getUser().then(function(t){t?r._start(t):r._settings.monitorAnonymousSession&&r._userManager.querySessionStatus().then(function(t){var e={session_state:t.session_state};t.sub&&t.sid&&(e.profile={sub:t.sub,sid:t.sid}),r._start(e);}).catch(function(t){i.Log.error("SessionMonitor ctor: error from querySessionStatus:",t.message);});}).catch(function(t){i.Log.error("SessionMonitor ctor: error from getUser:",t.message);});}return t.prototype._start=function t(e){var r=this,n=e.session_state;n&&(e.profile?(this._sub=e.profile.sub,this._sid=e.profile.sid,i.Log.debug("SessionMonitor._start: session_state:",n,", sub:",this._sub)):(this._sub=void 0,this._sid=void 0,i.Log.debug("SessionMonitor._start: session_state:",n,", anonymous user")),this._checkSessionIFrame?this._checkSessionIFrame.start(n):this._metadataService.getCheckSessionIframe().then(function(t){if(t){i.Log.debug("SessionMonitor._start: Initializing check session iframe");var e=r._client_id,o=r._checkSessionInterval,s=r._stopCheckSessionOnError;r._checkSessionIFrame=new r._CheckSessionIFrameCtor(r._callback.bind(r),e,t,o,s),r._checkSessionIFrame.load().then(function(){r._checkSessionIFrame.start(n);});}else i.Log.warn("SessionMonitor._start: No check session iframe found in the metadata");}).catch(function(t){i.Log.error("SessionMonitor._start: Error from getCheckSessionIframe:",t.message);}));},t.prototype._stop=function t(){var e=this;if(this._sub=void 0,this._sid=void 0,this._checkSessionIFrame&&(i.Log.debug("SessionMonitor._stop"),this._checkSessionIFrame.stop()),this._settings.monitorAnonymousSession)var r=this._timer.setInterval(function(){e._timer.clearInterval(r),e._userManager.querySessionStatus().then(function(t){var r={session_state:t.session_state};t.sub&&t.sid&&(r.profile={sub:t.sub,sid:t.sid}),e._start(r);}).catch(function(t){i.Log.error("SessionMonitor: error from querySessionStatus:",t.message);});},1e3);},t.prototype._callback=function t(){var e=this;this._userManager.querySessionStatus().then(function(t){var r=!0;t?t.sub===e._sub?(r=!1,e._checkSessionIFrame.start(t.session_state),t.sid===e._sid?i.Log.debug("SessionMonitor._callback: Same sub still logged in at OP, restarting check session iframe; session_state:",t.session_state):(i.Log.debug("SessionMonitor._callback: Same sub still logged in at OP, session state has changed, restarting check session iframe; session_state:",t.session_state),e._userManager.events._raiseUserSessionChanged())):i.Log.debug("SessionMonitor._callback: Different subject signed into OP:",t.sub):i.Log.debug("SessionMonitor._callback: Subject no longer signed into OP"),r&&(e._sub?(i.Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed out event"),e._userManager.events._raiseUserSignedOut()):(i.Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed in event"),e._userManager.events._raiseUserSignedIn()));}).catch(function(t){e._sub&&(i.Log.debug("SessionMonitor._callback: Error calling queryCurrentSigninSession; raising signed out event",t.message),e._userManager.events._raiseUserSignedOut());});},n(t,[{key:"_settings",get:function t(){return this._userManager.settings}},{key:"_metadataService",get:function t(){return this._userManager.metadataService}},{key:"_client_id",get:function t(){return this._settings.client_id}},{key:"_checkSessionInterval",get:function t(){return this._settings.checkSessionInterval}},{key:"_stopCheckSessionOnError",get:function t(){return this._settings.stopCheckSessionOnError}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CheckSessionIFrame=void 0;var n=r(0);var i=2e3;e.CheckSessionIFrame=function(){function t(e,r,n,o){var s=!(arguments.length>4&&void 0!==arguments[4])||arguments[4];!function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._callback=e,this._client_id=r,this._url=n,this._interval=o||i,this._stopOnError=s;var u=n.indexOf("/",n.indexOf("//")+2);this._frame_origin=n.substr(0,u),this._frame=window.document.createElement("iframe"),this._frame.style.visibility="hidden",this._frame.style.position="absolute",this._frame.style.display="none",this._frame.style.width=0,this._frame.style.height=0,this._frame.src=n;}return t.prototype.load=function t(){var e=this;return new Promise(function(t){e._frame.onload=function(){t();},window.document.body.appendChild(e._frame),e._boundMessageEvent=e._message.bind(e),window.addEventListener("message",e._boundMessageEvent,!1);})},t.prototype._message=function t(e){e.origin===this._frame_origin&&e.source===this._frame.contentWindow&&("error"===e.data?(n.Log.error("CheckSessionIFrame: error message from check session op iframe"),this._stopOnError&&this.stop()):"changed"===e.data?(n.Log.debug("CheckSessionIFrame: changed message from check session op iframe"),this.stop(),this._callback()):n.Log.debug("CheckSessionIFrame: "+e.data+" message from check session op iframe"));},t.prototype.start=function t(e){var r=this;if(this._session_state!==e){n.Log.debug("CheckSessionIFrame.start"),this.stop(),this._session_state=e;var i=function t(){r._frame.contentWindow.postMessage(r._client_id+" "+r._session_state,r._frame_origin);};i(),this._timer=window.setInterval(i,this._interval);}},t.prototype.stop=function t(){this._session_state=null,this._timer&&(n.Log.debug("CheckSessionIFrame.stop"),window.clearInterval(this._timer),this._timer=null);},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.TokenRevocationClient=void 0;var n=r(0),i=r(2),o=r(1);e.TokenRevocationClient=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.Global.XMLHttpRequest,s=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService;if(function a(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw n.Log.error("TokenRevocationClient.ctor: No settings provided"),new Error("No settings provided.");this._settings=e,this._XMLHttpRequestCtor=r,this._metadataService=new s(this._settings);}return t.prototype.revoke=function t(e,r){var i=this,o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:"access_token";if(!e)throw n.Log.error("TokenRevocationClient.revoke: No token provided"),new Error("No token provided.");if("access_token"!==o&&"refresh_token"!=o)throw n.Log.error("TokenRevocationClient.revoke: Invalid token type"),new Error("Invalid token type.");return this._metadataService.getRevocationEndpoint().then(function(t){if(t){n.Log.debug("TokenRevocationClient.revoke: Revoking "+o);var s=i._settings.client_id,a=i._settings.client_secret;return i._revoke(t,s,a,e,o)}if(r)throw n.Log.error("TokenRevocationClient.revoke: Revocation not supported"),new Error("Revocation not supported")})},t.prototype._revoke=function t(e,r,i,o,s){var a=this;return new Promise(function(t,u){var c=new a._XMLHttpRequestCtor;c.open("POST",e),c.onload=function(){n.Log.debug("TokenRevocationClient.revoke: HTTP response received, status",c.status),200===c.status?t():u(Error(c.statusText+" ("+c.status+")"));},c.onerror=function(){n.Log.debug("TokenRevocationClient.revoke: Network Error."),u("Network Error");};var h="client_id="+encodeURIComponent(r);i&&(h+="&client_secret="+encodeURIComponent(i)),h+="&token_type_hint="+encodeURIComponent(s),h+="&token="+encodeURIComponent(o),c.setRequestHeader("Content-Type","application/x-www-form-urlencoded"),c.send(h);})},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CordovaPopupWindow=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);var o="location=no,toolbar=no,zoom=no",s="_blank";e.CordovaPopupWindow=function(){function t(e){var r=this;!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._promise=new Promise(function(t,e){r._resolve=t,r._reject=e;}),this.features=e.popupWindowFeatures||o,this.target=e.popupWindowTarget||s,this.redirect_uri=e.startUrl,i.Log.debug("CordovaPopupWindow.ctor: redirect_uri: "+this.redirect_uri);}return t.prototype._isInAppBrowserInstalled=function t(e){return ["cordova-plugin-inappbrowser","cordova-plugin-inappbrowser.inappbrowser","org.apache.cordova.inappbrowser"].some(function(t){return e.hasOwnProperty(t)})},t.prototype.navigate=function t(e){if(e&&e.url){if(!window.cordova)return this._error("cordova is undefined");var r=window.cordova.require("cordova/plugin_list").metadata;if(!1===this._isInAppBrowserInstalled(r))return this._error("InAppBrowser plugin not found");this._popup=cordova.InAppBrowser.open(e.url,this.target,this.features),this._popup?(i.Log.debug("CordovaPopupWindow.navigate: popup successfully created"),this._exitCallbackEvent=this._exitCallback.bind(this),this._loadStartCallbackEvent=this._loadStartCallback.bind(this),this._popup.addEventListener("exit",this._exitCallbackEvent,!1),this._popup.addEventListener("loadstart",this._loadStartCallbackEvent,!1)):this._error("Error opening popup window");}else this._error("No url provided");return this.promise},t.prototype._loadStartCallback=function t(e){0===e.url.indexOf(this.redirect_uri)&&this._success({url:e.url});},t.prototype._exitCallback=function t(e){this._error(e);},t.prototype._success=function t(e){this._cleanup(),i.Log.debug("CordovaPopupWindow: Successful response from cordova popup window"),this._resolve(e);},t.prototype._error=function t(e){this._cleanup(),i.Log.error(e),this._reject(new Error(e));},t.prototype.close=function t(){this._cleanup();},t.prototype._cleanup=function t(){this._popup&&(i.Log.debug("CordovaPopupWindow: cleaning up popup"),this._popup.removeEventListener("exit",this._exitCallbackEvent,!1),this._popup.removeEventListener("loadstart",this._loadStartCallbackEvent,!1),this._popup.close()),this._popup=null;},n(t,[{key:"promise",get:function t(){return this._promise}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});var n=r(0),i=r(9),o=r(5),s=r(6),a=r(39),u=r(40),c=r(16),h=r(2),l=r(50),f=r(51),d=r(19),g=r(20),p=r(18),v=r(1),y=r(15),m=r(52);e.default={Version:m.Version,Log:n.Log,OidcClient:i.OidcClient,OidcClientSettings:o.OidcClientSettings,WebStorageStateStore:s.WebStorageStateStore,InMemoryWebStorage:a.InMemoryWebStorage,UserManager:u.UserManager,AccessTokenEvents:c.AccessTokenEvents,MetadataService:h.MetadataService,CordovaPopupNavigator:l.CordovaPopupNavigator,CordovaIFrameNavigator:f.CordovaIFrameNavigator,CheckSessionIFrame:d.CheckSessionIFrame,TokenRevocationClient:g.TokenRevocationClient,SessionMonitor:p.SessionMonitor,Global:v.Global,User:y.User},t.exports=e.default;},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.ResponseValidator=void 0;var n="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},i=r(0),o=r(2),s=r(24),a=r(10),u=r(11),c=r(4);var h=["nonce","at_hash","iat","nbf","exp","aud","iss","c_hash"];e.ResponseValidator=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.MetadataService,n=arguments.length>2&&void 0!==arguments[2]?arguments[2]:s.UserInfoService,u=arguments.length>3&&void 0!==arguments[3]?arguments[3]:c.JoseUtil,h=arguments.length>4&&void 0!==arguments[4]?arguments[4]:a.TokenClient;if(function l(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw i.Log.error("ResponseValidator.ctor: No settings passed to ResponseValidator"),new Error("settings");this._settings=e,this._metadataService=new r(this._settings),this._userInfoService=new n(this._settings),this._joseUtil=u,this._tokenClient=new h(this._settings);}return t.prototype.validateSigninResponse=function t(e,r){var n=this;return i.Log.debug("ResponseValidator.validateSigninResponse"),this._processSigninParams(e,r).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: state processed"),n._validateTokens(e,t).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: tokens validated"),n._processClaims(e,t).then(function(t){return i.Log.debug("ResponseValidator.validateSigninResponse: claims processed"),t})})})},t.prototype.validateSignoutResponse=function t(e,r){return e.id!==r.state?(i.Log.error("ResponseValidator.validateSignoutResponse: State does not match"),Promise.reject(new Error("State does not match"))):(i.Log.debug("ResponseValidator.validateSignoutResponse: state validated"),r.state=e.data,r.error?(i.Log.warn("ResponseValidator.validateSignoutResponse: Response was error",r.error),Promise.reject(new u.ErrorResponse(r))):Promise.resolve(r))},t.prototype._processSigninParams=function t(e,r){if(e.id!==r.state)return i.Log.error("ResponseValidator._processSigninParams: State does not match"),Promise.reject(new Error("State does not match"));if(!e.client_id)return i.Log.error("ResponseValidator._processSigninParams: No client_id on state"),Promise.reject(new Error("No client_id on state"));if(!e.authority)return i.Log.error("ResponseValidator._processSigninParams: No authority on state"),Promise.reject(new Error("No authority on state"));if(this._settings.authority){if(this._settings.authority&&this._settings.authority!==e.authority)return i.Log.error("ResponseValidator._processSigninParams: authority mismatch on settings vs. signin state"),Promise.reject(new Error("authority mismatch on settings vs. signin state"))}else this._settings.authority=e.authority;if(this._settings.client_id){if(this._settings.client_id&&this._settings.client_id!==e.client_id)return i.Log.error("ResponseValidator._processSigninParams: client_id mismatch on settings vs. signin state"),Promise.reject(new Error("client_id mismatch on settings vs. signin state"))}else this._settings.client_id=e.client_id;return i.Log.debug("ResponseValidator._processSigninParams: state validated"),r.state=e.data,r.error?(i.Log.warn("ResponseValidator._processSigninParams: Response was error",r.error),Promise.reject(new u.ErrorResponse(r))):e.nonce&&!r.id_token?(i.Log.error("ResponseValidator._processSigninParams: Expecting id_token in response"),Promise.reject(new Error("No id_token in response"))):!e.nonce&&r.id_token?(i.Log.error("ResponseValidator._processSigninParams: Not expecting id_token in response"),Promise.reject(new Error("Unexpected id_token in response"))):e.code_verifier&&!r.code?(i.Log.error("ResponseValidator._processSigninParams: Expecting code in response"),Promise.reject(new Error("No code in response"))):!e.code_verifier&&r.code?(i.Log.error("ResponseValidator._processSigninParams: Not expecting code in response"),Promise.reject(new Error("Unexpected code in response"))):(r.scope||(r.scope=e.scope),Promise.resolve(r))},t.prototype._processClaims=function t(e,r){var n=this;if(r.isOpenIdConnect){if(i.Log.debug("ResponseValidator._processClaims: response is OIDC, processing claims"),r.profile=this._filterProtocolClaims(r.profile),!0!==e.skipUserInfo&&this._settings.loadUserInfo&&r.access_token)return i.Log.debug("ResponseValidator._processClaims: loading user info"),this._userInfoService.getClaims(r.access_token).then(function(t){return i.Log.debug("ResponseValidator._processClaims: user info claims received from user info endpoint"),t.sub!==r.profile.sub?(i.Log.error("ResponseValidator._processClaims: sub from user info endpoint does not match sub in access_token"),Promise.reject(new Error("sub from user info endpoint does not match sub in access_token"))):(r.profile=n._mergeClaims(r.profile,t),i.Log.debug("ResponseValidator._processClaims: user info claims received, updated profile:",r.profile),r)});i.Log.debug("ResponseValidator._processClaims: not loading user info");}else i.Log.debug("ResponseValidator._processClaims: response is not OIDC, not processing claims");return Promise.resolve(r)},t.prototype._mergeClaims=function t(e,r){var i=Object.assign({},e);for(var o in r){var s=r[o];Array.isArray(s)||(s=[s]);for(var a=0;a<s.length;a++){var u=s[a];i[o]?Array.isArray(i[o])?i[o].indexOf(u)<0&&i[o].push(u):i[o]!==u&&("object"===(void 0===u?"undefined":n(u))?i[o]=this._mergeClaims(i[o],u):i[o]=[i[o],u]):i[o]=u;}}return i},t.prototype._filterProtocolClaims=function t(e){i.Log.debug("ResponseValidator._filterProtocolClaims, incoming claims:",e);var r=Object.assign({},e);return this._settings._filterProtocolClaims?(h.forEach(function(t){delete r[t];}),i.Log.debug("ResponseValidator._filterProtocolClaims: protocol claims filtered",r)):i.Log.debug("ResponseValidator._filterProtocolClaims: protocol claims not filtered"),r},t.prototype._validateTokens=function t(e,r){return r.code?(i.Log.debug("ResponseValidator._validateTokens: Validating code"),this._processCode(e,r)):r.id_token?r.access_token?(i.Log.debug("ResponseValidator._validateTokens: Validating id_token and access_token"),this._validateIdTokenAndAccessToken(e,r)):(i.Log.debug("ResponseValidator._validateTokens: Validating id_token"),this._validateIdToken(e,r)):(i.Log.debug("ResponseValidator._validateTokens: No code to process or id_token to validate"),Promise.resolve(r))},t.prototype._processCode=function t(e,r){var o=this,s={client_id:e.client_id,client_secret:e.client_secret,code:r.code,redirect_uri:e.redirect_uri,code_verifier:e.code_verifier};return e.extraTokenParams&&"object"===n(e.extraTokenParams)&&Object.assign(s,e.extraTokenParams),this._tokenClient.exchangeCode(s).then(function(t){for(var n in t)r[n]=t[n];return r.id_token?(i.Log.debug("ResponseValidator._processCode: token response successful, processing id_token"),o._validateIdTokenAttributes(e,r)):(i.Log.debug("ResponseValidator._processCode: token response successful, returning response"),r)})},t.prototype._validateIdTokenAttributes=function t(e,r){var n=this;return this._metadataService.getIssuer().then(function(t){var o=e.client_id,s=n._settings.clockSkew;return i.Log.debug("ResponseValidator._validateIdTokenAttributes: Validaing JWT attributes; using clock skew (in seconds) of: ",s),n._joseUtil.validateJwtAttributes(r.id_token,t,o,s).then(function(t){return e.nonce&&e.nonce!==t.nonce?(i.Log.error("ResponseValidator._validateIdTokenAttributes: Invalid nonce in id_token"),Promise.reject(new Error("Invalid nonce in id_token"))):t.sub?(r.profile=t,r):(i.Log.error("ResponseValidator._validateIdTokenAttributes: No sub present in id_token"),Promise.reject(new Error("No sub present in id_token")))})})},t.prototype._validateIdTokenAndAccessToken=function t(e,r){var n=this;return this._validateIdToken(e,r).then(function(t){return n._validateAccessToken(t)})},t.prototype._validateIdToken=function t(e,r){var n=this;if(!e.nonce)return i.Log.error("ResponseValidator._validateIdToken: No nonce on state"),Promise.reject(new Error("No nonce on state"));var o=this._joseUtil.parseJwt(r.id_token);if(!o||!o.header||!o.payload)return i.Log.error("ResponseValidator._validateIdToken: Failed to parse id_token",o),Promise.reject(new Error("Failed to parse id_token"));if(e.nonce!==o.payload.nonce)return i.Log.error("ResponseValidator._validateIdToken: Invalid nonce in id_token"),Promise.reject(new Error("Invalid nonce in id_token"));var s=o.header.kid;return this._metadataService.getIssuer().then(function(t){return i.Log.debug("ResponseValidator._validateIdToken: Received issuer"),n._metadataService.getSigningKeys().then(function(a){if(!a)return i.Log.error("ResponseValidator._validateIdToken: No signing keys from metadata"),Promise.reject(new Error("No signing keys from metadata"));i.Log.debug("ResponseValidator._validateIdToken: Received signing keys");var u=void 0;if(s)u=a.filter(function(t){return t.kid===s})[0];else{if((a=n._filterByAlg(a,o.header.alg)).length>1)return i.Log.error("ResponseValidator._validateIdToken: No kid found in id_token and more than one key found in metadata"),Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));u=a[0];}if(!u)return i.Log.error("ResponseValidator._validateIdToken: No key matching kid or alg found in signing keys"),Promise.reject(new Error("No key matching kid or alg found in signing keys"));var c=e.client_id,h=n._settings.clockSkew;return i.Log.debug("ResponseValidator._validateIdToken: Validaing JWT; using clock skew (in seconds) of: ",h),n._joseUtil.validateJwt(r.id_token,u,t,c,h).then(function(){return i.Log.debug("ResponseValidator._validateIdToken: JWT validation successful"),o.payload.sub?(r.profile=o.payload,r):(i.Log.error("ResponseValidator._validateIdToken: No sub present in id_token"),Promise.reject(new Error("No sub present in id_token")))})})})},t.prototype._filterByAlg=function t(e,r){var n=null;if(r.startsWith("RS"))n="RSA";else if(r.startsWith("PS"))n="PS";else{if(!r.startsWith("ES"))return i.Log.debug("ResponseValidator._filterByAlg: alg not supported: ",r),[];n="EC";}return i.Log.debug("ResponseValidator._filterByAlg: Looking for keys that match kty: ",n),e=e.filter(function(t){return t.kty===n}),i.Log.debug("ResponseValidator._filterByAlg: Number of keys that match kty: ",n,e.length),e},t.prototype._validateAccessToken=function t(e){if(!e.profile)return i.Log.error("ResponseValidator._validateAccessToken: No profile loaded from id_token"),Promise.reject(new Error("No profile loaded from id_token"));if(!e.profile.at_hash)return i.Log.error("ResponseValidator._validateAccessToken: No at_hash in id_token"),Promise.reject(new Error("No at_hash in id_token"));if(!e.id_token)return i.Log.error("ResponseValidator._validateAccessToken: No id_token"),Promise.reject(new Error("No id_token"));var r=this._joseUtil.parseJwt(e.id_token);if(!r||!r.header)return i.Log.error("ResponseValidator._validateAccessToken: Failed to parse id_token",r),Promise.reject(new Error("Failed to parse id_token"));var n=r.header.alg;if(!n||5!==n.length)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n),Promise.reject(new Error("Unsupported alg: "+n));var o=n.substr(2,3);if(!o)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n,o),Promise.reject(new Error("Unsupported alg: "+n));if(256!==(o=parseInt(o))&&384!==o&&512!==o)return i.Log.error("ResponseValidator._validateAccessToken: Unsupported alg:",n,o),Promise.reject(new Error("Unsupported alg: "+n));var s="sha"+o,a=this._joseUtil.hashString(e.access_token,s);if(!a)return i.Log.error("ResponseValidator._validateAccessToken: access_token hash failed:",s),Promise.reject(new Error("Failed to validate at_hash"));var u=a.substr(0,a.length/2),c=this._joseUtil.hexToBase64Url(u);return c!==e.profile.at_hash?(i.Log.error("ResponseValidator._validateAccessToken: Failed to validate at_hash",c,e.profile.at_hash),Promise.reject(new Error("Failed to validate at_hash"))):(i.Log.debug("ResponseValidator._validateAccessToken: success"),Promise.resolve(e))},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UserInfoService=void 0;var n=r(7),i=r(2),o=r(0),s=r(4);e.UserInfoService=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:n.JsonService,a=arguments.length>2&&void 0!==arguments[2]?arguments[2]:i.MetadataService,u=arguments.length>3&&void 0!==arguments[3]?arguments[3]:s.JoseUtil;if(function c(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!e)throw o.Log.error("UserInfoService.ctor: No settings passed"),new Error("settings");this._settings=e,this._jsonService=new r(void 0,void 0,this._getClaimsFromJwt.bind(this)),this._metadataService=new a(this._settings),this._joseUtil=u;}return t.prototype.getClaims=function t(e){var r=this;return e?this._metadataService.getUserInfoEndpoint().then(function(t){return o.Log.debug("UserInfoService.getClaims: received userinfo url",t),r._jsonService.getJson(t,e).then(function(t){return o.Log.debug("UserInfoService.getClaims: claims received",t),t})}):(o.Log.error("UserInfoService.getClaims: No token passed"),Promise.reject(new Error("A token is required")))},t.prototype._getClaimsFromJwt=function t(e){var r=this;try{var n=this._joseUtil.parseJwt(e.responseText);if(!n||!n.header||!n.payload)return o.Log.error("UserInfoService._getClaimsFromJwt: Failed to parse JWT",n),Promise.reject(new Error("Failed to parse id_token"));var i=n.header.kid,s=void 0;switch(this._settings.userInfoJwtIssuer){case"OP":s=this._metadataService.getIssuer();break;case"ANY":s=Promise.resolve(n.payload.iss);break;default:s=Promise.resolve(this._settings.userInfoJwtIssuer);}return s.then(function(t){return o.Log.debug("UserInfoService._getClaimsFromJwt: Received issuer:"+t),r._metadataService.getSigningKeys().then(function(s){if(!s)return o.Log.error("UserInfoService._getClaimsFromJwt: No signing keys from metadata"),Promise.reject(new Error("No signing keys from metadata"));o.Log.debug("UserInfoService._getClaimsFromJwt: Received signing keys");var a=void 0;if(i)a=s.filter(function(t){return t.kid===i})[0];else{if((s=r._filterByAlg(s,n.header.alg)).length>1)return o.Log.error("UserInfoService._getClaimsFromJwt: No kid found in id_token and more than one key found in metadata"),Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));a=s[0];}if(!a)return o.Log.error("UserInfoService._getClaimsFromJwt: No key matching kid or alg found in signing keys"),Promise.reject(new Error("No key matching kid or alg found in signing keys"));var u=r._settings.client_id,c=r._settings.clockSkew;return o.Log.debug("UserInfoService._getClaimsFromJwt: Validaing JWT; using clock skew (in seconds) of: ",c),r._joseUtil.validateJwt(e.responseText,a,t,u,c,void 0,!0).then(function(){return o.Log.debug("UserInfoService._getClaimsFromJwt: JWT validation successful"),n.payload})})})}catch(t){return o.Log.error("UserInfoService._getClaimsFromJwt: Error parsing JWT response",t.message),void reject(t)}},t.prototype._filterByAlg=function t(e,r){var n=null;if(r.startsWith("RS"))n="RSA";else if(r.startsWith("PS"))n="PS";else{if(!r.startsWith("ES"))return o.Log.debug("UserInfoService._filterByAlg: alg not supported: ",r),[];n="EC";}return o.Log.debug("UserInfoService._filterByAlg: Looking for keys that match kty: ",n),e=e.filter(function(t){return t.kty===n}),o.Log.debug("UserInfoService._filterByAlg: Number of keys that match kty: ",n,e.length),e},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.AllowedSigningAlgs=e.b64tohex=e.hextob64u=e.crypto=e.X509=e.KeyUtil=e.jws=void 0;var n=r(26);e.jws=n.jws,e.KeyUtil=n.KEYUTIL,e.X509=n.X509,e.crypto=n.crypto,e.hextob64u=n.hextob64u,e.b64tohex=n.b64tohex,e.AllowedSigningAlgs=["RS256","RS384","RS512","PS256","PS384","PS512","ES256","ES384","ES512"];},function(t,e,r){(function(t){Object.defineProperty(e,"__esModule",{value:!0});var r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t},n={userAgent:!1},i={};
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+    // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+    let nopLogger = {
+        debug(){},
+        info(){},
+        warn(){},
+        error(){}
+    };
+
+    const NONE = 0;
+    const ERROR = 1;
+    const WARN = 2;
+    const INFO = 3;
+    const DEBUG = 4;
+
+    let logger;
+    let level;
+
+    class Log {
+        static get NONE() {return NONE};
+        static get ERROR() {return ERROR};
+        static get WARN() {return WARN};
+        static get INFO() {return INFO};
+        static get DEBUG() {return DEBUG};
+        
+        static reset(){
+            level = INFO;
+            logger = nopLogger;
+        }
+        
+        static get level(){
+            return level;
+        }
+        static set level(value){
+            if (NONE <= value && value <= DEBUG){
+                level = value;
+            }
+            else {
+                throw new Error("Invalid log level");
+            }
+        }
+        
+        static get logger(){
+            return logger;
+        }
+        static set logger(value){
+            if (!value.debug && value.info) {
+                // just to stay backwards compat. can remove in 2.0
+                value.debug = value.info;
+            }
+
+            if (value.debug && value.info && value.warn && value.error){
+                logger = value;
+            }
+            else {
+                throw new Error("Invalid logger");
+            }
+        }
+        
+        static debug(...args){
+            if (level >= DEBUG){
+                logger.debug.apply(logger, Array.from(args));
+            }
+        }
+        static info(...args){
+            if (level >= INFO){
+                logger.info.apply(logger, Array.from(args));
+            }
+        }
+        static warn(...args){
+            if (level >= WARN){
+                logger.warn.apply(logger, Array.from(args));
+            }
+        }
+        static error(...args){
+            if (level >= ERROR){
+                logger.error.apply(logger, Array.from(args));
+            }
+        }
+    }
+
+    Log.reset();
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+    // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
+
+    const timer = {
+        setInterval: function (cb, duration) {
+            return setInterval(cb, duration);
+        },
+        clearInterval: function (handle) {
+            return clearInterval(handle);
+        }
+    };
+
+    let testing = false;
+    let request = null;
+
+    class Global {
+
+        static _testing() {
+            testing = true;
+        }
+
+        static get location() {
+            if (!testing) {
+                return location;
+            }
+        }
+
+        static get localStorage() {
+            if (!testing && typeof window !== 'undefined') {
+                return localStorage;
+            }
+        }
+
+        static get sessionStorage() {
+            if (!testing && typeof window !== 'undefined') {
+                return sessionStorage;
+            }
+        }
+
+        static setXMLHttpRequest(newRequest) {
+            request = newRequest;
+        }
+
+        static get XMLHttpRequest() {
+            if (!testing && typeof window !== 'undefined') {
+                return request || XMLHttpRequest;
+            }
+        }
+
+        static get timer() {
+            if (!testing) {
+                return timer;
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class WebStorageStateStore {
+        constructor({prefix = "oidc.", store = Global.localStorage} = {}) {
+            this._store = store;
+            this._prefix = prefix;
+        }
+
+        set(key, value) {
+            Log.debug("WebStorageStateStore.set", key);
+
+            key = this._prefix + key;
+
+            this._store.setItem(key, value);
+
+            return Promise.resolve();
+        }
+
+        get(key) {
+            Log.debug("WebStorageStateStore.get", key);
+
+            key = this._prefix + key;
+
+            let item = this._store.getItem(key);
+
+            return Promise.resolve(item);
+        }
+
+        remove(key) {
+            Log.debug("WebStorageStateStore.remove", key);
+
+            key = this._prefix + key;
+
+            let item = this._store.getItem(key);
+            this._store.removeItem(key);
+
+            return Promise.resolve(item);
+        }
+
+        getAllKeys() {
+            Log.debug("WebStorageStateStore.getAllKeys");
+
+            var keys = [];
+
+            for (let index = 0; index < this._store.length; index++) {
+                let key = this._store.key(index);
+
+                if (key.indexOf(this._prefix) === 0) {
+                    keys.push(key.substr(this._prefix.length));
+                }
+            }
+
+            return Promise.resolve(keys);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class JsonService {
+        constructor(
+            additionalContentTypes = null, 
+            XMLHttpRequestCtor = Global.XMLHttpRequest, 
+            jwtHandler = null
+        ) {
+            if (additionalContentTypes && Array.isArray(additionalContentTypes))
+            {
+                this._contentTypes = additionalContentTypes.slice();
+            }
+            else
+            {
+                this._contentTypes = [];
+            }
+            this._contentTypes.push('application/json');
+            if (jwtHandler) {
+                this._contentTypes.push('application/jwt');
+            }
+
+            this._XMLHttpRequest = XMLHttpRequestCtor;
+            this._jwtHandler = jwtHandler;
+        }
+
+        getJson(url, token) {
+            if (!url){
+                Log.error("JsonService.getJson: No url passed");
+                throw new Error("url");
+            }
+
+            Log.debug("JsonService.getJson, url: ", url);
+
+            return new Promise((resolve, reject) => {
+
+                var req = new this._XMLHttpRequest();
+                req.open('GET', url);
+
+                var allowedContentTypes = this._contentTypes;
+                var jwtHandler = this._jwtHandler;
+
+                req.onload = function() {
+                    Log.debug("JsonService.getJson: HTTP response received, status", req.status);
+
+                    if (req.status === 200) {
+
+                        var contentType = req.getResponseHeader("Content-Type");
+                        if (contentType) {
+
+                            var found = allowedContentTypes.find(item=>{
+                                if (contentType.startsWith(item)) {
+                                    return true;
+                                }
+                            });
+
+                            if (found == "application/jwt") {
+                                jwtHandler(req).then(resolve, reject);
+                                return;
+                            }
+
+                            if (found) {
+                                try {
+                                    resolve(JSON.parse(req.responseText));
+                                    return;
+                                }
+                                catch (e) {
+                                    Log.error("JsonService.getJson: Error parsing JSON response", e.message);
+                                    reject(e);
+                                    return;
+                                }
+                            }
+                        }
+
+                        reject(Error("Invalid response Content-Type: " + contentType + ", from URL: " + url));
+                    }
+                    else {
+                        reject(Error(req.statusText + " (" + req.status + ")"));
+                    }
+                };
+
+                req.onerror = function() {
+                    Log.error("JsonService.getJson: network error");
+                    reject(Error("Network Error"));
+                };
+
+                if (token) {
+                    Log.debug("JsonService.getJson: token passed, setting Authorization header");
+                    req.setRequestHeader("Authorization", "Bearer " + token);
+                }
+
+                req.send();
+            });
+        }
+
+        postForm(url, payload) {
+            if (!url){
+                Log.error("JsonService.postForm: No url passed");
+                throw new Error("url");
+            }
+
+            Log.debug("JsonService.postForm, url: ", url);
+
+            return new Promise((resolve, reject) => {
+
+                var req = new this._XMLHttpRequest();
+                req.open('POST', url);
+
+                var allowedContentTypes = this._contentTypes;
+
+                req.onload = function() {
+                    Log.debug("JsonService.postForm: HTTP response received, status", req.status);
+
+                    if (req.status === 200) {
+
+                        var contentType = req.getResponseHeader("Content-Type");
+                        if (contentType) {
+
+                            var found = allowedContentTypes.find(item=>{
+                                if (contentType.startsWith(item)) {
+                                    return true;
+                                }
+                            });
+
+                            if (found) {
+                                try {
+                                    resolve(JSON.parse(req.responseText));
+                                    return;
+                                }
+                                catch (e) {
+                                    Log.error("JsonService.postForm: Error parsing JSON response", e.message);
+                                    reject(e);
+                                    return;
+                                }
+                            }
+                        }
+
+                        reject(Error("Invalid response Content-Type: " + contentType + ", from URL: " + url));
+                        return;
+                    }
+
+                    if (req.status === 400) {
+
+                        var contentType = req.getResponseHeader("Content-Type");
+                        if (contentType) {
+
+                            var found = allowedContentTypes.find(item=>{
+                                if (contentType.startsWith(item)) {
+                                    return true;
+                                }
+                            });
+
+                            if (found) {
+                                try {
+                                    var payload = JSON.parse(req.responseText);
+                                    if (payload && payload.error) {
+                                        Log.error("JsonService.postForm: Error from server: ", payload.error);
+                                        reject(new Error(payload.error));
+                                        return;
+                                    }
+                                }
+                                catch (e) {
+                                    Log.error("JsonService.postForm: Error parsing JSON response", e.message);
+                                    reject(e);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
+                    reject(Error(req.statusText + " (" + req.status + ")"));
+                };
+
+                req.onerror = function() {
+                    Log.error("JsonService.postForm: network error");
+                    reject(Error("Network Error"));
+                };
+
+                let body = "";
+                for(let key in payload) {
+
+                    let value = payload[key];
+
+                    if (value) {
+
+                        if (body.length > 0) {
+                            body += "&";
+                        }
+
+                        body += encodeURIComponent(key);
+                        body += "=";
+                        body += encodeURIComponent(value);
+                    }
+                }
+
+                req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                req.send(body);
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const OidcMetadataUrlPath = '.well-known/openid-configuration';
+
+    class MetadataService {
+        constructor(settings, JsonServiceCtor = JsonService) {
+            if (!settings) {
+                Log.error("MetadataService: No settings passed to MetadataService");
+                throw new Error("settings");
+            }
+
+            this._settings = settings;
+            this._jsonService = new JsonServiceCtor(['application/jwk-set+json']);
+            this._metadata_promise;
+        }
+
+        get metadataUrl() {
+            if (!this._metadataUrl) {
+                if (this._settings.metadataUrl) {
+                    this._metadataUrl = this._settings.metadataUrl;
+                }
+                else {
+                    this._metadataUrl = this._settings.authority;
+
+                    if (this._metadataUrl && this._metadataUrl.indexOf(OidcMetadataUrlPath) < 0) {
+                        if (this._metadataUrl[this._metadataUrl.length - 1] !== '/') {
+                            this._metadataUrl += '/';
+                        }
+                        this._metadataUrl += OidcMetadataUrlPath;
+                    }
+                }
+            }
+
+            return this._metadataUrl;
+        }
+
+        getMetadata() {
+            // metadata was preloaded and no url was provided, so use the supplied data.
+            if (!this.metadataUrl && this._settings.metadata) {
+                Log.debug("MetadataService.getMetadata: Returning metadata from settings");
+                return Promise.resolve(this._settings.metadata);
+            }
+
+            // no url was provided and settings were not pre-loaded then throw an error.
+            if (!this.metadataUrl) {
+                Log.error("MetadataService.getMetadata: No authority or metadataUrl configured on settings");
+                return Promise.reject(new Error("No authority or metadataUrl configured on settings"));
+            }
+
+            // if we've already started fetching metadata return the existing promise so we don't call it again.
+            if (this._metadata_promise) {
+                Log.debug("MetadataService.getMetadata: getting metadata from cache promise", this.metadataUrl);
+                return this._metadata_promise
+            }
+
+            Log.debug("MetadataService.getMetadata: getting metadata from", this.metadataUrl);
+
+            this._metadata_promise = this._jsonService.getJson(this.metadataUrl)
+                .then(metadata => {
+                    Log.debug("MetadataService.getMetadata: json received");
+                    // overlay .well-known/openid-configuration over seeded setting. this allows consumers to set values
+                    // like end_session_url for Auth0 when it is not available in the configuration endpoint.
+                    // precedence was set on the assumption the issuers hosted configuration is always more accurate
+                    // than what the developer seeded the client with.
+                    if (!this._settings.metadata) this._settings.metadata = {};
+                    Object.assign(this._settings.metadata, metadata);
+                    return this._settings.metadata;
+                });
+
+            return this._metadata_promise;
+        }
+
+        getIssuer() {
+            return this._getMetadataProperty("issuer");
+        }
+
+        getAuthorizationEndpoint() {
+            return this._getMetadataProperty("authorization_endpoint");
+        }
+
+        getUserInfoEndpoint() {
+            return this._getMetadataProperty("userinfo_endpoint");
+        }
+
+        getTokenEndpoint(optional=true) {
+            return this._getMetadataProperty("token_endpoint", optional);
+        }
+
+        getCheckSessionIframe() {
+            return this._getMetadataProperty("check_session_iframe", true);
+        }
+
+        getEndSessionEndpoint() {
+            return this._getMetadataProperty("end_session_endpoint", true);
+        }
+
+        getRevocationEndpoint() {
+            return this._getMetadataProperty("revocation_endpoint", true);
+        }
+
+        getKeysEndpoint() {
+            return this._getMetadataProperty("jwks_uri", true);
+        }
+
+        _getMetadataProperty(name, optional=false) {
+            Log.debug("MetadataService.getMetadataProperty for: " + name);
+
+            return this.getMetadata().then(metadata => {
+                Log.debug("MetadataService.getMetadataProperty: metadata recieved");
+
+                if (metadata[name] === undefined) {
+
+                    if (optional === true) {
+                        Log.warn("MetadataService.getMetadataProperty: Metadata does not contain optional property " + name);
+                        return undefined;
+                    }
+                    else {
+                        Log.error("MetadataService.getMetadataProperty: Metadata does not contain property " + name);
+                        throw new Error("Metadata does not contain property " + name);
+                    }
+                }
+
+                return metadata[name];
+            });
+        }
+
+        getSigningKeys() {
+            if (this._settings.signingKeys) {
+                Log.debug("MetadataService.getSigningKeys: Returning signingKeys from settings");
+                return Promise.resolve(this._settings.signingKeys);
+            }
+
+            return this._getMetadataProperty("jwks_uri").then(jwks_uri => {
+                Log.debug("MetadataService.getSigningKeys: jwks_uri received", jwks_uri);
+
+                return this._jsonService.getJson(jwks_uri).then(keySet => {
+                    Log.debug("MetadataService.getSigningKeys: key set received", keySet);
+
+                    if (!keySet.keys) {
+                        Log.error("MetadataService.getSigningKeys: Missing keys on keyset");
+                        throw new Error("Missing keys on keyset");
+                    }
+
+                    this._settings.signingKeys = keySet.keys;
+                    return this._settings.signingKeys;
+                });
+            });
+        }
+    }
+
+    /*
+     * jsrsasign(all) 8.0.12 (2018-04-22) (c) 2010-2018 Kenji Urushima | kjur.github.com/jsrsasign/license
+     */
+
+    var navigator = {};
+    navigator.userAgent = false;
+
+    var window$1 = {};
+
     /*!
     Copyright (c) 2011, Yahoo! Inc. All rights reserved.
     Code licensed under the BSD License:
     http://developer.yahoo.com/yui/license.html
     version: 2.9.0
     */
-    if(void 0===o)var o={};o.lang={extend:function t(e,r,i){if(!r||!e)throw new Error("YAHOO.lang.extend failed, please check that all dependencies are included.");var o=function t(){};if(o.prototype=r.prototype,e.prototype=new o,e.prototype.constructor=e,e.superclass=r.prototype,r.prototype.constructor==Object.prototype.constructor&&(r.prototype.constructor=r),i){var s;for(s in i)e.prototype[s]=i[s];var a=function t(){},u=["toString","valueOf"];try{/MSIE/.test(n.userAgent)&&(a=function t(e,r){for(s=0;s<u.length;s+=1){var n=u[s],i=r[n];"function"==typeof i&&i!=Object.prototype[n]&&(e[n]=i);}});}catch(t){}a(e.prototype,i);}}};
+    if(YAHOO===undefined){var YAHOO={};}YAHOO.lang={extend:function(g,h,f){if(!h||!g){throw new Error("YAHOO.lang.extend failed, please check that all dependencies are included.")}var d=function(){};d.prototype=h.prototype;g.prototype=new d();g.prototype.constructor=g;g.superclass=h.prototype;if(h.prototype.constructor==Object.prototype.constructor){h.prototype.constructor=h;}if(f){var b;for(b in f){g.prototype[b]=f[b];}var e=function(){},c=["toString","valueOf"];try{if(/MSIE/.test(navigator.userAgent)){e=function(j,i){for(b=0;b<c.length;b=b+1){var l=c[b],k=i[l];if(typeof k==="function"&&k!=Object.prototype[l]){j[l]=k;}}};}}catch(a){}e(g.prototype,f);}}};
     /*! CryptoJS v3.1.2 core-fix.js
      * code.google.com/p/crypto-js
      * (c) 2009-2013 by Jeff Mott. All rights reserved.
@@ -2278,49 +2834,3907 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
      * https://code.google.com/p/crypto-js/issues/detail?id=84
      * https://crypto-js.googlecode.com/svn-history/r667/branches/3.x/src/core.js
      */
-    var s,a,u,c,h,l,f,d,g,p,v,y=y||(s=Math,u=(a={}).lib={},c=u.Base=function(){function t(){}return {extend:function e(r){t.prototype=this;var n=new t;return r&&n.mixIn(r),n.hasOwnProperty("init")||(n.init=function(){n.$super.init.apply(this,arguments);}),n.init.prototype=n,n.$super=this,n},create:function t(){var e=this.extend();return e.init.apply(e,arguments),e},init:function t(){},mixIn:function t(e){for(var r in e)e.hasOwnProperty(r)&&(this[r]=e[r]);e.hasOwnProperty("toString")&&(this.toString=e.toString);},clone:function t(){return this.init.prototype.extend(this)}}}(),h=u.WordArray=c.extend({init:function t(e,r){e=this.words=e||[],this.sigBytes=void 0!=r?r:4*e.length;},toString:function t(e){return (e||f).stringify(this)},concat:function t(e){var r=this.words,n=e.words,i=this.sigBytes,o=e.sigBytes;if(this.clamp(),i%4)for(var s=0;s<o;s++){var a=n[s>>>2]>>>24-s%4*8&255;r[i+s>>>2]|=a<<24-(i+s)%4*8;}else for(s=0;s<o;s+=4)r[i+s>>>2]=n[s>>>2];return this.sigBytes+=o,this},clamp:function t(){var e=this.words,r=this.sigBytes;e[r>>>2]&=4294967295<<32-r%4*8,e.length=s.ceil(r/4);},clone:function t(){var e=c.clone.call(this);return e.words=this.words.slice(0),e},random:function t(e){for(var r=[],n=0;n<e;n+=4)r.push(4294967296*s.random()|0);return new h.init(r,e)}}),l=a.enc={},f=l.Hex={stringify:function t(e){for(var r=e.words,n=e.sigBytes,i=[],o=0;o<n;o++){var s=r[o>>>2]>>>24-o%4*8&255;i.push((s>>>4).toString(16)),i.push((15&s).toString(16));}return i.join("")},parse:function t(e){for(var r=e.length,n=[],i=0;i<r;i+=2)n[i>>>3]|=parseInt(e.substr(i,2),16)<<24-i%8*4;return new h.init(n,r/2)}},d=l.Latin1={stringify:function t(e){for(var r=e.words,n=e.sigBytes,i=[],o=0;o<n;o++){var s=r[o>>>2]>>>24-o%4*8&255;i.push(String.fromCharCode(s));}return i.join("")},parse:function t(e){for(var r=e.length,n=[],i=0;i<r;i++)n[i>>>2]|=(255&e.charCodeAt(i))<<24-i%4*8;return new h.init(n,r)}},g=l.Utf8={stringify:function t(e){try{return decodeURIComponent(escape(d.stringify(e)))}catch(t){throw new Error("Malformed UTF-8 data")}},parse:function t(e){return d.parse(unescape(encodeURIComponent(e)))}},p=u.BufferedBlockAlgorithm=c.extend({reset:function t(){this._data=new h.init,this._nDataBytes=0;},_append:function t(e){"string"==typeof e&&(e=g.parse(e)),this._data.concat(e),this._nDataBytes+=e.sigBytes;},_process:function t(e){var r=this._data,n=r.words,i=r.sigBytes,o=this.blockSize,a=i/(4*o),u=(a=e?s.ceil(a):s.max((0|a)-this._minBufferSize,0))*o,c=s.min(4*u,i);if(u){for(var l=0;l<u;l+=o)this._doProcessBlock(n,l);var f=n.splice(0,u);r.sigBytes-=c;}return new h.init(f,c)},clone:function t(){var e=c.clone.call(this);return e._data=this._data.clone(),e},_minBufferSize:0}),u.Hasher=p.extend({cfg:c.extend(),init:function t(e){this.cfg=this.cfg.extend(e),this.reset();},reset:function t(){p.reset.call(this),this._doReset();},update:function t(e){return this._append(e),this._process(),this},finalize:function t(e){return e&&this._append(e),this._doFinalize()},blockSize:16,_createHelper:function t(e){return function(t,r){return new e.init(r).finalize(t)}},_createHmacHelper:function t(e){return function(t,r){return new v.HMAC.init(e,r).finalize(t)}}}),v=a.algo={},a);!function(t){var e,r=(e=y).lib,n=r.Base,i=r.WordArray;(e=e.x64={}).Word=n.extend({init:function t(e,r){this.high=e,this.low=r;}}),e.WordArray=n.extend({init:function t(e,r){e=this.words=e||[],this.sigBytes=void 0!=r?r:8*e.length;},toX32:function t(){for(var e=this.words,r=e.length,n=[],o=0;o<r;o++){var s=e[o];n.push(s.high),n.push(s.low);}return i.create(n,this.sigBytes)},clone:function t(){for(var e=n.clone.call(this),r=e.words=this.words.slice(0),i=r.length,o=0;o<i;o++)r[o]=r[o].clone();return e}});}(),function(){var t=y,e=t.lib.WordArray;t.enc.Base64={stringify:function t(e){var r=e.words,n=e.sigBytes,i=this._map;e.clamp(),e=[];for(var o=0;o<n;o+=3)for(var s=(r[o>>>2]>>>24-o%4*8&255)<<16|(r[o+1>>>2]>>>24-(o+1)%4*8&255)<<8|r[o+2>>>2]>>>24-(o+2)%4*8&255,a=0;4>a&&o+.75*a<n;a++)e.push(i.charAt(s>>>6*(3-a)&63));if(r=i.charAt(64))for(;e.length%4;)e.push(r);return e.join("")},parse:function t(r){var n=r.length,i=this._map;(o=i.charAt(64))&&(-1!=(o=r.indexOf(o))&&(n=o));for(var o=[],s=0,a=0;a<n;a++)if(a%4){var u=i.indexOf(r.charAt(a-1))<<a%4*2,c=i.indexOf(r.charAt(a))>>>6-a%4*2;o[s>>>2]|=(u|c)<<24-s%4*8,s++;}return e.create(o,s)},_map:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="};}(),function(t){for(var e=y,r=(i=e.lib).WordArray,n=i.Hasher,i=e.algo,o=[],s=[],a=function t(e){return 4294967296*(e-(0|e))|0},u=2,c=0;64>c;){var h;t:{h=u;for(var l=t.sqrt(h),f=2;f<=l;f++)if(!(h%f)){h=!1;break t}h=!0;}h&&(8>c&&(o[c]=a(t.pow(u,.5))),s[c]=a(t.pow(u,1/3)),c++),u++;}var d=[];i=i.SHA256=n.extend({_doReset:function t(){this._hash=new r.init(o.slice(0));},_doProcessBlock:function t(e,r){for(var n=this._hash.words,i=n[0],o=n[1],a=n[2],u=n[3],c=n[4],h=n[5],l=n[6],f=n[7],g=0;64>g;g++){if(16>g)d[g]=0|e[r+g];else{var p=d[g-15],v=d[g-2];d[g]=((p<<25|p>>>7)^(p<<14|p>>>18)^p>>>3)+d[g-7]+((v<<15|v>>>17)^(v<<13|v>>>19)^v>>>10)+d[g-16];}p=f+((c<<26|c>>>6)^(c<<21|c>>>11)^(c<<7|c>>>25))+(c&h^~c&l)+s[g]+d[g],v=((i<<30|i>>>2)^(i<<19|i>>>13)^(i<<10|i>>>22))+(i&o^i&a^o&a),f=l,l=h,h=c,c=u+p|0,u=a,a=o,o=i,i=p+v|0;}n[0]=n[0]+i|0,n[1]=n[1]+o|0,n[2]=n[2]+a|0,n[3]=n[3]+u|0,n[4]=n[4]+c|0,n[5]=n[5]+h|0,n[6]=n[6]+l|0,n[7]=n[7]+f|0;},_doFinalize:function e(){var r=this._data,n=r.words,i=8*this._nDataBytes,o=8*r.sigBytes;return n[o>>>5]|=128<<24-o%32,n[14+(o+64>>>9<<4)]=t.floor(i/4294967296),n[15+(o+64>>>9<<4)]=i,r.sigBytes=4*n.length,this._process(),this._hash},clone:function t(){var e=n.clone.call(this);return e._hash=this._hash.clone(),e}});e.SHA256=n._createHelper(i),e.HmacSHA256=n._createHmacHelper(i);}(Math),function(){function t(){return n.create.apply(n,arguments)}for(var e=y,r=e.lib.Hasher,n=(o=e.x64).Word,i=o.WordArray,o=e.algo,s=[t(1116352408,3609767458),t(1899447441,602891725),t(3049323471,3964484399),t(3921009573,2173295548),t(961987163,4081628472),t(1508970993,3053834265),t(2453635748,2937671579),t(2870763221,3664609560),t(3624381080,2734883394),t(310598401,1164996542),t(607225278,1323610764),t(1426881987,3590304994),t(1925078388,4068182383),t(2162078206,991336113),t(2614888103,633803317),t(3248222580,3479774868),t(3835390401,2666613458),t(4022224774,944711139),t(264347078,2341262773),t(604807628,2007800933),t(770255983,1495990901),t(1249150122,1856431235),t(1555081692,3175218132),t(1996064986,2198950837),t(2554220882,3999719339),t(2821834349,766784016),t(2952996808,2566594879),t(3210313671,3203337956),t(3336571891,1034457026),t(3584528711,2466948901),t(113926993,3758326383),t(338241895,168717936),t(666307205,1188179964),t(773529912,1546045734),t(1294757372,1522805485),t(1396182291,2643833823),t(1695183700,2343527390),t(1986661051,1014477480),t(2177026350,1206759142),t(2456956037,344077627),t(2730485921,1290863460),t(2820302411,3158454273),t(3259730800,3505952657),t(3345764771,106217008),t(3516065817,3606008344),t(3600352804,1432725776),t(4094571909,1467031594),t(275423344,851169720),t(430227734,3100823752),t(506948616,1363258195),t(659060556,3750685593),t(883997877,3785050280),t(958139571,3318307427),t(1322822218,3812723403),t(1537002063,2003034995),t(1747873779,3602036899),t(1955562222,1575990012),t(2024104815,1125592928),t(2227730452,2716904306),t(2361852424,442776044),t(2428436474,593698344),t(2756734187,3733110249),t(3204031479,2999351573),t(3329325298,3815920427),t(3391569614,3928383900),t(3515267271,566280711),t(3940187606,3454069534),t(4118630271,4000239992),t(116418474,1914138554),t(174292421,2731055270),t(289380356,3203993006),t(460393269,320620315),t(685471733,587496836),t(852142971,1086792851),t(1017036298,365543100),t(1126000580,2618297676),t(1288033470,3409855158),t(1501505948,4234509866),t(1607167915,987167468),t(1816402316,1246189591)],a=[],u=0;80>u;u++)a[u]=t();o=o.SHA512=r.extend({_doReset:function t(){this._hash=new i.init([new n.init(1779033703,4089235720),new n.init(3144134277,2227873595),new n.init(1013904242,4271175723),new n.init(2773480762,1595750129),new n.init(1359893119,2917565137),new n.init(2600822924,725511199),new n.init(528734635,4215389547),new n.init(1541459225,327033209)]);},_doProcessBlock:function t(e,r){for(var n=(f=this._hash.words)[0],i=f[1],o=f[2],u=f[3],c=f[4],h=f[5],l=f[6],f=f[7],d=n.high,g=n.low,p=i.high,v=i.low,y=o.high,m=o.low,_=u.high,S=u.low,F=c.high,b=c.low,w=h.high,E=h.low,x=l.high,k=l.low,A=f.high,P=f.low,C=d,T=g,R=p,I=v,D=y,U=m,L=_,B=S,N=F,O=b,j=w,M=E,H=x,K=k,V=A,q=P,J=0;80>J;J++){var W=a[J];if(16>J)var z=W.high=0|e[r+2*J],Y=W.low=0|e[r+2*J+1];else{z=((Y=(z=a[J-15]).high)>>>1|(G=z.low)<<31)^(Y>>>8|G<<24)^Y>>>7;var G=(G>>>1|Y<<31)^(G>>>8|Y<<24)^(G>>>7|Y<<25),X=((Y=(X=a[J-2]).high)>>>19|(Q=X.low)<<13)^(Y<<3|Q>>>29)^Y>>>6,Q=(Q>>>19|Y<<13)^(Q<<3|Y>>>29)^(Q>>>6|Y<<26),$=(Y=a[J-7]).high,Z=(tt=a[J-16]).high,tt=tt.low;z=(z=(z=z+$+((Y=G+Y.low)>>>0<G>>>0?1:0))+X+((Y=Y+Q)>>>0<Q>>>0?1:0))+Z+((Y=Y+tt)>>>0<tt>>>0?1:0);W.high=z,W.low=Y;}$=N&j^~N&H,tt=O&M^~O&K,W=C&R^C&D^R&D;var et=T&I^T&U^I&U,rt=(G=(C>>>28|T<<4)^(C<<30|T>>>2)^(C<<25|T>>>7),X=(T>>>28|C<<4)^(T<<30|C>>>2)^(T<<25|C>>>7),(Q=s[J]).high),nt=Q.low;Z=(Z=(Z=(Z=V+((N>>>14|O<<18)^(N>>>18|O<<14)^(N<<23|O>>>9))+((Q=q+((O>>>14|N<<18)^(O>>>18|N<<14)^(O<<23|N>>>9)))>>>0<q>>>0?1:0))+$+((Q=Q+tt)>>>0<tt>>>0?1:0))+rt+((Q=Q+nt)>>>0<nt>>>0?1:0))+z+((Q=Q+Y)>>>0<Y>>>0?1:0),W=G+W+((Y=X+et)>>>0<X>>>0?1:0),V=H,q=K,H=j,K=M,j=N,M=O,N=L+Z+((O=B+Q|0)>>>0<B>>>0?1:0)|0,L=D,B=U,D=R,U=I,R=C,I=T,C=Z+W+((T=Q+Y|0)>>>0<Q>>>0?1:0)|0;}g=n.low=g+T,n.high=d+C+(g>>>0<T>>>0?1:0),v=i.low=v+I,i.high=p+R+(v>>>0<I>>>0?1:0),m=o.low=m+U,o.high=y+D+(m>>>0<U>>>0?1:0),S=u.low=S+B,u.high=_+L+(S>>>0<B>>>0?1:0),b=c.low=b+O,c.high=F+N+(b>>>0<O>>>0?1:0),E=h.low=E+M,h.high=w+j+(E>>>0<M>>>0?1:0),k=l.low=k+K,l.high=x+H+(k>>>0<K>>>0?1:0),P=f.low=P+q,f.high=A+V+(P>>>0<q>>>0?1:0);},_doFinalize:function t(){var e=this._data,r=e.words,n=8*this._nDataBytes,i=8*e.sigBytes;return r[i>>>5]|=128<<24-i%32,r[30+(i+128>>>10<<5)]=Math.floor(n/4294967296),r[31+(i+128>>>10<<5)]=n,e.sigBytes=4*r.length,this._process(),this._hash.toX32()},clone:function t(){var e=r.clone.call(this);return e._hash=this._hash.clone(),e},blockSize:32}),e.SHA512=r._createHelper(o),e.HmacSHA512=r._createHmacHelper(o);}(),function(){var t=y,e=(i=t.x64).Word,r=i.WordArray,n=(i=t.algo).SHA512,i=i.SHA384=n.extend({_doReset:function t(){this._hash=new r.init([new e.init(3418070365,3238371032),new e.init(1654270250,914150663),new e.init(2438529370,812702999),new e.init(355462360,4144912697),new e.init(1731405415,4290775857),new e.init(2394180231,1750603025),new e.init(3675008525,1694076839),new e.init(1203062813,3204075428)]);},_doFinalize:function t(){var e=n._doFinalize.call(this);return e.sigBytes-=16,e}});t.SHA384=n._createHelper(i),t.HmacSHA384=n._createHmacHelper(i);}();
+    var CryptoJS=CryptoJS||(function(e,g){var a={};var b=a.lib={};var j=b.Base=(function(){function n(){}return {extend:function(p){n.prototype=this;var o=new n();if(p){o.mixIn(p);}if(!o.hasOwnProperty("init")){o.init=function(){o.$super.init.apply(this,arguments);};}o.init.prototype=o;o.$super=this;return o},create:function(){var o=this.extend();o.init.apply(o,arguments);return o},init:function(){},mixIn:function(p){for(var o in p){if(p.hasOwnProperty(o)){this[o]=p[o];}}if(p.hasOwnProperty("toString")){this.toString=p.toString;}},clone:function(){return this.init.prototype.extend(this)}}}());var l=b.WordArray=j.extend({init:function(o,n){o=this.words=o||[];if(n!=g){this.sigBytes=n;}else{this.sigBytes=o.length*4;}},toString:function(n){return (n||h).stringify(this)},concat:function(t){var q=this.words;var p=t.words;var n=this.sigBytes;var s=t.sigBytes;this.clamp();if(n%4){for(var r=0;r<s;r++){var o=(p[r>>>2]>>>(24-(r%4)*8))&255;q[(n+r)>>>2]|=o<<(24-((n+r)%4)*8);}}else{for(var r=0;r<s;r+=4){q[(n+r)>>>2]=p[r>>>2];}}this.sigBytes+=s;return this},clamp:function(){var o=this.words;var n=this.sigBytes;o[n>>>2]&=4294967295<<(32-(n%4)*8);o.length=e.ceil(n/4);},clone:function(){var n=j.clone.call(this);n.words=this.words.slice(0);return n},random:function(p){var o=[];for(var n=0;n<p;n+=4){o.push((e.random()*4294967296)|0);}return new l.init(o,p)}});var m=a.enc={};var h=m.Hex={stringify:function(p){var r=p.words;var o=p.sigBytes;var q=[];for(var n=0;n<o;n++){var s=(r[n>>>2]>>>(24-(n%4)*8))&255;q.push((s>>>4).toString(16));q.push((s&15).toString(16));}return q.join("")},parse:function(p){var n=p.length;var q=[];for(var o=0;o<n;o+=2){q[o>>>3]|=parseInt(p.substr(o,2),16)<<(24-(o%8)*4);}return new l.init(q,n/2)}};var d=m.Latin1={stringify:function(q){var r=q.words;var p=q.sigBytes;var n=[];for(var o=0;o<p;o++){var s=(r[o>>>2]>>>(24-(o%4)*8))&255;n.push(String.fromCharCode(s));}return n.join("")},parse:function(p){var n=p.length;var q=[];for(var o=0;o<n;o++){q[o>>>2]|=(p.charCodeAt(o)&255)<<(24-(o%4)*8);}return new l.init(q,n)}};var c=m.Utf8={stringify:function(n){try{return decodeURIComponent(escape(d.stringify(n)))}catch(o){throw new Error("Malformed UTF-8 data")}},parse:function(n){return d.parse(unescape(encodeURIComponent(n)))}};var i=b.BufferedBlockAlgorithm=j.extend({reset:function(){this._data=new l.init();this._nDataBytes=0;},_append:function(n){if(typeof n=="string"){n=c.parse(n);}this._data.concat(n);this._nDataBytes+=n.sigBytes;},_process:function(w){var q=this._data;var x=q.words;var n=q.sigBytes;var t=this.blockSize;var v=t*4;var u=n/v;if(w){u=e.ceil(u);}else{u=e.max((u|0)-this._minBufferSize,0);}var s=u*t;var r=e.min(s*4,n);if(s){for(var p=0;p<s;p+=t){this._doProcessBlock(x,p);}var o=x.splice(0,s);q.sigBytes-=r;}return new l.init(o,r)},clone:function(){var n=j.clone.call(this);n._data=this._data.clone();return n},_minBufferSize:0});var f=b.Hasher=i.extend({cfg:j.extend(),init:function(n){this.cfg=this.cfg.extend(n);this.reset();},reset:function(){i.reset.call(this);this._doReset();},update:function(n){this._append(n);this._process();return this},finalize:function(n){if(n){this._append(n);}var o=this._doFinalize();return o},blockSize:512/32,_createHelper:function(n){return function(p,o){return new n.init(o).finalize(p)}},_createHmacHelper:function(n){return function(p,o){return new k.HMAC.init(n,o).finalize(p)}}});var k=a.algo={};return a}(Math));
+    /*
+    CryptoJS v3.1.2 x64-core-min.js
+    code.google.com/p/crypto-js
+    (c) 2009-2013 by Jeff Mott. All rights reserved.
+    code.google.com/p/crypto-js/wiki/License
+    */
+    (function(g){var a=CryptoJS,f=a.lib,e=f.Base,h=f.WordArray,a=a.x64={};a.Word=e.extend({init:function(b,c){this.high=b;this.low=c;}});a.WordArray=e.extend({init:function(b,c){b=this.words=b||[];this.sigBytes=c!=g?c:8*b.length;},toX32:function(){for(var b=this.words,c=b.length,a=[],d=0;d<c;d++){var e=b[d];a.push(e.high);a.push(e.low);}return h.create(a,this.sigBytes)},clone:function(){for(var b=e.clone.call(this),c=b.words=this.words.slice(0),a=c.length,d=0;d<a;d++)c[d]=c[d].clone();return b}});})();
+
+    /*
+    CryptoJS v3.1.2 enc-base64.js
+    code.google.com/p/crypto-js
+    (c) 2009-2013 by Jeff Mott. All rights reserved.
+    code.google.com/p/crypto-js/wiki/License
+    */
+    (function(){var h=CryptoJS,j=h.lib.WordArray;h.enc.Base64={stringify:function(b){var e=b.words,f=b.sigBytes,c=this._map;b.clamp();b=[];for(var a=0;a<f;a+=3)for(var d=(e[a>>>2]>>>24-8*(a%4)&255)<<16|(e[a+1>>>2]>>>24-8*((a+1)%4)&255)<<8|e[a+2>>>2]>>>24-8*((a+2)%4)&255,g=0;4>g&&a+0.75*g<f;g++)b.push(c.charAt(d>>>6*(3-g)&63));if(e=c.charAt(64))for(;b.length%4;)b.push(e);return b.join("")},parse:function(b){var e=b.length,f=this._map,c=f.charAt(64);c&&(c=b.indexOf(c),-1!=c&&(e=c));for(var c=[],a=0,d=0;d<
+    e;d++)if(d%4){var g=f.indexOf(b.charAt(d-1))<<2*(d%4),h=f.indexOf(b.charAt(d))>>>6-2*(d%4);c[a>>>2]|=(g|h)<<24-8*(a%4);a++;}return j.create(c,a)},_map:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="};})();
+
+    /*
+    CryptoJS v3.1.2 sha256-min.js
+    code.google.com/p/crypto-js
+    (c) 2009-2013 by Jeff Mott. All rights reserved.
+    code.google.com/p/crypto-js/wiki/License
+    */
+    (function(k){for(var g=CryptoJS,h=g.lib,v=h.WordArray,j=h.Hasher,h=g.algo,s=[],t=[],u=function(q){return 4294967296*(q-(q|0))|0},l=2,b=0;64>b;){var d;a:{d=l;for(var w=k.sqrt(d),r=2;r<=w;r++)if(!(d%r)){d=!1;break a}d=!0;}d&&(8>b&&(s[b]=u(k.pow(l,0.5))),t[b]=u(k.pow(l,1/3)),b++);l++;}var n=[],h=h.SHA256=j.extend({_doReset:function(){this._hash=new v.init(s.slice(0));},_doProcessBlock:function(q,h){for(var a=this._hash.words,c=a[0],d=a[1],b=a[2],k=a[3],f=a[4],g=a[5],j=a[6],l=a[7],e=0;64>e;e++){if(16>e)n[e]=
+    q[h+e]|0;else{var m=n[e-15],p=n[e-2];n[e]=((m<<25|m>>>7)^(m<<14|m>>>18)^m>>>3)+n[e-7]+((p<<15|p>>>17)^(p<<13|p>>>19)^p>>>10)+n[e-16];}m=l+((f<<26|f>>>6)^(f<<21|f>>>11)^(f<<7|f>>>25))+(f&g^~f&j)+t[e]+n[e];p=((c<<30|c>>>2)^(c<<19|c>>>13)^(c<<10|c>>>22))+(c&d^c&b^d&b);l=j;j=g;g=f;f=k+m|0;k=b;b=d;d=c;c=m+p|0;}a[0]=a[0]+c|0;a[1]=a[1]+d|0;a[2]=a[2]+b|0;a[3]=a[3]+k|0;a[4]=a[4]+f|0;a[5]=a[5]+g|0;a[6]=a[6]+j|0;a[7]=a[7]+l|0;},_doFinalize:function(){var d=this._data,b=d.words,a=8*this._nDataBytes,c=8*d.sigBytes;
+    b[c>>>5]|=128<<24-c%32;b[(c+64>>>9<<4)+14]=k.floor(a/4294967296);b[(c+64>>>9<<4)+15]=a;d.sigBytes=4*b.length;this._process();return this._hash},clone:function(){var b=j.clone.call(this);b._hash=this._hash.clone();return b}});g.SHA256=j._createHelper(h);g.HmacSHA256=j._createHmacHelper(h);})(Math);
+
+    /*
+    CryptoJS v3.1.2 sha512-min.js
+    code.google.com/p/crypto-js
+    (c) 2009-2013 by Jeff Mott. All rights reserved.
+    code.google.com/p/crypto-js/wiki/License
+    */
+    (function(){function a(){return d.create.apply(d,arguments)}for(var n=CryptoJS,r=n.lib.Hasher,e=n.x64,d=e.Word,T=e.WordArray,e=n.algo,ea=[a(1116352408,3609767458),a(1899447441,602891725),a(3049323471,3964484399),a(3921009573,2173295548),a(961987163,4081628472),a(1508970993,3053834265),a(2453635748,2937671579),a(2870763221,3664609560),a(3624381080,2734883394),a(310598401,1164996542),a(607225278,1323610764),a(1426881987,3590304994),a(1925078388,4068182383),a(2162078206,991336113),a(2614888103,633803317),
+    a(3248222580,3479774868),a(3835390401,2666613458),a(4022224774,944711139),a(264347078,2341262773),a(604807628,2007800933),a(770255983,1495990901),a(1249150122,1856431235),a(1555081692,3175218132),a(1996064986,2198950837),a(2554220882,3999719339),a(2821834349,766784016),a(2952996808,2566594879),a(3210313671,3203337956),a(3336571891,1034457026),a(3584528711,2466948901),a(113926993,3758326383),a(338241895,168717936),a(666307205,1188179964),a(773529912,1546045734),a(1294757372,1522805485),a(1396182291,
+    2643833823),a(1695183700,2343527390),a(1986661051,1014477480),a(2177026350,1206759142),a(2456956037,344077627),a(2730485921,1290863460),a(2820302411,3158454273),a(3259730800,3505952657),a(3345764771,106217008),a(3516065817,3606008344),a(3600352804,1432725776),a(4094571909,1467031594),a(275423344,851169720),a(430227734,3100823752),a(506948616,1363258195),a(659060556,3750685593),a(883997877,3785050280),a(958139571,3318307427),a(1322822218,3812723403),a(1537002063,2003034995),a(1747873779,3602036899),
+    a(1955562222,1575990012),a(2024104815,1125592928),a(2227730452,2716904306),a(2361852424,442776044),a(2428436474,593698344),a(2756734187,3733110249),a(3204031479,2999351573),a(3329325298,3815920427),a(3391569614,3928383900),a(3515267271,566280711),a(3940187606,3454069534),a(4118630271,4000239992),a(116418474,1914138554),a(174292421,2731055270),a(289380356,3203993006),a(460393269,320620315),a(685471733,587496836),a(852142971,1086792851),a(1017036298,365543100),a(1126000580,2618297676),a(1288033470,
+    3409855158),a(1501505948,4234509866),a(1607167915,987167468),a(1816402316,1246189591)],v=[],w=0;80>w;w++)v[w]=a();e=e.SHA512=r.extend({_doReset:function(){this._hash=new T.init([new d.init(1779033703,4089235720),new d.init(3144134277,2227873595),new d.init(1013904242,4271175723),new d.init(2773480762,1595750129),new d.init(1359893119,2917565137),new d.init(2600822924,725511199),new d.init(528734635,4215389547),new d.init(1541459225,327033209)]);},_doProcessBlock:function(a,d){for(var f=this._hash.words,
+    F=f[0],e=f[1],n=f[2],r=f[3],G=f[4],H=f[5],I=f[6],f=f[7],w=F.high,J=F.low,X=e.high,K=e.low,Y=n.high,L=n.low,Z=r.high,M=r.low,$=G.high,N=G.low,aa=H.high,O=H.low,ba=I.high,P=I.low,ca=f.high,Q=f.low,k=w,g=J,z=X,x=K,A=Y,y=L,U=Z,B=M,l=$,h=N,R=aa,C=O,S=ba,D=P,V=ca,E=Q,m=0;80>m;m++){var s=v[m];if(16>m)var j=s.high=a[d+2*m]|0,b=s.low=a[d+2*m+1]|0;else{var j=v[m-15],b=j.high,p=j.low,j=(b>>>1|p<<31)^(b>>>8|p<<24)^b>>>7,p=(p>>>1|b<<31)^(p>>>8|b<<24)^(p>>>7|b<<25),u=v[m-2],b=u.high,c=u.low,u=(b>>>19|c<<13)^(b<<
+    3|c>>>29)^b>>>6,c=(c>>>19|b<<13)^(c<<3|b>>>29)^(c>>>6|b<<26),b=v[m-7],W=b.high,t=v[m-16],q=t.high,t=t.low,b=p+b.low,j=j+W+(b>>>0<p>>>0?1:0),b=b+c,j=j+u+(b>>>0<c>>>0?1:0),b=b+t,j=j+q+(b>>>0<t>>>0?1:0);s.high=j;s.low=b;}var W=l&R^~l&S,t=h&C^~h&D,s=k&z^k&A^z&A,T=g&x^g&y^x&y,p=(k>>>28|g<<4)^(k<<30|g>>>2)^(k<<25|g>>>7),u=(g>>>28|k<<4)^(g<<30|k>>>2)^(g<<25|k>>>7),c=ea[m],fa=c.high,da=c.low,c=E+((h>>>14|l<<18)^(h>>>18|l<<14)^(h<<23|l>>>9)),q=V+((l>>>14|h<<18)^(l>>>18|h<<14)^(l<<23|h>>>9))+(c>>>0<E>>>0?1:
+    0),c=c+t,q=q+W+(c>>>0<t>>>0?1:0),c=c+da,q=q+fa+(c>>>0<da>>>0?1:0),c=c+b,q=q+j+(c>>>0<b>>>0?1:0),b=u+T,s=p+s+(b>>>0<u>>>0?1:0),V=S,E=D,S=R,D=C,R=l,C=h,h=B+c|0,l=U+q+(h>>>0<B>>>0?1:0)|0,U=A,B=y,A=z,y=x,z=k,x=g,g=c+b|0,k=q+s+(g>>>0<c>>>0?1:0)|0;}J=F.low=J+g;F.high=w+k+(J>>>0<g>>>0?1:0);K=e.low=K+x;e.high=X+z+(K>>>0<x>>>0?1:0);L=n.low=L+y;n.high=Y+A+(L>>>0<y>>>0?1:0);M=r.low=M+B;r.high=Z+U+(M>>>0<B>>>0?1:0);N=G.low=N+h;G.high=$+l+(N>>>0<h>>>0?1:0);O=H.low=O+C;H.high=aa+R+(O>>>0<C>>>0?1:0);P=I.low=P+D;
+    I.high=ba+S+(P>>>0<D>>>0?1:0);Q=f.low=Q+E;f.high=ca+V+(Q>>>0<E>>>0?1:0);},_doFinalize:function(){var a=this._data,d=a.words,f=8*this._nDataBytes,e=8*a.sigBytes;d[e>>>5]|=128<<24-e%32;d[(e+128>>>10<<5)+30]=Math.floor(f/4294967296);d[(e+128>>>10<<5)+31]=f;a.sigBytes=4*d.length;this._process();return this._hash.toX32()},clone:function(){var a=r.clone.call(this);a._hash=this._hash.clone();return a},blockSize:32});n.SHA512=r._createHelper(e);n.HmacSHA512=r._createHmacHelper(e);})();
+
+    /*
+    CryptoJS v3.1.2 sha384-min.js
+    code.google.com/p/crypto-js
+    (c) 2009-2013 by Jeff Mott. All rights reserved.
+    code.google.com/p/crypto-js/wiki/License
+    */
+    (function(){var c=CryptoJS,a=c.x64,b=a.Word,e=a.WordArray,a=c.algo,d=a.SHA512,a=a.SHA384=d.extend({_doReset:function(){this._hash=new e.init([new b.init(3418070365,3238371032),new b.init(1654270250,914150663),new b.init(2438529370,812702999),new b.init(355462360,4144912697),new b.init(1731405415,4290775857),new b.init(2394180231,1750603025),new b.init(3675008525,1694076839),new b.init(1203062813,3204075428)]);},_doFinalize:function(){var a=d._doFinalize.call(this);a.sigBytes-=16;return a}});c.SHA384=
+    d._createHelper(a);c.HmacSHA384=d._createHmacHelper(a);})();
+
     /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
      */
-    var m,_="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",S="=";function F(t){var e,r,n="";for(e=0;e+3<=t.length;e+=3)r=parseInt(t.substring(e,e+3),16),n+=_.charAt(r>>6)+_.charAt(63&r);if(e+1==t.length?(r=parseInt(t.substring(e,e+1),16),n+=_.charAt(r<<2)):e+2==t.length&&(r=parseInt(t.substring(e,e+2),16),n+=_.charAt(r>>2)+_.charAt((3&r)<<4)),S)for(;(3&n.length)>0;)n+=S;return n}function b(t){var e,r,n,i="",o=0;for(e=0;e<t.length&&t.charAt(e)!=S;++e)(n=_.indexOf(t.charAt(e)))<0||(0==o?(i+=D(n>>2),r=3&n,o=1):1==o?(i+=D(r<<2|n>>4),r=15&n,o=2):2==o?(i+=D(r),i+=D(n>>2),r=3&n,o=3):(i+=D(r<<2|n>>4),i+=D(15&n),o=0));return 1==o&&(i+=D(r<<2)),i}function w(t){var e,r=b(t),n=new Array;for(e=0;2*e<r.length;++e)n[e]=parseInt(r.substring(2*e,2*e+2),16);return n}function E(t,e,r){null!=t&&("number"==typeof t?this.fromNumber(t,e,r):null==e&&"string"!=typeof t?this.fromString(t,256):this.fromString(t,e));}function x(){return new E(null)}(E.prototype.am=function A(t,e,r,n,i,o){for(;--o>=0;){var s=e*this[t++]+r[n]+i;i=Math.floor(s/67108864),r[n++]=67108863&s;}return i},m=26),E.prototype.DB=m,E.prototype.DM=(1<<m)-1,E.prototype.DV=1<<m;E.prototype.FV=Math.pow(2,52),E.prototype.F1=52-m,E.prototype.F2=2*m-52;var C,T,R="0123456789abcdefghijklmnopqrstuvwxyz",I=new Array;for(C="0".charCodeAt(0),T=0;T<=9;++T)I[C++]=T;for(C="a".charCodeAt(0),T=10;T<36;++T)I[C++]=T;for(C="A".charCodeAt(0),T=10;T<36;++T)I[C++]=T;function D(t){return R.charAt(t)}function U(t,e){var r=I[t.charCodeAt(e)];return null==r?-1:r}function L(t){var e=x();return e.fromInt(t),e}function B(t){var e,r=1;return 0!=(e=t>>>16)&&(t=e,r+=16),0!=(e=t>>8)&&(t=e,r+=8),0!=(e=t>>4)&&(t=e,r+=4),0!=(e=t>>2)&&(t=e,r+=2),0!=(e=t>>1)&&(t=e,r+=1),r}function N(t){this.m=t;}function O(t){this.m=t,this.mp=t.invDigit(),this.mpl=32767&this.mp,this.mph=this.mp>>15,this.um=(1<<t.DB-15)-1,this.mt2=2*t.t;}function j(t,e){return t&e}function M(t,e){return t|e}function H(t,e){return t^e}function K(t,e){return t&~e}function V(t){if(0==t)return -1;var e=0;return 0==(65535&t)&&(t>>=16,e+=16),0==(255&t)&&(t>>=8,e+=8),0==(15&t)&&(t>>=4,e+=4),0==(3&t)&&(t>>=2,e+=2),0==(1&t)&&++e,e}function q(t){for(var e=0;0!=t;)t&=t-1,++e;return e}function J(){}function W(t){return t}function z(t){this.r2=x(),this.q3=x(),E.ONE.dlShiftTo(2*t.t,this.r2),this.mu=this.r2.divide(t),this.m=t;}N.prototype.convert=function Y(t){return t.s<0||t.compareTo(this.m)>=0?t.mod(this.m):t},N.prototype.revert=function G(t){return t},N.prototype.reduce=function X(t){t.divRemTo(this.m,null,t);},N.prototype.mulTo=function Q(t,e,r){t.multiplyTo(e,r),this.reduce(r);},N.prototype.sqrTo=function $(t,e){t.squareTo(e),this.reduce(e);},O.prototype.convert=function Z(t){var e=x();return t.abs().dlShiftTo(this.m.t,e),e.divRemTo(this.m,null,e),t.s<0&&e.compareTo(E.ZERO)>0&&this.m.subTo(e,e),e},O.prototype.revert=function tt(t){var e=x();return t.copyTo(e),this.reduce(e),e},O.prototype.reduce=function et(t){for(;t.t<=this.mt2;)t[t.t++]=0;for(var e=0;e<this.m.t;++e){var r=32767&t[e],n=r*this.mpl+((r*this.mph+(t[e]>>15)*this.mpl&this.um)<<15)&t.DM;for(t[r=e+this.m.t]+=this.m.am(0,n,t,e,0,this.m.t);t[r]>=t.DV;)t[r]-=t.DV,t[++r]++;}t.clamp(),t.drShiftTo(this.m.t,t),t.compareTo(this.m)>=0&&t.subTo(this.m,t);},O.prototype.mulTo=function rt(t,e,r){t.multiplyTo(e,r),this.reduce(r);},O.prototype.sqrTo=function nt(t,e){t.squareTo(e),this.reduce(e);},E.prototype.copyTo=function it(t){for(var e=this.t-1;e>=0;--e)t[e]=this[e];t.t=this.t,t.s=this.s;},E.prototype.fromInt=function ot(t){this.t=1,this.s=t<0?-1:0,t>0?this[0]=t:t<-1?this[0]=t+this.DV:this.t=0;},E.prototype.fromString=function st(t,e){var r;if(16==e)r=4;else if(8==e)r=3;else if(256==e)r=8;else if(2==e)r=1;else if(32==e)r=5;else{if(4!=e)return void this.fromRadix(t,e);r=2;}this.t=0,this.s=0;for(var n=t.length,i=!1,o=0;--n>=0;){var s=8==r?255&t[n]:U(t,n);s<0?"-"==t.charAt(n)&&(i=!0):(i=!1,0==o?this[this.t++]=s:o+r>this.DB?(this[this.t-1]|=(s&(1<<this.DB-o)-1)<<o,this[this.t++]=s>>this.DB-o):this[this.t-1]|=s<<o,(o+=r)>=this.DB&&(o-=this.DB));}8==r&&0!=(128&t[0])&&(this.s=-1,o>0&&(this[this.t-1]|=(1<<this.DB-o)-1<<o)),this.clamp(),i&&E.ZERO.subTo(this,this);},E.prototype.clamp=function at(){for(var t=this.s&this.DM;this.t>0&&this[this.t-1]==t;)--this.t;},E.prototype.dlShiftTo=function ut(t,e){var r;for(r=this.t-1;r>=0;--r)e[r+t]=this[r];for(r=t-1;r>=0;--r)e[r]=0;e.t=this.t+t,e.s=this.s;},E.prototype.drShiftTo=function ct(t,e){for(var r=t;r<this.t;++r)e[r-t]=this[r];e.t=Math.max(this.t-t,0),e.s=this.s;},E.prototype.lShiftTo=function ht(t,e){var r,n=t%this.DB,i=this.DB-n,o=(1<<i)-1,s=Math.floor(t/this.DB),a=this.s<<n&this.DM;for(r=this.t-1;r>=0;--r)e[r+s+1]=this[r]>>i|a,a=(this[r]&o)<<n;for(r=s-1;r>=0;--r)e[r]=0;e[s]=a,e.t=this.t+s+1,e.s=this.s,e.clamp();},E.prototype.rShiftTo=function lt(t,e){e.s=this.s;var r=Math.floor(t/this.DB);if(r>=this.t)e.t=0;else{var n=t%this.DB,i=this.DB-n,o=(1<<n)-1;e[0]=this[r]>>n;for(var s=r+1;s<this.t;++s)e[s-r-1]|=(this[s]&o)<<i,e[s-r]=this[s]>>n;n>0&&(e[this.t-r-1]|=(this.s&o)<<i),e.t=this.t-r,e.clamp();}},E.prototype.subTo=function ft(t,e){for(var r=0,n=0,i=Math.min(t.t,this.t);r<i;)n+=this[r]-t[r],e[r++]=n&this.DM,n>>=this.DB;if(t.t<this.t){for(n-=t.s;r<this.t;)n+=this[r],e[r++]=n&this.DM,n>>=this.DB;n+=this.s;}else{for(n+=this.s;r<t.t;)n-=t[r],e[r++]=n&this.DM,n>>=this.DB;n-=t.s;}e.s=n<0?-1:0,n<-1?e[r++]=this.DV+n:n>0&&(e[r++]=n),e.t=r,e.clamp();},E.prototype.multiplyTo=function dt(t,e){var r=this.abs(),n=t.abs(),i=r.t;for(e.t=i+n.t;--i>=0;)e[i]=0;for(i=0;i<n.t;++i)e[i+r.t]=r.am(0,n[i],e,i,0,r.t);e.s=0,e.clamp(),this.s!=t.s&&E.ZERO.subTo(e,e);},E.prototype.squareTo=function gt(t){for(var e=this.abs(),r=t.t=2*e.t;--r>=0;)t[r]=0;for(r=0;r<e.t-1;++r){var n=e.am(r,e[r],t,2*r,0,1);(t[r+e.t]+=e.am(r+1,2*e[r],t,2*r+1,n,e.t-r-1))>=e.DV&&(t[r+e.t]-=e.DV,t[r+e.t+1]=1);}t.t>0&&(t[t.t-1]+=e.am(r,e[r],t,2*r,0,1)),t.s=0,t.clamp();},E.prototype.divRemTo=function pt(t,e,r){var n=t.abs();if(!(n.t<=0)){var i=this.abs();if(i.t<n.t)return null!=e&&e.fromInt(0),void(null!=r&&this.copyTo(r));null==r&&(r=x());var o=x(),s=this.s,a=t.s,u=this.DB-B(n[n.t-1]);u>0?(n.lShiftTo(u,o),i.lShiftTo(u,r)):(n.copyTo(o),i.copyTo(r));var c=o.t,h=o[c-1];if(0!=h){var l=h*(1<<this.F1)+(c>1?o[c-2]>>this.F2:0),f=this.FV/l,d=(1<<this.F1)/l,g=1<<this.F2,p=r.t,v=p-c,y=null==e?x():e;for(o.dlShiftTo(v,y),r.compareTo(y)>=0&&(r[r.t++]=1,r.subTo(y,r)),E.ONE.dlShiftTo(c,y),y.subTo(o,o);o.t<c;)o[o.t++]=0;for(;--v>=0;){var m=r[--p]==h?this.DM:Math.floor(r[p]*f+(r[p-1]+g)*d);if((r[p]+=o.am(0,m,r,v,0,c))<m)for(o.dlShiftTo(v,y),r.subTo(y,r);r[p]<--m;)r.subTo(y,r);}null!=e&&(r.drShiftTo(c,e),s!=a&&E.ZERO.subTo(e,e)),r.t=c,r.clamp(),u>0&&r.rShiftTo(u,r),s<0&&E.ZERO.subTo(r,r);}}},E.prototype.invDigit=function vt(){if(this.t<1)return 0;var t=this[0];if(0==(1&t))return 0;var e=3&t;return (e=(e=(e=(e=e*(2-(15&t)*e)&15)*(2-(255&t)*e)&255)*(2-((65535&t)*e&65535))&65535)*(2-t*e%this.DV)%this.DV)>0?this.DV-e:-e},E.prototype.isEven=function yt(){return 0==(this.t>0?1&this[0]:this.s)},E.prototype.exp=function mt(t,e){if(t>4294967295||t<1)return E.ONE;var r=x(),n=x(),i=e.convert(this),o=B(t)-1;for(i.copyTo(r);--o>=0;)if(e.sqrTo(r,n),(t&1<<o)>0)e.mulTo(n,i,r);else{var s=r;r=n,n=s;}return e.revert(r)},E.prototype.toString=function _t(t){if(this.s<0)return "-"+this.negate().toString(t);var e;if(16==t)e=4;else if(8==t)e=3;else if(2==t)e=1;else if(32==t)e=5;else{if(4!=t)return this.toRadix(t);e=2;}var r,n=(1<<e)-1,i=!1,o="",s=this.t,a=this.DB-s*this.DB%e;if(s-- >0)for(a<this.DB&&(r=this[s]>>a)>0&&(i=!0,o=D(r));s>=0;)a<e?(r=(this[s]&(1<<a)-1)<<e-a,r|=this[--s]>>(a+=this.DB-e)):(r=this[s]>>(a-=e)&n,a<=0&&(a+=this.DB,--s)),r>0&&(i=!0),i&&(o+=D(r));return i?o:"0"},E.prototype.negate=function St(){var t=x();return E.ZERO.subTo(this,t),t},E.prototype.abs=function Ft(){return this.s<0?this.negate():this},E.prototype.compareTo=function bt(t){var e=this.s-t.s;if(0!=e)return e;var r=this.t;if(0!=(e=r-t.t))return this.s<0?-e:e;for(;--r>=0;)if(0!=(e=this[r]-t[r]))return e;return 0},E.prototype.bitLength=function wt(){return this.t<=0?0:this.DB*(this.t-1)+B(this[this.t-1]^this.s&this.DM)},E.prototype.mod=function Et(t){var e=x();return this.abs().divRemTo(t,null,e),this.s<0&&e.compareTo(E.ZERO)>0&&t.subTo(e,e),e},E.prototype.modPowInt=function xt(t,e){var r;return r=t<256||e.isEven()?new N(e):new O(e),this.exp(t,r)},E.ZERO=L(0),E.ONE=L(1),J.prototype.convert=W,J.prototype.revert=W,J.prototype.mulTo=function kt(t,e,r){t.multiplyTo(e,r);},J.prototype.sqrTo=function At(t,e){t.squareTo(e);},z.prototype.convert=function Pt(t){if(t.s<0||t.t>2*this.m.t)return t.mod(this.m);if(t.compareTo(this.m)<0)return t;var e=x();return t.copyTo(e),this.reduce(e),e},z.prototype.revert=function Ct(t){return t},z.prototype.reduce=function Tt(t){for(t.drShiftTo(this.m.t-1,this.r2),t.t>this.m.t+1&&(t.t=this.m.t+1,t.clamp()),this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3),this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);t.compareTo(this.r2)<0;)t.dAddOffset(1,this.m.t+1);for(t.subTo(this.r2,t);t.compareTo(this.m)>=0;)t.subTo(this.m,t);},z.prototype.mulTo=function Rt(t,e,r){t.multiplyTo(e,r),this.reduce(r);},z.prototype.sqrTo=function It(t,e){t.squareTo(e),this.reduce(e);};var Dt=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997],Ut=(1<<26)/Dt[Dt.length-1];
+    var b64map="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";var b64pad="=";function hex2b64(d){var b;var e;var a="";for(b=0;b+3<=d.length;b+=3){e=parseInt(d.substring(b,b+3),16);a+=b64map.charAt(e>>6)+b64map.charAt(e&63);}if(b+1==d.length){e=parseInt(d.substring(b,b+1),16);a+=b64map.charAt(e<<2);}else{if(b+2==d.length){e=parseInt(d.substring(b,b+2),16);a+=b64map.charAt(e>>2)+b64map.charAt((e&3)<<4);}}{while((a.length&3)>0){a+=b64pad;}}return a}function b64tohex(f){var d="";var e;var b=0;var c;var a;for(e=0;e<f.length;++e){if(f.charAt(e)==b64pad){break}a=b64map.indexOf(f.charAt(e));if(a<0){continue}if(b==0){d+=int2char(a>>2);c=a&3;b=1;}else{if(b==1){d+=int2char((c<<2)|(a>>4));c=a&15;b=2;}else{if(b==2){d+=int2char(c);d+=int2char(a>>2);c=a&3;b=3;}else{d+=int2char((c<<2)|(a>>4));d+=int2char(a&15);b=0;}}}}if(b==1){d+=int2char(c<<2);}return d}/*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
+     */
+    var dbits;function BigInteger(e,d,f){if(e!=null){if("number"==typeof e){this.fromNumber(e,d,f);}else{if(d==null&&"string"!=typeof e){this.fromString(e,256);}else{this.fromString(e,d);}}}}function nbi(){return new BigInteger(null)}function am1(f,a,b,e,h,g){while(--g>=0){var d=a*this[f++]+b[e]+h;h=Math.floor(d/67108864);b[e++]=d&67108863;}return h}{{BigInteger.prototype.am=am1;dbits=26;}}BigInteger.prototype.DB=dbits;BigInteger.prototype.DM=((1<<dbits)-1);BigInteger.prototype.DV=(1<<dbits);var BI_FP=52;BigInteger.prototype.FV=Math.pow(2,BI_FP);BigInteger.prototype.F1=BI_FP-dbits;BigInteger.prototype.F2=2*dbits-BI_FP;var BI_RM="0123456789abcdefghijklmnopqrstuvwxyz";var BI_RC=new Array();var rr,vv;rr="0".charCodeAt(0);for(vv=0;vv<=9;++vv){BI_RC[rr++]=vv;}rr="a".charCodeAt(0);for(vv=10;vv<36;++vv){BI_RC[rr++]=vv;}rr="A".charCodeAt(0);for(vv=10;vv<36;++vv){BI_RC[rr++]=vv;}function int2char(a){return BI_RM.charAt(a)}function intAt(b,a){var d=BI_RC[b.charCodeAt(a)];return (d==null)?-1:d}function bnpCopyTo(b){for(var a=this.t-1;a>=0;--a){b[a]=this[a];}b.t=this.t;b.s=this.s;}function bnpFromInt(a){this.t=1;this.s=(a<0)?-1:0;if(a>0){this[0]=a;}else{if(a<-1){this[0]=a+this.DV;}else{this.t=0;}}}function nbv(a){var b=nbi();b.fromInt(a);return b}function bnpFromString(h,c){var e;if(c==16){e=4;}else{if(c==8){e=3;}else{if(c==256){e=8;}else{if(c==2){e=1;}else{if(c==32){e=5;}else{if(c==4){e=2;}else{this.fromRadix(h,c);return}}}}}}this.t=0;this.s=0;var g=h.length,d=false,f=0;while(--g>=0){var a=(e==8)?h[g]&255:intAt(h,g);if(a<0){if(h.charAt(g)=="-"){d=true;}continue}d=false;if(f==0){this[this.t++]=a;}else{if(f+e>this.DB){this[this.t-1]|=(a&((1<<(this.DB-f))-1))<<f;this[this.t++]=(a>>(this.DB-f));}else{this[this.t-1]|=a<<f;}}f+=e;if(f>=this.DB){f-=this.DB;}}if(e==8&&(h[0]&128)!=0){this.s=-1;if(f>0){this[this.t-1]|=((1<<(this.DB-f))-1)<<f;}}this.clamp();if(d){BigInteger.ZERO.subTo(this,this);}}function bnpClamp(){var a=this.s&this.DM;while(this.t>0&&this[this.t-1]==a){--this.t;}}function bnToString(c){if(this.s<0){return "-"+this.negate().toString(c)}var e;if(c==16){e=4;}else{if(c==8){e=3;}else{if(c==2){e=1;}else{if(c==32){e=5;}else{if(c==4){e=2;}else{return this.toRadix(c)}}}}}var g=(1<<e)-1,l,a=false,h="",f=this.t;var j=this.DB-(f*this.DB)%e;if(f-->0){if(j<this.DB&&(l=this[f]>>j)>0){a=true;h=int2char(l);}while(f>=0){if(j<e){l=(this[f]&((1<<j)-1))<<(e-j);l|=this[--f]>>(j+=this.DB-e);}else{l=(this[f]>>(j-=e))&g;if(j<=0){j+=this.DB;--f;}}if(l>0){a=true;}if(a){h+=int2char(l);}}}return a?h:"0"}function bnNegate(){var a=nbi();BigInteger.ZERO.subTo(this,a);return a}function bnAbs(){return (this.s<0)?this.negate():this}function bnCompareTo(b){var d=this.s-b.s;if(d!=0){return d}var c=this.t;d=c-b.t;if(d!=0){return (this.s<0)?-d:d}while(--c>=0){if((d=this[c]-b[c])!=0){return d}}return 0}function nbits(a){var c=1,b;if((b=a>>>16)!=0){a=b;c+=16;}if((b=a>>8)!=0){a=b;c+=8;}if((b=a>>4)!=0){a=b;c+=4;}if((b=a>>2)!=0){a=b;c+=2;}if((b=a>>1)!=0){a=b;c+=1;}return c}function bnBitLength(){if(this.t<=0){return 0}return this.DB*(this.t-1)+nbits(this[this.t-1]^(this.s&this.DM))}function bnpDLShiftTo(c,b){var a;for(a=this.t-1;a>=0;--a){b[a+c]=this[a];}for(a=c-1;a>=0;--a){b[a]=0;}b.t=this.t+c;b.s=this.s;}function bnpDRShiftTo(c,b){for(var a=c;a<this.t;++a){b[a-c]=this[a];}b.t=Math.max(this.t-c,0);b.s=this.s;}function bnpLShiftTo(j,e){var b=j%this.DB;var a=this.DB-b;var g=(1<<a)-1;var f=Math.floor(j/this.DB),h=(this.s<<b)&this.DM,d;for(d=this.t-1;d>=0;--d){e[d+f+1]=(this[d]>>a)|h;h=(this[d]&g)<<b;}for(d=f-1;d>=0;--d){e[d]=0;}e[f]=h;e.t=this.t+f+1;e.s=this.s;e.clamp();}function bnpRShiftTo(g,d){d.s=this.s;var e=Math.floor(g/this.DB);if(e>=this.t){d.t=0;return}var b=g%this.DB;var a=this.DB-b;var f=(1<<b)-1;d[0]=this[e]>>b;for(var c=e+1;c<this.t;++c){d[c-e-1]|=(this[c]&f)<<a;d[c-e]=this[c]>>b;}if(b>0){d[this.t-e-1]|=(this.s&f)<<a;}d.t=this.t-e;d.clamp();}function bnpSubTo(d,f){var e=0,g=0,b=Math.min(d.t,this.t);while(e<b){g+=this[e]-d[e];f[e++]=g&this.DM;g>>=this.DB;}if(d.t<this.t){g-=d.s;while(e<this.t){g+=this[e];f[e++]=g&this.DM;g>>=this.DB;}g+=this.s;}else{g+=this.s;while(e<d.t){g-=d[e];f[e++]=g&this.DM;g>>=this.DB;}g-=d.s;}f.s=(g<0)?-1:0;if(g<-1){f[e++]=this.DV+g;}else{if(g>0){f[e++]=g;}}f.t=e;f.clamp();}function bnpMultiplyTo(c,e){var b=this.abs(),f=c.abs();var d=b.t;e.t=d+f.t;while(--d>=0){e[d]=0;}for(d=0;d<f.t;++d){e[d+b.t]=b.am(0,f[d],e,d,0,b.t);}e.s=0;e.clamp();if(this.s!=c.s){BigInteger.ZERO.subTo(e,e);}}function bnpSquareTo(d){var a=this.abs();var b=d.t=2*a.t;while(--b>=0){d[b]=0;}for(b=0;b<a.t-1;++b){var e=a.am(b,a[b],d,2*b,0,1);if((d[b+a.t]+=a.am(b+1,2*a[b],d,2*b+1,e,a.t-b-1))>=a.DV){d[b+a.t]-=a.DV;d[b+a.t+1]=1;}}if(d.t>0){d[d.t-1]+=a.am(b,a[b],d,2*b,0,1);}d.s=0;d.clamp();}function bnpDivRemTo(n,h,g){var w=n.abs();if(w.t<=0){return}var k=this.abs();if(k.t<w.t){if(h!=null){h.fromInt(0);}if(g!=null){this.copyTo(g);}return}if(g==null){g=nbi();}var d=nbi(),a=this.s,l=n.s;var v=this.DB-nbits(w[w.t-1]);if(v>0){w.lShiftTo(v,d);k.lShiftTo(v,g);}else{w.copyTo(d);k.copyTo(g);}var p=d.t;var b=d[p-1];if(b==0){return}var o=b*(1<<this.F1)+((p>1)?d[p-2]>>this.F2:0);var A=this.FV/o,z=(1<<this.F1)/o,x=1<<this.F2;var u=g.t,s=u-p,f=(h==null)?nbi():h;d.dlShiftTo(s,f);if(g.compareTo(f)>=0){g[g.t++]=1;g.subTo(f,g);}BigInteger.ONE.dlShiftTo(p,f);f.subTo(d,d);while(d.t<p){d[d.t++]=0;}while(--s>=0){var c=(g[--u]==b)?this.DM:Math.floor(g[u]*A+(g[u-1]+x)*z);if((g[u]+=d.am(0,c,g,s,0,p))<c){d.dlShiftTo(s,f);g.subTo(f,g);while(g[u]<--c){g.subTo(f,g);}}}if(h!=null){g.drShiftTo(p,h);if(a!=l){BigInteger.ZERO.subTo(h,h);}}g.t=p;g.clamp();if(v>0){g.rShiftTo(v,g);}if(a<0){BigInteger.ZERO.subTo(g,g);}}function bnMod(b){var c=nbi();this.abs().divRemTo(b,null,c);if(this.s<0&&c.compareTo(BigInteger.ZERO)>0){b.subTo(c,c);}return c}function Classic(a){this.m=a;}function cConvert(a){if(a.s<0||a.compareTo(this.m)>=0){return a.mod(this.m)}else{return a}}function cRevert(a){return a}function cReduce(a){a.divRemTo(this.m,null,a);}function cMulTo(a,c,b){a.multiplyTo(c,b);this.reduce(b);}function cSqrTo(a,b){a.squareTo(b);this.reduce(b);}Classic.prototype.convert=cConvert;Classic.prototype.revert=cRevert;Classic.prototype.reduce=cReduce;Classic.prototype.mulTo=cMulTo;Classic.prototype.sqrTo=cSqrTo;function bnpInvDigit(){if(this.t<1){return 0}var a=this[0];if((a&1)==0){return 0}var b=a&3;b=(b*(2-(a&15)*b))&15;b=(b*(2-(a&255)*b))&255;b=(b*(2-(((a&65535)*b)&65535)))&65535;b=(b*(2-a*b%this.DV))%this.DV;return (b>0)?this.DV-b:-b}function Montgomery(a){this.m=a;this.mp=a.invDigit();this.mpl=this.mp&32767;this.mph=this.mp>>15;this.um=(1<<(a.DB-15))-1;this.mt2=2*a.t;}function montConvert(a){var b=nbi();a.abs().dlShiftTo(this.m.t,b);b.divRemTo(this.m,null,b);if(a.s<0&&b.compareTo(BigInteger.ZERO)>0){this.m.subTo(b,b);}return b}function montRevert(a){var b=nbi();a.copyTo(b);this.reduce(b);return b}function montReduce(a){while(a.t<=this.mt2){a[a.t++]=0;}for(var c=0;c<this.m.t;++c){var b=a[c]&32767;var d=(b*this.mpl+(((b*this.mph+(a[c]>>15)*this.mpl)&this.um)<<15))&a.DM;b=c+this.m.t;a[b]+=this.m.am(0,d,a,c,0,this.m.t);while(a[b]>=a.DV){a[b]-=a.DV;a[++b]++;}}a.clamp();a.drShiftTo(this.m.t,a);if(a.compareTo(this.m)>=0){a.subTo(this.m,a);}}function montSqrTo(a,b){a.squareTo(b);this.reduce(b);}function montMulTo(a,c,b){a.multiplyTo(c,b);this.reduce(b);}Montgomery.prototype.convert=montConvert;Montgomery.prototype.revert=montRevert;Montgomery.prototype.reduce=montReduce;Montgomery.prototype.mulTo=montMulTo;Montgomery.prototype.sqrTo=montSqrTo;function bnpIsEven(){return ((this.t>0)?(this[0]&1):this.s)==0}function bnpExp(h,j){if(h>4294967295||h<1){return BigInteger.ONE}var f=nbi(),a=nbi(),d=j.convert(this),c=nbits(h)-1;d.copyTo(f);while(--c>=0){j.sqrTo(f,a);if((h&(1<<c))>0){j.mulTo(a,d,f);}else{var b=f;f=a;a=b;}}return j.revert(f)}function bnModPowInt(b,a){var c;if(b<256||a.isEven()){c=new Classic(a);}else{c=new Montgomery(a);}return this.exp(b,c)}BigInteger.prototype.copyTo=bnpCopyTo;BigInteger.prototype.fromInt=bnpFromInt;BigInteger.prototype.fromString=bnpFromString;BigInteger.prototype.clamp=bnpClamp;BigInteger.prototype.dlShiftTo=bnpDLShiftTo;BigInteger.prototype.drShiftTo=bnpDRShiftTo;BigInteger.prototype.lShiftTo=bnpLShiftTo;BigInteger.prototype.rShiftTo=bnpRShiftTo;BigInteger.prototype.subTo=bnpSubTo;BigInteger.prototype.multiplyTo=bnpMultiplyTo;BigInteger.prototype.squareTo=bnpSquareTo;BigInteger.prototype.divRemTo=bnpDivRemTo;BigInteger.prototype.invDigit=bnpInvDigit;BigInteger.prototype.isEven=bnpIsEven;BigInteger.prototype.exp=bnpExp;BigInteger.prototype.toString=bnToString;BigInteger.prototype.negate=bnNegate;BigInteger.prototype.abs=bnAbs;BigInteger.prototype.compareTo=bnCompareTo;BigInteger.prototype.bitLength=bnBitLength;BigInteger.prototype.mod=bnMod;BigInteger.prototype.modPowInt=bnModPowInt;BigInteger.ZERO=nbv(0);BigInteger.ONE=nbv(1);
     /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
      */
-    function Lt(){this.i=0,this.j=0,this.S=new Array;}E.prototype.chunkSize=function Bt(t){return Math.floor(Math.LN2*this.DB/Math.log(t))},E.prototype.toRadix=function Nt(t){if(null==t&&(t=10),0==this.signum()||t<2||t>36)return "0";var e=this.chunkSize(t),r=Math.pow(t,e),n=L(r),i=x(),o=x(),s="";for(this.divRemTo(n,i,o);i.signum()>0;)s=(r+o.intValue()).toString(t).substr(1)+s,i.divRemTo(n,i,o);return o.intValue().toString(t)+s},E.prototype.fromRadix=function Ot(t,e){this.fromInt(0),null==e&&(e=10);for(var r=this.chunkSize(e),n=Math.pow(e,r),i=!1,o=0,s=0,a=0;a<t.length;++a){var u=U(t,a);u<0?"-"==t.charAt(a)&&0==this.signum()&&(i=!0):(s=e*s+u,++o>=r&&(this.dMultiply(n),this.dAddOffset(s,0),o=0,s=0));}o>0&&(this.dMultiply(Math.pow(e,o)),this.dAddOffset(s,0)),i&&E.ZERO.subTo(this,this);},E.prototype.fromNumber=function jt(t,e,r){if("number"==typeof e)if(t<2)this.fromInt(1);else for(this.fromNumber(t,r),this.testBit(t-1)||this.bitwiseTo(E.ONE.shiftLeft(t-1),M,this),this.isEven()&&this.dAddOffset(1,0);!this.isProbablePrime(e);)this.dAddOffset(2,0),this.bitLength()>t&&this.subTo(E.ONE.shiftLeft(t-1),this);else{var n=new Array,i=7&t;n.length=1+(t>>3),e.nextBytes(n),i>0?n[0]&=(1<<i)-1:n[0]=0,this.fromString(n,256);}},E.prototype.bitwiseTo=function Mt(t,e,r){var n,i,o=Math.min(t.t,this.t);for(n=0;n<o;++n)r[n]=e(this[n],t[n]);if(t.t<this.t){for(i=t.s&this.DM,n=o;n<this.t;++n)r[n]=e(this[n],i);r.t=this.t;}else{for(i=this.s&this.DM,n=o;n<t.t;++n)r[n]=e(i,t[n]);r.t=t.t;}r.s=e(this.s,t.s),r.clamp();},E.prototype.changeBit=function Ht(t,e){var r=E.ONE.shiftLeft(t);return this.bitwiseTo(r,e,r),r},E.prototype.addTo=function Kt(t,e){for(var r=0,n=0,i=Math.min(t.t,this.t);r<i;)n+=this[r]+t[r],e[r++]=n&this.DM,n>>=this.DB;if(t.t<this.t){for(n+=t.s;r<this.t;)n+=this[r],e[r++]=n&this.DM,n>>=this.DB;n+=this.s;}else{for(n+=this.s;r<t.t;)n+=t[r],e[r++]=n&this.DM,n>>=this.DB;n+=t.s;}e.s=n<0?-1:0,n>0?e[r++]=n:n<-1&&(e[r++]=this.DV+n),e.t=r,e.clamp();},E.prototype.dMultiply=function Vt(t){this[this.t]=this.am(0,t-1,this,0,0,this.t),++this.t,this.clamp();},E.prototype.dAddOffset=function qt(t,e){if(0!=t){for(;this.t<=e;)this[this.t++]=0;for(this[e]+=t;this[e]>=this.DV;)this[e]-=this.DV,++e>=this.t&&(this[this.t++]=0),++this[e];}},E.prototype.multiplyLowerTo=function Jt(t,e,r){var n,i=Math.min(this.t+t.t,e);for(r.s=0,r.t=i;i>0;)r[--i]=0;for(n=r.t-this.t;i<n;++i)r[i+this.t]=this.am(0,t[i],r,i,0,this.t);for(n=Math.min(t.t,e);i<n;++i)this.am(0,t[i],r,i,0,e-i);r.clamp();},E.prototype.multiplyUpperTo=function Wt(t,e,r){--e;var n=r.t=this.t+t.t-e;for(r.s=0;--n>=0;)r[n]=0;for(n=Math.max(e-this.t,0);n<t.t;++n)r[this.t+n-e]=this.am(e-n,t[n],r,0,0,this.t+n-e);r.clamp(),r.drShiftTo(1,r);},E.prototype.modInt=function zt(t){if(t<=0)return 0;var e=this.DV%t,r=this.s<0?t-1:0;if(this.t>0)if(0==e)r=this[0]%t;else for(var n=this.t-1;n>=0;--n)r=(e*r+this[n])%t;return r},E.prototype.millerRabin=function Yt(t){var e=this.subtract(E.ONE),r=e.getLowestSetBit();if(r<=0)return !1;var n=e.shiftRight(r);(t=t+1>>1)>Dt.length&&(t=Dt.length);for(var i=x(),o=0;o<t;++o){i.fromInt(Dt[Math.floor(Math.random()*Dt.length)]);var s=i.modPow(n,this);if(0!=s.compareTo(E.ONE)&&0!=s.compareTo(e)){for(var a=1;a++<r&&0!=s.compareTo(e);)if(0==(s=s.modPowInt(2,this)).compareTo(E.ONE))return !1;if(0!=s.compareTo(e))return !1}}return !0},E.prototype.clone=
+    function bnClone(){var a=nbi();this.copyTo(a);return a}function bnIntValue(){if(this.s<0){if(this.t==1){return this[0]-this.DV}else{if(this.t==0){return -1}}}else{if(this.t==1){return this[0]}else{if(this.t==0){return 0}}}return ((this[1]&((1<<(32-this.DB))-1))<<this.DB)|this[0]}function bnByteValue(){return (this.t==0)?this.s:(this[0]<<24)>>24}function bnShortValue(){return (this.t==0)?this.s:(this[0]<<16)>>16}function bnpChunkSize(a){return Math.floor(Math.LN2*this.DB/Math.log(a))}function bnSigNum(){if(this.s<0){return -1}else{if(this.t<=0||(this.t==1&&this[0]<=0)){return 0}else{return 1}}}function bnpToRadix(c){if(c==null){c=10;}if(this.signum()==0||c<2||c>36){return "0"}var f=this.chunkSize(c);var e=Math.pow(c,f);var i=nbv(e),j=nbi(),h=nbi(),g="";this.divRemTo(i,j,h);while(j.signum()>0){g=(e+h.intValue()).toString(c).substr(1)+g;j.divRemTo(i,j,h);}return h.intValue().toString(c)+g}function bnpFromRadix(m,h){this.fromInt(0);if(h==null){h=10;}var f=this.chunkSize(h);var g=Math.pow(h,f),e=false,a=0,l=0;for(var c=0;c<m.length;++c){var k=intAt(m,c);if(k<0){if(m.charAt(c)=="-"&&this.signum()==0){e=true;}continue}l=h*l+k;if(++a>=f){this.dMultiply(g);this.dAddOffset(l,0);a=0;l=0;}}if(a>0){this.dMultiply(Math.pow(h,a));this.dAddOffset(l,0);}if(e){BigInteger.ZERO.subTo(this,this);}}function bnpFromNumber(f,e,h){if("number"==typeof e){if(f<2){this.fromInt(1);}else{this.fromNumber(f,h);if(!this.testBit(f-1)){this.bitwiseTo(BigInteger.ONE.shiftLeft(f-1),op_or,this);}if(this.isEven()){this.dAddOffset(1,0);}while(!this.isProbablePrime(e)){this.dAddOffset(2,0);if(this.bitLength()>f){this.subTo(BigInteger.ONE.shiftLeft(f-1),this);}}}}else{var d=new Array(),g=f&7;d.length=(f>>3)+1;e.nextBytes(d);if(g>0){d[0]&=((1<<g)-1);}else{d[0]=0;}this.fromString(d,256);}}function bnToByteArray(){var b=this.t,c=new Array();c[0]=this.s;var e=this.DB-(b*this.DB)%8,f,a=0;if(b-->0){if(e<this.DB&&(f=this[b]>>e)!=(this.s&this.DM)>>e){c[a++]=f|(this.s<<(this.DB-e));}while(b>=0){if(e<8){f=(this[b]&((1<<e)-1))<<(8-e);f|=this[--b]>>(e+=this.DB-8);}else{f=(this[b]>>(e-=8))&255;if(e<=0){e+=this.DB;--b;}}if((f&128)!=0){f|=-256;}if(a==0&&(this.s&128)!=(f&128)){++a;}if(a>0||f!=this.s){c[a++]=f;}}}return c}function bnEquals(b){return(this.compareTo(b)==0)}function bnMin(b){return (this.compareTo(b)<0)?this:b}function bnMax(b){return (this.compareTo(b)>0)?this:b}function bnpBitwiseTo(c,h,e){var d,g,b=Math.min(c.t,this.t);for(d=0;d<b;++d){e[d]=h(this[d],c[d]);}if(c.t<this.t){g=c.s&this.DM;for(d=b;d<this.t;++d){e[d]=h(this[d],g);}e.t=this.t;}else{g=this.s&this.DM;for(d=b;d<c.t;++d){e[d]=h(g,c[d]);}e.t=c.t;}e.s=h(this.s,c.s);e.clamp();}function op_and(a,b){return a&b}function bnAnd(b){var c=nbi();this.bitwiseTo(b,op_and,c);return c}function op_or(a,b){return a|b}function bnOr(b){var c=nbi();this.bitwiseTo(b,op_or,c);return c}function op_xor(a,b){return a^b}function bnXor(b){var c=nbi();this.bitwiseTo(b,op_xor,c);return c}function op_andnot(a,b){return a&~b}function bnAndNot(b){var c=nbi();this.bitwiseTo(b,op_andnot,c);return c}function bnNot(){var b=nbi();for(var a=0;a<this.t;++a){b[a]=this.DM&~this[a];}b.t=this.t;b.s=~this.s;return b}function bnShiftLeft(b){var a=nbi();if(b<0){this.rShiftTo(-b,a);}else{this.lShiftTo(b,a);}return a}function bnShiftRight(b){var a=nbi();if(b<0){this.lShiftTo(-b,a);}else{this.rShiftTo(b,a);}return a}function lbit(a){if(a==0){return -1}var b=0;if((a&65535)==0){a>>=16;b+=16;}if((a&255)==0){a>>=8;b+=8;}if((a&15)==0){a>>=4;b+=4;}if((a&3)==0){a>>=2;b+=2;}if((a&1)==0){++b;}return b}function bnGetLowestSetBit(){for(var a=0;a<this.t;++a){if(this[a]!=0){return a*this.DB+lbit(this[a])}}if(this.s<0){return this.t*this.DB}return -1}function cbit(a){var b=0;while(a!=0){a&=a-1;++b;}return b}function bnBitCount(){var c=0,a=this.s&this.DM;for(var b=0;b<this.t;++b){c+=cbit(this[b]^a);}return c}function bnTestBit(b){var a=Math.floor(b/this.DB);if(a>=this.t){return(this.s!=0)}return((this[a]&(1<<(b%this.DB)))!=0)}function bnpChangeBit(c,b){var a=BigInteger.ONE.shiftLeft(c);this.bitwiseTo(a,b,a);return a}function bnSetBit(a){return this.changeBit(a,op_or)}function bnClearBit(a){return this.changeBit(a,op_andnot)}function bnFlipBit(a){return this.changeBit(a,op_xor)}function bnpAddTo(d,f){var e=0,g=0,b=Math.min(d.t,this.t);while(e<b){g+=this[e]+d[e];f[e++]=g&this.DM;g>>=this.DB;}if(d.t<this.t){g+=d.s;while(e<this.t){g+=this[e];f[e++]=g&this.DM;g>>=this.DB;}g+=this.s;}else{g+=this.s;while(e<d.t){g+=d[e];f[e++]=g&this.DM;g>>=this.DB;}g+=d.s;}f.s=(g<0)?-1:0;if(g>0){f[e++]=g;}else{if(g<-1){f[e++]=this.DV+g;}}f.t=e;f.clamp();}function bnAdd(b){var c=nbi();this.addTo(b,c);return c}function bnSubtract(b){var c=nbi();this.subTo(b,c);return c}function bnMultiply(b){var c=nbi();this.multiplyTo(b,c);return c}function bnSquare(){var a=nbi();this.squareTo(a);return a}function bnDivide(b){var c=nbi();this.divRemTo(b,c,null);return c}function bnRemainder(b){var c=nbi();this.divRemTo(b,null,c);return c}function bnDivideAndRemainder(b){var d=nbi(),c=nbi();this.divRemTo(b,d,c);return new Array(d,c)}function bnpDMultiply(a){this[this.t]=this.am(0,a-1,this,0,0,this.t);++this.t;this.clamp();}function bnpDAddOffset(b,a){if(b==0){return}while(this.t<=a){this[this.t++]=0;}this[a]+=b;while(this[a]>=this.DV){this[a]-=this.DV;if(++a>=this.t){this[this.t++]=0;}++this[a];}}function NullExp(){}function nNop(a){return a}function nMulTo(a,c,b){a.multiplyTo(c,b);}function nSqrTo(a,b){a.squareTo(b);}NullExp.prototype.convert=nNop;NullExp.prototype.revert=nNop;NullExp.prototype.mulTo=nMulTo;NullExp.prototype.sqrTo=nSqrTo;function bnPow(a){return this.exp(a,new NullExp())}function bnpMultiplyLowerTo(b,f,e){var d=Math.min(this.t+b.t,f);e.s=0;e.t=d;while(d>0){e[--d]=0;}var c;for(c=e.t-this.t;d<c;++d){e[d+this.t]=this.am(0,b[d],e,d,0,this.t);}for(c=Math.min(b.t,f);d<c;++d){this.am(0,b[d],e,d,0,f-d);}e.clamp();}function bnpMultiplyUpperTo(b,e,d){--e;var c=d.t=this.t+b.t-e;d.s=0;while(--c>=0){d[c]=0;}for(c=Math.max(e-this.t,0);c<b.t;++c){d[this.t+c-e]=this.am(e-c,b[c],d,0,0,this.t+c-e);}d.clamp();d.drShiftTo(1,d);}function Barrett(a){this.r2=nbi();this.q3=nbi();BigInteger.ONE.dlShiftTo(2*a.t,this.r2);this.mu=this.r2.divide(a);this.m=a;}function barrettConvert(a){if(a.s<0||a.t>2*this.m.t){return a.mod(this.m)}else{if(a.compareTo(this.m)<0){return a}else{var b=nbi();a.copyTo(b);this.reduce(b);return b}}}function barrettRevert(a){return a}function barrettReduce(a){a.drShiftTo(this.m.t-1,this.r2);if(a.t>this.m.t+1){a.t=this.m.t+1;a.clamp();}this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3);this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);while(a.compareTo(this.r2)<0){a.dAddOffset(1,this.m.t+1);}a.subTo(this.r2,a);while(a.compareTo(this.m)>=0){a.subTo(this.m,a);}}function barrettSqrTo(a,b){a.squareTo(b);this.reduce(b);}function barrettMulTo(a,c,b){a.multiplyTo(c,b);this.reduce(b);}Barrett.prototype.convert=barrettConvert;Barrett.prototype.revert=barrettRevert;Barrett.prototype.reduce=barrettReduce;Barrett.prototype.mulTo=barrettMulTo;Barrett.prototype.sqrTo=barrettSqrTo;function bnModPow(q,f){var o=q.bitLength(),h,b=nbv(1),v;if(o<=0){return b}else{if(o<18){h=1;}else{if(o<48){h=3;}else{if(o<144){h=4;}else{if(o<768){h=5;}else{h=6;}}}}}if(o<8){v=new Classic(f);}else{if(f.isEven()){v=new Barrett(f);}else{v=new Montgomery(f);}}var p=new Array(),d=3,s=h-1,a=(1<<h)-1;p[1]=v.convert(this);if(h>1){var A=nbi();v.sqrTo(p[1],A);while(d<=a){p[d]=nbi();v.mulTo(A,p[d-2],p[d]);d+=2;}}var l=q.t-1,x,u=true,c=nbi(),y;o=nbits(q[l])-1;while(l>=0){if(o>=s){x=(q[l]>>(o-s))&a;}else{x=(q[l]&((1<<(o+1))-1))<<(s-o);if(l>0){x|=q[l-1]>>(this.DB+o-s);}}d=h;while((x&1)==0){x>>=1;--d;}if((o-=d)<0){o+=this.DB;--l;}if(u){p[x].copyTo(b);u=false;}else{while(d>1){v.sqrTo(b,c);v.sqrTo(c,b);d-=2;}if(d>0){v.sqrTo(b,c);}else{y=b;b=c;c=y;}v.mulTo(c,p[x],b);}while(l>=0&&(q[l]&(1<<o))==0){v.sqrTo(b,c);y=b;b=c;c=y;if(--o<0){o=this.DB-1;--l;}}}return v.revert(b)}function bnGCD(c){var b=(this.s<0)?this.negate():this.clone();var h=(c.s<0)?c.negate():c.clone();if(b.compareTo(h)<0){var e=b;b=h;h=e;}var d=b.getLowestSetBit(),f=h.getLowestSetBit();if(f<0){return b}if(d<f){f=d;}if(f>0){b.rShiftTo(f,b);h.rShiftTo(f,h);}while(b.signum()>0){if((d=b.getLowestSetBit())>0){b.rShiftTo(d,b);}if((d=h.getLowestSetBit())>0){h.rShiftTo(d,h);}if(b.compareTo(h)>=0){b.subTo(h,b);b.rShiftTo(1,b);}else{h.subTo(b,h);h.rShiftTo(1,h);}}if(f>0){h.lShiftTo(f,h);}return h}function bnpModInt(e){if(e<=0){return 0}var c=this.DV%e,b=(this.s<0)?e-1:0;if(this.t>0){if(c==0){b=this[0]%e;}else{for(var a=this.t-1;a>=0;--a){b=(c*b+this[a])%e;}}}return b}function bnModInverse(f){var j=f.isEven();if((this.isEven()&&j)||f.signum()==0){return BigInteger.ZERO}var i=f.clone(),h=this.clone();var g=nbv(1),e=nbv(0),l=nbv(0),k=nbv(1);while(i.signum()!=0){while(i.isEven()){i.rShiftTo(1,i);if(j){if(!g.isEven()||!e.isEven()){g.addTo(this,g);e.subTo(f,e);}g.rShiftTo(1,g);}else{if(!e.isEven()){e.subTo(f,e);}}e.rShiftTo(1,e);}while(h.isEven()){h.rShiftTo(1,h);if(j){if(!l.isEven()||!k.isEven()){l.addTo(this,l);k.subTo(f,k);}l.rShiftTo(1,l);}else{if(!k.isEven()){k.subTo(f,k);}}k.rShiftTo(1,k);}if(i.compareTo(h)>=0){i.subTo(h,i);if(j){g.subTo(l,g);}e.subTo(k,e);}else{h.subTo(i,h);if(j){l.subTo(g,l);}k.subTo(e,k);}}if(h.compareTo(BigInteger.ONE)!=0){return BigInteger.ZERO}if(k.compareTo(f)>=0){return k.subtract(f)}if(k.signum()<0){k.addTo(f,k);}else{return k}if(k.signum()<0){return k.add(f)}else{return k}}var lowprimes=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997];var lplim=(1<<26)/lowprimes[lowprimes.length-1];function bnIsProbablePrime(e){var d,b=this.abs();if(b.t==1&&b[0]<=lowprimes[lowprimes.length-1]){for(d=0;d<lowprimes.length;++d){if(b[0]==lowprimes[d]){return true}}return false}if(b.isEven()){return false}d=1;while(d<lowprimes.length){var a=lowprimes[d],c=d+1;while(c<lowprimes.length&&a<lplim){a*=lowprimes[c++];}a=b.modInt(a);while(d<c){if(a%lowprimes[d++]==0){return false}}}return b.millerRabin(e)}function bnpMillerRabin(f){var g=this.subtract(BigInteger.ONE);var c=g.getLowestSetBit();if(c<=0){return false}var h=g.shiftRight(c);f=(f+1)>>1;if(f>lowprimes.length){f=lowprimes.length;}var b=nbi();for(var e=0;e<f;++e){b.fromInt(lowprimes[Math.floor(Math.random()*lowprimes.length)]);var l=b.modPow(h,this);if(l.compareTo(BigInteger.ONE)!=0&&l.compareTo(g)!=0){var d=1;while(d++<c&&l.compareTo(g)!=0){l=l.modPowInt(2,this);if(l.compareTo(BigInteger.ONE)==0){return false}}if(l.compareTo(g)!=0){return false}}}return true}BigInteger.prototype.chunkSize=bnpChunkSize;BigInteger.prototype.toRadix=bnpToRadix;BigInteger.prototype.fromRadix=bnpFromRadix;BigInteger.prototype.fromNumber=bnpFromNumber;BigInteger.prototype.bitwiseTo=bnpBitwiseTo;BigInteger.prototype.changeBit=bnpChangeBit;BigInteger.prototype.addTo=bnpAddTo;BigInteger.prototype.dMultiply=bnpDMultiply;BigInteger.prototype.dAddOffset=bnpDAddOffset;BigInteger.prototype.multiplyLowerTo=bnpMultiplyLowerTo;BigInteger.prototype.multiplyUpperTo=bnpMultiplyUpperTo;BigInteger.prototype.modInt=bnpModInt;BigInteger.prototype.millerRabin=bnpMillerRabin;BigInteger.prototype.clone=bnClone;BigInteger.prototype.intValue=bnIntValue;BigInteger.prototype.byteValue=bnByteValue;BigInteger.prototype.shortValue=bnShortValue;BigInteger.prototype.signum=bnSigNum;BigInteger.prototype.toByteArray=bnToByteArray;BigInteger.prototype.equals=bnEquals;BigInteger.prototype.min=bnMin;BigInteger.prototype.max=bnMax;BigInteger.prototype.and=bnAnd;BigInteger.prototype.or=bnOr;BigInteger.prototype.xor=bnXor;BigInteger.prototype.andNot=bnAndNot;BigInteger.prototype.not=bnNot;BigInteger.prototype.shiftLeft=bnShiftLeft;BigInteger.prototype.shiftRight=bnShiftRight;BigInteger.prototype.getLowestSetBit=bnGetLowestSetBit;BigInteger.prototype.bitCount=bnBitCount;BigInteger.prototype.testBit=bnTestBit;BigInteger.prototype.setBit=bnSetBit;BigInteger.prototype.clearBit=bnClearBit;BigInteger.prototype.flipBit=bnFlipBit;BigInteger.prototype.add=bnAdd;BigInteger.prototype.subtract=bnSubtract;BigInteger.prototype.multiply=bnMultiply;BigInteger.prototype.divide=bnDivide;BigInteger.prototype.remainder=bnRemainder;BigInteger.prototype.divideAndRemainder=bnDivideAndRemainder;BigInteger.prototype.modPow=bnModPow;BigInteger.prototype.modInverse=bnModInverse;BigInteger.prototype.pow=bnPow;BigInteger.prototype.gcd=bnGCD;BigInteger.prototype.isProbablePrime=bnIsProbablePrime;BigInteger.prototype.square=bnSquare;
     /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
      */
-    function Gt(){var t=x();return this.copyTo(t),t},E.prototype.intValue=function Xt(){if(this.s<0){if(1==this.t)return this[0]-this.DV;if(0==this.t)return -1}else{if(1==this.t)return this[0];if(0==this.t)return 0}return (this[1]&(1<<32-this.DB)-1)<<this.DB|this[0]},E.prototype.byteValue=function Qt(){return 0==this.t?this.s:this[0]<<24>>24},E.prototype.shortValue=function $t(){return 0==this.t?this.s:this[0]<<16>>16},E.prototype.signum=function Zt(){return this.s<0?-1:this.t<=0||1==this.t&&this[0]<=0?0:1},E.prototype.toByteArray=function te(){var t=this.t,e=new Array;e[0]=this.s;var r,n=this.DB-t*this.DB%8,i=0;if(t-- >0)for(n<this.DB&&(r=this[t]>>n)!=(this.s&this.DM)>>n&&(e[i++]=r|this.s<<this.DB-n);t>=0;)n<8?(r=(this[t]&(1<<n)-1)<<8-n,r|=this[--t]>>(n+=this.DB-8)):(r=this[t]>>(n-=8)&255,n<=0&&(n+=this.DB,--t)),0!=(128&r)&&(r|=-256),0==i&&(128&this.s)!=(128&r)&&++i,(i>0||r!=this.s)&&(e[i++]=r);return e},E.prototype.equals=function ee(t){return 0==this.compareTo(t)},E.prototype.min=function re(t){return this.compareTo(t)<0?this:t},E.prototype.max=function ne(t){return this.compareTo(t)>0?this:t},E.prototype.and=function ie(t){var e=x();return this.bitwiseTo(t,j,e),e},E.prototype.or=function oe(t){var e=x();return this.bitwiseTo(t,M,e),e},E.prototype.xor=function se(t){var e=x();return this.bitwiseTo(t,H,e),e},E.prototype.andNot=function ae(t){var e=x();return this.bitwiseTo(t,K,e),e},E.prototype.not=function ue(){for(var t=x(),e=0;e<this.t;++e)t[e]=this.DM&~this[e];return t.t=this.t,t.s=~this.s,t},E.prototype.shiftLeft=function ce(t){var e=x();return t<0?this.rShiftTo(-t,e):this.lShiftTo(t,e),e},E.prototype.shiftRight=function he(t){var e=x();return t<0?this.lShiftTo(-t,e):this.rShiftTo(t,e),e},E.prototype.getLowestSetBit=function le(){for(var t=0;t<this.t;++t)if(0!=this[t])return t*this.DB+V(this[t]);return this.s<0?this.t*this.DB:-1},E.prototype.bitCount=function fe(){for(var t=0,e=this.s&this.DM,r=0;r<this.t;++r)t+=q(this[r]^e);return t},E.prototype.testBit=function de(t){var e=Math.floor(t/this.DB);return e>=this.t?0!=this.s:0!=(this[e]&1<<t%this.DB)},E.prototype.setBit=function ge(t){return this.changeBit(t,M)},E.prototype.clearBit=function pe(t){return this.changeBit(t,K)},E.prototype.flipBit=function ve(t){return this.changeBit(t,H)},E.prototype.add=function ye(t){var e=x();return this.addTo(t,e),e},E.prototype.subtract=function me(t){var e=x();return this.subTo(t,e),e},E.prototype.multiply=function _e(t){var e=x();return this.multiplyTo(t,e),e},E.prototype.divide=function Se(t){var e=x();return this.divRemTo(t,e,null),e},E.prototype.remainder=function Fe(t){var e=x();return this.divRemTo(t,null,e),e},E.prototype.divideAndRemainder=function be(t){var e=x(),r=x();return this.divRemTo(t,e,r),new Array(e,r)},E.prototype.modPow=function we(t,e){var r,n,i=t.bitLength(),o=L(1);if(i<=0)return o;r=i<18?1:i<48?3:i<144?4:i<768?5:6,n=i<8?new N(e):e.isEven()?new z(e):new O(e);var s=new Array,a=3,u=r-1,c=(1<<r)-1;if(s[1]=n.convert(this),r>1){var h=x();for(n.sqrTo(s[1],h);a<=c;)s[a]=x(),n.mulTo(h,s[a-2],s[a]),a+=2;}var l,f,d=t.t-1,g=!0,p=x();for(i=B(t[d])-1;d>=0;){for(i>=u?l=t[d]>>i-u&c:(l=(t[d]&(1<<i+1)-1)<<u-i,d>0&&(l|=t[d-1]>>this.DB+i-u)),a=r;0==(1&l);)l>>=1,--a;if((i-=a)<0&&(i+=this.DB,--d),g)s[l].copyTo(o),g=!1;else{for(;a>1;)n.sqrTo(o,p),n.sqrTo(p,o),a-=2;a>0?n.sqrTo(o,p):(f=o,o=p,p=f),n.mulTo(p,s[l],o);}for(;d>=0&&0==(t[d]&1<<i);)n.sqrTo(o,p),f=o,o=p,p=f,--i<0&&(i=this.DB-1,--d);}return n.revert(o)},E.prototype.modInverse=function Ee(t){var e=t.isEven();if(this.isEven()&&e||0==t.signum())return E.ZERO;for(var r=t.clone(),n=this.clone(),i=L(1),o=L(0),s=L(0),a=L(1);0!=r.signum();){for(;r.isEven();)r.rShiftTo(1,r),e?(i.isEven()&&o.isEven()||(i.addTo(this,i),o.subTo(t,o)),i.rShiftTo(1,i)):o.isEven()||o.subTo(t,o),o.rShiftTo(1,o);for(;n.isEven();)n.rShiftTo(1,n),e?(s.isEven()&&a.isEven()||(s.addTo(this,s),a.subTo(t,a)),s.rShiftTo(1,s)):a.isEven()||a.subTo(t,a),a.rShiftTo(1,a);r.compareTo(n)>=0?(r.subTo(n,r),e&&i.subTo(s,i),o.subTo(a,o)):(n.subTo(r,n),e&&s.subTo(i,s),a.subTo(o,a));}return 0!=n.compareTo(E.ONE)?E.ZERO:a.compareTo(t)>=0?a.subtract(t):a.signum()<0?(a.addTo(t,a),a.signum()<0?a.add(t):a):a},E.prototype.pow=function xe(t){return this.exp(t,new J)},E.prototype.gcd=function ke(t){var e=this.s<0?this.negate():this.clone(),r=t.s<0?t.negate():t.clone();if(e.compareTo(r)<0){var n=e;e=r,r=n;}var i=e.getLowestSetBit(),o=r.getLowestSetBit();if(o<0)return e;for(i<o&&(o=i),o>0&&(e.rShiftTo(o,e),r.rShiftTo(o,r));e.signum()>0;)(i=e.getLowestSetBit())>0&&e.rShiftTo(i,e),(i=r.getLowestSetBit())>0&&r.rShiftTo(i,r),e.compareTo(r)>=0?(e.subTo(r,e),e.rShiftTo(1,e)):(r.subTo(e,r),r.rShiftTo(1,r));return o>0&&r.lShiftTo(o,r),r},E.prototype.isProbablePrime=function Ae(t){var e,r=this.abs();if(1==r.t&&r[0]<=Dt[Dt.length-1]){for(e=0;e<Dt.length;++e)if(r[0]==Dt[e])return !0;return !1}if(r.isEven())return !1;for(e=1;e<Dt.length;){for(var n=Dt[e],i=e+1;i<Dt.length&&n<Ut;)n*=Dt[i++];for(n=r.modInt(n);e<i;)if(n%Dt[e++]==0)return !1}return r.millerRabin(t)},E.prototype.square=function Pe(){var t=x();return this.squareTo(t),t},Lt.prototype.init=function Ce(t){var e,r,n;for(e=0;e<256;++e)this.S[e]=e;for(r=0,e=0;e<256;++e)r=r+this.S[e]+t[e%t.length]&255,n=this.S[e],this.S[e]=this.S[r],this.S[r]=n;this.i=0,this.j=0;},Lt.prototype.next=function Te(){var t;return this.i=this.i+1&255,this.j=this.j+this.S[this.i]&255,t=this.S[this.i],this.S[this.i]=this.S[this.j],this.S[this.j]=t,this.S[t+this.S[this.i]&255]};var Re,Ie,De,Ue=256;
-    /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
-     */function Le(){!function t(e){Ie[De++]^=255&e,Ie[De++]^=e>>8&255,Ie[De++]^=e>>16&255,Ie[De++]^=e>>24&255,De>=Ue&&(De-=Ue);}((new Date).getTime());}if(null==Ie){var Be;if(Ie=new Array,De=0,void 0!==i&&(void 0!==i.msCrypto)){var Ne=i.msCrypto;if(Ne.getRandomValues){var Oe=new Uint8Array(32);for(Ne.getRandomValues(Oe),Be=0;Be<32;++Be)Ie[De++]=Oe[Be];}}for(;De<Ue;)Be=Math.floor(65536*Math.random()),Ie[De++]=Be>>>8,Ie[De++]=255&Be;De=0,Le();}function Me(){if(null==Re){for(Le(),(Re=function t(){return new Lt}()).init(Ie),De=0;De<Ie.length;++De)Ie[De]=0;De=0;}return Re.next()}function He(){}
+    function Arcfour(){this.i=0;this.j=0;this.S=new Array();}function ARC4init(d){var c,a,b;for(c=0;c<256;++c){this.S[c]=c;}a=0;for(c=0;c<256;++c){a=(a+this.S[c]+d[c%d.length])&255;b=this.S[c];this.S[c]=this.S[a];this.S[a]=b;}this.i=0;this.j=0;}function ARC4next(){var a;this.i=(this.i+1)&255;this.j=(this.j+this.S[this.i])&255;a=this.S[this.i];this.S[this.i]=this.S[this.j];this.S[this.j]=a;return this.S[(a+this.S[this.i])&255]}Arcfour.prototype.init=ARC4init;Arcfour.prototype.next=ARC4next;function prng_newstate(){return new Arcfour()}var rng_psize=256;
     /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
      */
-    function Ke(t,e){return new E(t,e)}function Ve(t,e,r){for(var n="",i=0;n.length<e;)n+=r(String.fromCharCode.apply(String,t.concat([(4278190080&i)>>24,(16711680&i)>>16,(65280&i)>>8,255&i]))),i+=1;return n}function qe(){this.n=null,this.e=0,this.d=null,this.p=null,this.q=null,this.dmp1=null,this.dmq1=null,this.coeff=null;}
+    var rng_state;var rng_pool;var rng_pptr;function rng_seed_int(a){rng_pool[rng_pptr++]^=a&255;rng_pool[rng_pptr++]^=(a>>8)&255;rng_pool[rng_pptr++]^=(a>>16)&255;rng_pool[rng_pptr++]^=(a>>24)&255;if(rng_pptr>=rng_psize){rng_pptr-=rng_psize;}}function rng_seed_time(){rng_seed_int(new Date().getTime());}if(rng_pool==null){rng_pool=new Array();rng_pptr=0;var t;if(window$1!==undefined&&(window$1.msCrypto!==undefined)){var crypto$1=window$1.msCrypto;if(crypto$1.getRandomValues){var ua=new Uint8Array(32);crypto$1.getRandomValues(ua);for(t=0;t<32;++t){rng_pool[rng_pptr++]=ua[t];}}}while(rng_pptr<rng_psize){t=Math.floor(65536*Math.random());rng_pool[rng_pptr++]=t>>>8;rng_pool[rng_pptr++]=t&255;}rng_pptr=0;rng_seed_time();}function rng_get_byte(){if(rng_state==null){rng_seed_time();rng_state=prng_newstate();rng_state.init(rng_pool);for(rng_pptr=0;rng_pptr<rng_pool.length;++rng_pptr){rng_pool[rng_pptr]=0;}rng_pptr=0;}return rng_state.next()}function rng_get_bytes(b){var a;for(a=0;a<b.length;++a){b[a]=rng_get_byte();}}function SecureRandom(){}SecureRandom.prototype.nextBytes=rng_get_bytes;
     /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
      */
-    function Je(t,e){this.x=e,this.q=t;}function We(t,e,r,n){this.curve=t,this.x=e,this.y=r,this.z=null==n?E.ONE:n,this.zinv=null;}function ze(t,e,r){this.q=t,this.a=this.fromBigInteger(e),this.b=this.fromBigInteger(r),this.infinity=new We(this,null,null);}He.prototype.nextBytes=function Ye(t){var e;for(e=0;e<t.length;++e)t[e]=Me();},qe.prototype.doPublic=function Ge(t){return t.modPowInt(this.e,this.n)},qe.prototype.setPublic=function Xe(t,e){if(this.isPublic=!0,this.isPrivate=!1,"string"!=typeof t)this.n=t,this.e=e;else{if(!(null!=t&&null!=e&&t.length>0&&e.length>0))throw "Invalid RSA public key";this.n=Ke(t,16),this.e=parseInt(e,16);}},qe.prototype.encrypt=function Qe(t){var e=function r(t,e){if(e<t.length+11)throw "Message too long for RSA";for(var r=new Array,n=t.length-1;n>=0&&e>0;){var i=t.charCodeAt(n--);i<128?r[--e]=i:i>127&&i<2048?(r[--e]=63&i|128,r[--e]=i>>6|192):(r[--e]=63&i|128,r[--e]=i>>6&63|128,r[--e]=i>>12|224);}r[--e]=0;for(var o=new He,s=new Array;e>2;){for(s[0]=0;0==s[0];)o.nextBytes(s);r[--e]=s[0];}return r[--e]=2,r[--e]=0,new E(r)}(t,this.n.bitLength()+7>>3);if(null==e)return null;var n=this.doPublic(e);if(null==n)return null;var i=n.toString(16);return 0==(1&i.length)?i:"0"+i},qe.prototype.encryptOAEP=function $e(t,e,r){var n=function i(t,e,r,n){var i=Er.crypto.MessageDigest,o=Er.crypto.Util,s=null;if(r||(r="sha1"),"string"==typeof r&&(s=i.getCanonicalAlgName(r),n=i.getHashLength(s),r=function t(e){return Or(o.hashHex(jr(e),s))}),t.length+2*n+2>e)throw "Message too long for RSA";var a,u="";for(a=0;a<e-t.length-2*n-2;a+=1)u+="\0";var c=r("")+u+""+t,h=new Array(n);(new He).nextBytes(h);var l=Ve(h,c.length,r),f=[];for(a=0;a<c.length;a+=1)f[a]=c.charCodeAt(a)^l.charCodeAt(a);var d=Ve(f,h.length,r),g=[0];for(a=0;a<h.length;a+=1)g[a+1]=h[a]^d.charCodeAt(a);return new E(g.concat(f))}(t,this.n.bitLength()+7>>3,e,r);if(null==n)return null;var o=this.doPublic(n);if(null==o)return null;var s=o.toString(16);return 0==(1&s.length)?s:"0"+s},qe.prototype.type="RSA",Je.prototype.equals=function Ze(t){return t==this||this.q.equals(t.q)&&this.x.equals(t.x)},Je.prototype.toBigInteger=function tr(){return this.x},Je.prototype.negate=function er(){return new Je(this.q,this.x.negate().mod(this.q))},Je.prototype.add=function rr(t){return new Je(this.q,this.x.add(t.toBigInteger()).mod(this.q))},Je.prototype.subtract=function nr(t){return new Je(this.q,this.x.subtract(t.toBigInteger()).mod(this.q))},Je.prototype.multiply=function ir(t){return new Je(this.q,this.x.multiply(t.toBigInteger()).mod(this.q))},Je.prototype.square=function or(){return new Je(this.q,this.x.square().mod(this.q))},Je.prototype.divide=function sr(t){return new Je(this.q,this.x.multiply(t.toBigInteger().modInverse(this.q)).mod(this.q))},We.prototype.getX=function ar(){return null==this.zinv&&(this.zinv=this.z.modInverse(this.curve.q)),this.curve.fromBigInteger(this.x.toBigInteger().multiply(this.zinv).mod(this.curve.q))},We.prototype.getY=function ur(){return null==this.zinv&&(this.zinv=this.z.modInverse(this.curve.q)),this.curve.fromBigInteger(this.y.toBigInteger().multiply(this.zinv).mod(this.curve.q))},We.prototype.equals=function cr(t){return t==this||(this.isInfinity()?t.isInfinity():t.isInfinity()?this.isInfinity():!!t.y.toBigInteger().multiply(this.z).subtract(this.y.toBigInteger().multiply(t.z)).mod(this.curve.q).equals(E.ZERO)&&t.x.toBigInteger().multiply(this.z).subtract(this.x.toBigInteger().multiply(t.z)).mod(this.curve.q).equals(E.ZERO))},We.prototype.isInfinity=function hr(){return null==this.x&&null==this.y||this.z.equals(E.ZERO)&&!this.y.toBigInteger().equals(E.ZERO)},We.prototype.negate=function lr(){return new We(this.curve,this.x,this.y.negate(),this.z)},We.prototype.add=function fr(t){if(this.isInfinity())return t;if(t.isInfinity())return this;var e=t.y.toBigInteger().multiply(this.z).subtract(this.y.toBigInteger().multiply(t.z)).mod(this.curve.q),r=t.x.toBigInteger().multiply(this.z).subtract(this.x.toBigInteger().multiply(t.z)).mod(this.curve.q);if(E.ZERO.equals(r))return E.ZERO.equals(e)?this.twice():this.curve.getInfinity();var n=new E("3"),i=this.x.toBigInteger(),o=this.y.toBigInteger(),s=(t.x.toBigInteger(),t.y.toBigInteger(),r.square()),a=s.multiply(r),u=i.multiply(s),c=e.square().multiply(this.z),h=c.subtract(u.shiftLeft(1)).multiply(t.z).subtract(a).multiply(r).mod(this.curve.q),l=u.multiply(n).multiply(e).subtract(o.multiply(a)).subtract(c.multiply(e)).multiply(t.z).add(e.multiply(a)).mod(this.curve.q),f=a.multiply(this.z).multiply(t.z).mod(this.curve.q);return new We(this.curve,this.curve.fromBigInteger(h),this.curve.fromBigInteger(l),f)},We.prototype.twice=function dr(){if(this.isInfinity())return this;if(0==this.y.toBigInteger().signum())return this.curve.getInfinity();var t=new E("3"),e=this.x.toBigInteger(),r=this.y.toBigInteger(),n=r.multiply(this.z),i=n.multiply(r).mod(this.curve.q),o=this.curve.a.toBigInteger(),s=e.square().multiply(t);E.ZERO.equals(o)||(s=s.add(this.z.square().multiply(o)));var a=(s=s.mod(this.curve.q)).square().subtract(e.shiftLeft(3).multiply(i)).shiftLeft(1).multiply(n).mod(this.curve.q),u=s.multiply(t).multiply(e).subtract(i.shiftLeft(1)).shiftLeft(2).multiply(i).subtract(s.square().multiply(s)).mod(this.curve.q),c=n.square().multiply(n).shiftLeft(3).mod(this.curve.q);return new We(this.curve,this.curve.fromBigInteger(a),this.curve.fromBigInteger(u),c)},We.prototype.multiply=function gr(t){if(this.isInfinity())return this;if(0==t.signum())return this.curve.getInfinity();var e,r=t,n=r.multiply(new E("3")),i=this.negate(),o=this;for(e=n.bitLength()-2;e>0;--e){o=o.twice();var s=n.testBit(e);s!=r.testBit(e)&&(o=o.add(s?this:i));}return o},We.prototype.multiplyTwo=function pr(t,e,r){var n;n=t.bitLength()>r.bitLength()?t.bitLength()-1:r.bitLength()-1;for(var i=this.curve.getInfinity(),o=this.add(e);n>=0;)i=i.twice(),t.testBit(n)?i=r.testBit(n)?i.add(o):i.add(this):r.testBit(n)&&(i=i.add(e)),--n;return i},ze.prototype.getQ=function vr(){return this.q},ze.prototype.getA=function yr(){return this.a},ze.prototype.getB=function mr(){return this.b},ze.prototype.equals=function _r(t){return t==this||this.q.equals(t.q)&&this.a.equals(t.a)&&this.b.equals(t.b)},ze.prototype.getInfinity=function Sr(){return this.infinity},ze.prototype.fromBigInteger=function Fr(t){return new Je(this.q,t)},ze.prototype.decodePointHex=function br(t){switch(parseInt(t.substr(0,2),16)){case 0:return this.infinity;case 2:case 3:return null;case 4:case 6:case 7:var e=(t.length-2)/2,r=t.substr(2,e),n=t.substr(e+2,e);return new We(this,this.fromBigInteger(new E(r,16)),this.fromBigInteger(new E(n,16)));default:return null}},
+    function parseBigInt(b,a){return new BigInteger(b,a)}function pkcs1pad2(e,h){if(h<e.length+11){throw "Message too long for RSA";}var g=new Array();var d=e.length-1;while(d>=0&&h>0){var f=e.charCodeAt(d--);if(f<128){g[--h]=f;}else{if((f>127)&&(f<2048)){g[--h]=(f&63)|128;g[--h]=(f>>6)|192;}else{g[--h]=(f&63)|128;g[--h]=((f>>6)&63)|128;g[--h]=(f>>12)|224;}}}g[--h]=0;var b=new SecureRandom();var a=new Array();while(h>2){a[0]=0;while(a[0]==0){b.nextBytes(a);}g[--h]=a[0];}g[--h]=2;g[--h]=0;return new BigInteger(g)}function oaep_mgf1_arr(c,a,e){var b="",d=0;while(b.length<a){b+=e(String.fromCharCode.apply(String,c.concat([(d&4278190080)>>24,(d&16711680)>>16,(d&65280)>>8,d&255])));d+=1;}return b}function oaep_pad(q,a,f,l){var c=KJUR.crypto.MessageDigest;var o=KJUR.crypto.Util;var b=null;if(!f){f="sha1";}if(typeof f==="string"){b=c.getCanonicalAlgName(f);l=c.getHashLength(b);f=function(i){return hextorstr(o.hashHex(rstrtohex(i),b))};}if(q.length+2*l+2>a){throw "Message too long for RSA"}var k="",e;for(e=0;e<a-q.length-2*l-2;e+=1){k+="\x00";}var h=f("")+k+"\x01"+q;var g=new Array(l);new SecureRandom().nextBytes(g);var j=oaep_mgf1_arr(g,h.length,f);var p=[];for(e=0;e<h.length;e+=1){p[e]=h.charCodeAt(e)^j.charCodeAt(e);}var m=oaep_mgf1_arr(p,g.length,f);var d=[0];for(e=0;e<g.length;e+=1){d[e+1]=g[e]^m.charCodeAt(e);}return new BigInteger(d.concat(p))}function RSAKey(){this.n=null;this.e=0;this.d=null;this.p=null;this.q=null;this.dmp1=null;this.dmq1=null;this.coeff=null;}function RSASetPublic(b,a){this.isPublic=true;this.isPrivate=false;if(typeof b!=="string"){this.n=b;this.e=a;}else{if(b!=null&&a!=null&&b.length>0&&a.length>0){this.n=parseBigInt(b,16);this.e=parseInt(a,16);}else{throw "Invalid RSA public key"}}}function RSADoPublic(a){return a.modPowInt(this.e,this.n)}function RSAEncrypt(d){var a=pkcs1pad2(d,(this.n.bitLength()+7)>>3);if(a==null){return null}var e=this.doPublic(a);if(e==null){return null}var b=e.toString(16);if((b.length&1)==0){return b}else{return "0"+b}}function RSAEncryptOAEP(f,e,b){var a=oaep_pad(f,(this.n.bitLength()+7)>>3,e,b);if(a==null){return null}var g=this.doPublic(a);if(g==null){return null}var d=g.toString(16);if((d.length&1)==0){return d}else{return "0"+d}}RSAKey.prototype.doPublic=RSADoPublic;RSAKey.prototype.setPublic=RSASetPublic;RSAKey.prototype.encrypt=RSAEncrypt;RSAKey.prototype.encryptOAEP=RSAEncryptOAEP;RSAKey.prototype.type="RSA";
+    /*! (c) Tom Wu | http://www-cs-students.stanford.edu/~tjw/jsbn/
+     */
+    function ECFieldElementFp(b,a){this.x=a;this.q=b;}function feFpEquals(a){if(a==this){return true}return(this.q.equals(a.q)&&this.x.equals(a.x))}function feFpToBigInteger(){return this.x}function feFpNegate(){return new ECFieldElementFp(this.q,this.x.negate().mod(this.q))}function feFpAdd(a){return new ECFieldElementFp(this.q,this.x.add(a.toBigInteger()).mod(this.q))}function feFpSubtract(a){return new ECFieldElementFp(this.q,this.x.subtract(a.toBigInteger()).mod(this.q))}function feFpMultiply(a){return new ECFieldElementFp(this.q,this.x.multiply(a.toBigInteger()).mod(this.q))}function feFpSquare(){return new ECFieldElementFp(this.q,this.x.square().mod(this.q))}function feFpDivide(a){return new ECFieldElementFp(this.q,this.x.multiply(a.toBigInteger().modInverse(this.q)).mod(this.q))}ECFieldElementFp.prototype.equals=feFpEquals;ECFieldElementFp.prototype.toBigInteger=feFpToBigInteger;ECFieldElementFp.prototype.negate=feFpNegate;ECFieldElementFp.prototype.add=feFpAdd;ECFieldElementFp.prototype.subtract=feFpSubtract;ECFieldElementFp.prototype.multiply=feFpMultiply;ECFieldElementFp.prototype.square=feFpSquare;ECFieldElementFp.prototype.divide=feFpDivide;function ECPointFp(c,a,d,b){this.curve=c;this.x=a;this.y=d;if(b==null){this.z=BigInteger.ONE;}else{this.z=b;}this.zinv=null;}function pointFpGetX(){if(this.zinv==null){this.zinv=this.z.modInverse(this.curve.q);}return this.curve.fromBigInteger(this.x.toBigInteger().multiply(this.zinv).mod(this.curve.q))}function pointFpGetY(){if(this.zinv==null){this.zinv=this.z.modInverse(this.curve.q);}return this.curve.fromBigInteger(this.y.toBigInteger().multiply(this.zinv).mod(this.curve.q))}function pointFpEquals(a){if(a==this){return true}if(this.isInfinity()){return a.isInfinity()}if(a.isInfinity()){return this.isInfinity()}var c,b;c=a.y.toBigInteger().multiply(this.z).subtract(this.y.toBigInteger().multiply(a.z)).mod(this.curve.q);if(!c.equals(BigInteger.ZERO)){return false}b=a.x.toBigInteger().multiply(this.z).subtract(this.x.toBigInteger().multiply(a.z)).mod(this.curve.q);return b.equals(BigInteger.ZERO)}function pointFpIsInfinity(){if((this.x==null)&&(this.y==null)){return true}return this.z.equals(BigInteger.ZERO)&&!this.y.toBigInteger().equals(BigInteger.ZERO)}function pointFpNegate(){return new ECPointFp(this.curve,this.x,this.y.negate(),this.z)}function pointFpAdd(l){if(this.isInfinity()){return l}if(l.isInfinity()){return this}var p=l.y.toBigInteger().multiply(this.z).subtract(this.y.toBigInteger().multiply(l.z)).mod(this.curve.q);var o=l.x.toBigInteger().multiply(this.z).subtract(this.x.toBigInteger().multiply(l.z)).mod(this.curve.q);if(BigInteger.ZERO.equals(o)){if(BigInteger.ZERO.equals(p)){return this.twice()}return this.curve.getInfinity()}var j=new BigInteger("3");var e=this.x.toBigInteger();var n=this.y.toBigInteger();var c=l.x.toBigInteger();var k=l.y.toBigInteger();var m=o.square();var i=m.multiply(o);var d=e.multiply(m);var g=p.square().multiply(this.z);var a=g.subtract(d.shiftLeft(1)).multiply(l.z).subtract(i).multiply(o).mod(this.curve.q);var h=d.multiply(j).multiply(p).subtract(n.multiply(i)).subtract(g.multiply(p)).multiply(l.z).add(p.multiply(i)).mod(this.curve.q);var f=i.multiply(this.z).multiply(l.z).mod(this.curve.q);return new ECPointFp(this.curve,this.curve.fromBigInteger(a),this.curve.fromBigInteger(h),f)}function pointFpTwice(){if(this.isInfinity()){return this}if(this.y.toBigInteger().signum()==0){return this.curve.getInfinity()}var g=new BigInteger("3");var c=this.x.toBigInteger();var h=this.y.toBigInteger();var e=h.multiply(this.z);var j=e.multiply(h).mod(this.curve.q);var i=this.curve.a.toBigInteger();var k=c.square().multiply(g);if(!BigInteger.ZERO.equals(i)){k=k.add(this.z.square().multiply(i));}k=k.mod(this.curve.q);var b=k.square().subtract(c.shiftLeft(3).multiply(j)).shiftLeft(1).multiply(e).mod(this.curve.q);var f=k.multiply(g).multiply(c).subtract(j.shiftLeft(1)).shiftLeft(2).multiply(j).subtract(k.square().multiply(k)).mod(this.curve.q);var d=e.square().multiply(e).shiftLeft(3).mod(this.curve.q);return new ECPointFp(this.curve,this.curve.fromBigInteger(b),this.curve.fromBigInteger(f),d)}function pointFpMultiply(b){if(this.isInfinity()){return this}if(b.signum()==0){return this.curve.getInfinity()}var g=b;var f=g.multiply(new BigInteger("3"));var l=this.negate();var d=this;var c;for(c=f.bitLength()-2;c>0;--c){d=d.twice();var a=f.testBit(c);var j=g.testBit(c);if(a!=j){d=d.add(a?this:l);}}return d}function pointFpMultiplyTwo(c,a,b){var d;if(c.bitLength()>b.bitLength()){d=c.bitLength()-1;}else{d=b.bitLength()-1;}var f=this.curve.getInfinity();var e=this.add(a);while(d>=0){f=f.twice();if(c.testBit(d)){if(b.testBit(d)){f=f.add(e);}else{f=f.add(this);}}else{if(b.testBit(d)){f=f.add(a);}}--d;}return f}ECPointFp.prototype.getX=pointFpGetX;ECPointFp.prototype.getY=pointFpGetY;ECPointFp.prototype.equals=pointFpEquals;ECPointFp.prototype.isInfinity=pointFpIsInfinity;ECPointFp.prototype.negate=pointFpNegate;ECPointFp.prototype.add=pointFpAdd;ECPointFp.prototype.twice=pointFpTwice;ECPointFp.prototype.multiply=pointFpMultiply;ECPointFp.prototype.multiplyTwo=pointFpMultiplyTwo;function ECCurveFp(e,d,c){this.q=e;this.a=this.fromBigInteger(d);this.b=this.fromBigInteger(c);this.infinity=new ECPointFp(this,null,null);}function curveFpGetQ(){return this.q}function curveFpGetA(){return this.a}function curveFpGetB(){return this.b}function curveFpEquals(a){if(a==this){return true}return(this.q.equals(a.q)&&this.a.equals(a.a)&&this.b.equals(a.b))}function curveFpGetInfinity(){return this.infinity}function curveFpFromBigInteger(a){return new ECFieldElementFp(this.q,a)}function curveFpDecodePointHex(d){switch(parseInt(d.substr(0,2),16)){case 0:return this.infinity;case 2:case 3:return null;case 4:case 6:case 7:var a=(d.length-2)/2;var c=d.substr(2,a);var b=d.substr(a+2,a);return new ECPointFp(this,this.fromBigInteger(new BigInteger(c,16)),this.fromBigInteger(new BigInteger(b,16)));default:return null}}ECCurveFp.prototype.getQ=curveFpGetQ;ECCurveFp.prototype.getA=curveFpGetA;ECCurveFp.prototype.getB=curveFpGetB;ECCurveFp.prototype.equals=curveFpEquals;ECCurveFp.prototype.getInfinity=curveFpGetInfinity;ECCurveFp.prototype.fromBigInteger=curveFpFromBigInteger;ECCurveFp.prototype.decodePointHex=curveFpDecodePointHex;
     /*! (c) Stefan Thomas | https://github.com/bitcoinjs/bitcoinjs-lib
      */
-    Je.prototype.getByteLength=function(){return Math.floor((this.toBigInteger().bitLength()+7)/8)},We.prototype.getEncoded=function(t){var e=function t(e,r){var n=e.toByteArrayUnsigned();if(r<n.length)n=n.slice(n.length-r);else for(;r>n.length;)n.unshift(0);return n},r=this.getX().toBigInteger(),n=this.getY().toBigInteger(),i=e(r,32);return t?n.isEven()?i.unshift(2):i.unshift(3):(i.unshift(4),i=i.concat(e(n,32))),i},We.decodeFrom=function(t,e){e[0];var r=e.length-1,n=e.slice(1,1+r/2),i=e.slice(1+r/2,1+r);n.unshift(0),i.unshift(0);var o=new E(n),s=new E(i);return new We(t,t.fromBigInteger(o),t.fromBigInteger(s))},We.decodeFromHex=function(t,e){e.substr(0,2);var r=e.length-2,n=e.substr(2,r/2),i=e.substr(2+r/2,r/2),o=new E(n,16),s=new E(i,16);return new We(t,t.fromBigInteger(o),t.fromBigInteger(s))},We.prototype.add2D=function(t){if(this.isInfinity())return t;if(t.isInfinity())return this;if(this.x.equals(t.x))return this.y.equals(t.y)?this.twice():this.curve.getInfinity();var e=t.x.subtract(this.x),r=t.y.subtract(this.y).divide(e),n=r.square().subtract(this.x).subtract(t.x),i=r.multiply(this.x.subtract(n)).subtract(this.y);return new We(this.curve,n,i)},We.prototype.twice2D=function(){if(this.isInfinity())return this;if(0==this.y.toBigInteger().signum())return this.curve.getInfinity();var t=this.curve.fromBigInteger(E.valueOf(2)),e=this.curve.fromBigInteger(E.valueOf(3)),r=this.x.square().multiply(e).add(this.curve.a).divide(this.y.multiply(t)),n=r.square().subtract(this.x.multiply(t)),i=r.multiply(this.x.subtract(n)).subtract(this.y);return new We(this.curve,n,i)},We.prototype.multiply2D=function(t){if(this.isInfinity())return this;if(0==t.signum())return this.curve.getInfinity();var e,r=t,n=r.multiply(new E("3")),i=this.negate(),o=this;for(e=n.bitLength()-2;e>0;--e){o=o.twice();var s=n.testBit(e);s!=r.testBit(e)&&(o=o.add2D(s?this:i));}return o},We.prototype.isOnCurve=function(){var t=this.getX().toBigInteger(),e=this.getY().toBigInteger(),r=this.curve.getA().toBigInteger(),n=this.curve.getB().toBigInteger(),i=this.curve.getQ(),o=e.multiply(e).mod(i),s=t.multiply(t).multiply(t).add(r.multiply(t)).add(n).mod(i);return o.equals(s)},We.prototype.toString=function(){return "("+this.getX().toBigInteger().toString()+","+this.getY().toBigInteger().toString()+")"},We.prototype.validate=function(){var t=this.curve.getQ();if(this.isInfinity())throw new Error("Point is at infinity.");var e=this.getX().toBigInteger(),r=this.getY().toBigInteger();if(e.compareTo(E.ONE)<0||e.compareTo(t.subtract(E.ONE))>0)throw new Error("x coordinate out of bounds");if(r.compareTo(E.ONE)<0||r.compareTo(t.subtract(E.ONE))>0)throw new Error("y coordinate out of bounds");if(!this.isOnCurve())throw new Error("Point is not on the curve.");if(this.multiply(t).isInfinity())throw new Error("Point is not a scalar multiple of G.");return !0};
+    ECFieldElementFp.prototype.getByteLength=function(){return Math.floor((this.toBigInteger().bitLength()+7)/8)};ECPointFp.prototype.getEncoded=function(c){var d=function(h,f){var g=h.toByteArrayUnsigned();if(f<g.length){g=g.slice(g.length-f);}else{while(f>g.length){g.unshift(0);}}return g};var a=this.getX().toBigInteger();var e=this.getY().toBigInteger();var b=d(a,32);if(c){if(e.isEven()){b.unshift(2);}else{b.unshift(3);}}else{b.unshift(4);b=b.concat(d(e,32));}return b};ECPointFp.decodeFrom=function(g,c){var f=c[0];var e=c.length-1;var d=c.slice(1,1+e/2);var b=c.slice(1+e/2,1+e);d.unshift(0);b.unshift(0);var a=new BigInteger(d);var h=new BigInteger(b);return new ECPointFp(g,g.fromBigInteger(a),g.fromBigInteger(h))};ECPointFp.decodeFromHex=function(g,c){var f=c.substr(0,2);var e=c.length-2;var d=c.substr(2,e/2);var b=c.substr(2+e/2,e/2);var a=new BigInteger(d,16);var h=new BigInteger(b,16);return new ECPointFp(g,g.fromBigInteger(a),g.fromBigInteger(h))};ECPointFp.prototype.add2D=function(c){if(this.isInfinity()){return c}if(c.isInfinity()){return this}if(this.x.equals(c.x)){if(this.y.equals(c.y)){return this.twice()}return this.curve.getInfinity()}var g=c.x.subtract(this.x);var e=c.y.subtract(this.y);var a=e.divide(g);var d=a.square().subtract(this.x).subtract(c.x);var f=a.multiply(this.x.subtract(d)).subtract(this.y);return new ECPointFp(this.curve,d,f)};ECPointFp.prototype.twice2D=function(){if(this.isInfinity()){return this}if(this.y.toBigInteger().signum()==0){return this.curve.getInfinity()}var b=this.curve.fromBigInteger(BigInteger.valueOf(2));var e=this.curve.fromBigInteger(BigInteger.valueOf(3));var a=this.x.square().multiply(e).add(this.curve.a).divide(this.y.multiply(b));var c=a.square().subtract(this.x.multiply(b));var d=a.multiply(this.x.subtract(c)).subtract(this.y);return new ECPointFp(this.curve,c,d)};ECPointFp.prototype.multiply2D=function(b){if(this.isInfinity()){return this}if(b.signum()==0){return this.curve.getInfinity()}var g=b;var f=g.multiply(new BigInteger("3"));var l=this.negate();var d=this;var c;for(c=f.bitLength()-2;c>0;--c){d=d.twice();var a=f.testBit(c);var j=g.testBit(c);if(a!=j){d=d.add2D(a?this:l);}}return d};ECPointFp.prototype.isOnCurve=function(){var d=this.getX().toBigInteger();var i=this.getY().toBigInteger();var f=this.curve.getA().toBigInteger();var c=this.curve.getB().toBigInteger();var h=this.curve.getQ();var e=i.multiply(i).mod(h);var g=d.multiply(d).multiply(d).add(f.multiply(d)).add(c).mod(h);return e.equals(g)};ECPointFp.prototype.toString=function(){return "("+this.getX().toBigInteger().toString()+","+this.getY().toBigInteger().toString()+")"};ECPointFp.prototype.validate=function(){var c=this.curve.getQ();if(this.isInfinity()){throw new Error("Point is at infinity.")}var a=this.getX().toBigInteger();var b=this.getY().toBigInteger();if(a.compareTo(BigInteger.ONE)<0||a.compareTo(c.subtract(BigInteger.ONE))>0){throw new Error("x coordinate out of bounds")}if(b.compareTo(BigInteger.ONE)<0||b.compareTo(c.subtract(BigInteger.ONE))>0){throw new Error("y coordinate out of bounds")}if(!this.isOnCurve()){throw new Error("Point is not on the curve.")}if(this.multiply(c).isInfinity()){throw new Error("Point is not a scalar multiple of G.")}return true};
     /*! Mike Samuel (c) 2009 | code.google.com/p/json-sans-eval
      */
-    var wr=function(){var t=new RegExp('(?:false|true|null|[\\{\\}\\[\\]]|(?:-?\\b(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\b)|(?:"(?:[^\\0-\\x08\\x0a-\\x1f"\\\\]|\\\\(?:["/\\\\bfnrt]|u[0-9A-Fa-f]{4}))*"))',"g"),e=new RegExp("\\\\(?:([^u])|u(.{4}))","g"),n={'"':'"',"/":"/","\\":"\\",b:"\b",f:"\f",n:"\n",r:"\r",t:"\t"};function i(t,e,r){return e?n[e]:String.fromCharCode(parseInt(r,16))}var o=new String(""),s=(Object.hasOwnProperty);return function(n,a){var u,c,h=n.match(t),l=h[0],f=!1;"{"===l?u={}:"["===l?u=[]:(u=[],f=!0);for(var d=[u],g=1-f,p=h.length;g<p;++g){var v;switch((l=h[g]).charCodeAt(0)){default:(v=d[0])[c||v.length]=+l,c=void 0;break;case 34:if(-1!==(l=l.substring(1,l.length-1)).indexOf("\\")&&(l=l.replace(e,i)),v=d[0],!c){if(!(v instanceof Array)){c=l||o;break}c=v.length;}v[c]=l,c=void 0;break;case 91:v=d[0],d.unshift(v[c||v.length]=[]),c=void 0;break;case 93:d.shift();break;case 102:(v=d[0])[c||v.length]=!1,c=void 0;break;case 110:(v=d[0])[c||v.length]=null,c=void 0;break;case 116:(v=d[0])[c||v.length]=!0,c=void 0;break;case 123:v=d[0],d.unshift(v[c||v.length]={}),c=void 0;break;case 125:d.shift();}}if(f){if(1!==d.length)throw new Error;u=u[0];}else if(d.length)throw new Error;if(a){u=function t(e,n){var i=e[n];if(i&&"object"===(void 0===i?"undefined":r(i))){var o=null;for(var u in i)if(s.call(i,u)&&i!==e){var c=t(i,u);void 0!==c?i[u]=c:(o||(o=[]),o.push(u));}if(o)for(var h=o.length;--h>=0;)delete i[o[h]];}return a.call(e,n,i)}({"":u},"");}return u}}();void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.asn1&&Er.asn1||(Er.asn1={}),Er.asn1.ASN1Util=new function(){this.integerToByteHex=function(t){var e=t.toString(16);return e.length%2==1&&(e="0"+e),e},this.bigIntToMinTwosComplementsHex=function(t){var e=t.toString(16);if("-"!=e.substr(0,1))e.length%2==1?e="0"+e:e.match(/^[0-7]/)||(e="00"+e);else{var r=e.substr(1).length;r%2==1?r+=1:e.match(/^[0-7]/)||(r+=2);for(var n="",i=0;i<r;i++)n+="f";e=new E(n,16).xor(t).add(E.ONE).toString(16).replace(/^-/,"");}return e},this.getPEMStringFromHex=function(t,e){return Vr(t,e)},this.newObject=function(t){var e=Er.asn1,r=e.DERBoolean,n=e.DERInteger,i=e.DERBitString,o=e.DEROctetString,s=e.DERNull,a=e.DERObjectIdentifier,u=e.DEREnumerated,c=e.DERUTF8String,h=e.DERNumericString,l=e.DERPrintableString,f=e.DERTeletexString,d=e.DERIA5String,g=e.DERUTCTime,p=e.DERGeneralizedTime,v=e.DERSequence,y=e.DERSet,m=e.DERTaggedObject,_=e.ASN1Util.newObject,S=Object.keys(t);if(1!=S.length)throw "key of param shall be only one.";var F=S[0];if(-1==":bool:int:bitstr:octstr:null:oid:enum:utf8str:numstr:prnstr:telstr:ia5str:utctime:gentime:seq:set:tag:".indexOf(":"+F+":"))throw "undefined key: "+F;if("bool"==F)return new r(t[F]);if("int"==F)return new n(t[F]);if("bitstr"==F)return new i(t[F]);if("octstr"==F)return new o(t[F]);if("null"==F)return new s(t[F]);if("oid"==F)return new a(t[F]);if("enum"==F)return new u(t[F]);if("utf8str"==F)return new c(t[F]);if("numstr"==F)return new h(t[F]);if("prnstr"==F)return new l(t[F]);if("telstr"==F)return new f(t[F]);if("ia5str"==F)return new d(t[F]);if("utctime"==F)return new g(t[F]);if("gentime"==F)return new p(t[F]);if("seq"==F){for(var b=t[F],w=[],E=0;E<b.length;E++){var x=_(b[E]);w.push(x);}return new v({array:w})}if("set"==F){for(b=t[F],w=[],E=0;E<b.length;E++){x=_(b[E]);w.push(x);}return new y({array:w})}if("tag"==F){var k=t[F];if("[object Array]"===Object.prototype.toString.call(k)&&3==k.length){var A=_(k[2]);return new m({tag:k[0],explicit:k[1],obj:A})}var P={};if(void 0!==k.explicit&&(P.explicit=k.explicit),void 0!==k.tag&&(P.tag=k.tag),void 0===k.obj)throw "obj shall be specified for 'tag'.";return P.obj=_(k.obj),new m(P)}},this.jsonToASN1HEX=function(t){return this.newObject(t).getEncodedHex()};},Er.asn1.ASN1Util.oidHexToInt=function(t){for(var e="",r=parseInt(t.substr(0,2),16),n=(e=Math.floor(r/40)+"."+r%40,""),i=2;i<t.length;i+=2){var o=("00000000"+parseInt(t.substr(i,2),16).toString(2)).slice(-8);if(n+=o.substr(1,7),"0"==o.substr(0,1))e=e+"."+new E(n,2).toString(10),n="";}return e},Er.asn1.ASN1Util.oidIntToHex=function(t){var e=function t(e){var r=e.toString(16);return 1==r.length&&(r="0"+r),r},r=function t(r){var n="",i=new E(r,10).toString(2),o=7-i.length%7;7==o&&(o=0);for(var s="",a=0;a<o;a++)s+="0";i=s+i;for(a=0;a<i.length-1;a+=7){var u=i.substr(a,7);a!=i.length-7&&(u="1"+u),n+=e(parseInt(u,2));}return n};if(!t.match(/^[0-9.]+$/))throw "malformed oid string: "+t;var n="",i=t.split("."),o=40*parseInt(i[0])+parseInt(i[1]);n+=e(o),i.splice(0,2);for(var s=0;s<i.length;s++)n+=r(i[s]);return n},Er.asn1.ASN1Object=function(){this.getLengthHexFromValue=function(){if(void 0===this.hV||null==this.hV)throw "this.hV is null or undefined.";if(this.hV.length%2==1)throw "value hex must be even length: n="+"".length+",v="+this.hV;var t=this.hV.length/2,e=t.toString(16);if(e.length%2==1&&(e="0"+e),t<128)return e;var r=e.length/2;if(r>15)throw "ASN.1 length too long to represent by 8x: n = "+t.toString(16);return (128+r).toString(16)+e},this.getEncodedHex=function(){return (null==this.hTLV||this.isModified)&&(this.hV=this.getFreshValueHex(),this.hL=this.getLengthHexFromValue(),this.hTLV=this.hT+this.hL+this.hV,this.isModified=!1),this.hTLV},this.getValueHex=function(){return this.getEncodedHex(),this.hV},this.getFreshValueHex=function(){return ""};},Er.asn1.DERAbstractString=function(t){Er.asn1.DERAbstractString.superclass.constructor.call(this);this.getString=function(){return this.s},this.setString=function(t){this.hTLV=null,this.isModified=!0,this.s=t,this.hV=Br(this.s).toLowerCase();},this.setStringHex=function(t){this.hTLV=null,this.isModified=!0,this.s=null,this.hV=t;},this.getFreshValueHex=function(){return this.hV},void 0!==t&&("string"==typeof t?this.setString(t):void 0!==t.str?this.setString(t.str):void 0!==t.hex&&this.setStringHex(t.hex));},o.lang.extend(Er.asn1.DERAbstractString,Er.asn1.ASN1Object),Er.asn1.DERAbstractTime=function(t){Er.asn1.DERAbstractTime.superclass.constructor.call(this);this.localDateToUTC=function(t){return utc=t.getTime()+6e4*t.getTimezoneOffset(),new Date(utc)},this.formatDate=function(t,e,r){var n=this.zeroPadding,i=this.localDateToUTC(t),o=String(i.getFullYear());"utc"==e&&(o=o.substr(2,2));var s=o+n(String(i.getMonth()+1),2)+n(String(i.getDate()),2)+n(String(i.getHours()),2)+n(String(i.getMinutes()),2)+n(String(i.getSeconds()),2);if(!0===r){var a=i.getMilliseconds();if(0!=a){var u=n(String(a),3);s=s+"."+(u=u.replace(/[0]+$/,""));}}return s+"Z"},this.zeroPadding=function(t,e){return t.length>=e?t:new Array(e-t.length+1).join("0")+t},this.getString=function(){return this.s},this.setString=function(t){this.hTLV=null,this.isModified=!0,this.s=t,this.hV=Rr(t);},this.setByDateValue=function(t,e,r,n,i,o){var s=new Date(Date.UTC(t,e-1,r,n,i,o,0));this.setByDate(s);},this.getFreshValueHex=function(){return this.hV};},o.lang.extend(Er.asn1.DERAbstractTime,Er.asn1.ASN1Object),Er.asn1.DERAbstractStructured=function(t){Er.asn1.DERAbstractString.superclass.constructor.call(this);this.setByASN1ObjectArray=function(t){this.hTLV=null,this.isModified=!0,this.asn1Array=t;},this.appendASN1Object=function(t){this.hTLV=null,this.isModified=!0,this.asn1Array.push(t);},this.asn1Array=new Array,void 0!==t&&void 0!==t.array&&(this.asn1Array=t.array);},o.lang.extend(Er.asn1.DERAbstractStructured,Er.asn1.ASN1Object),Er.asn1.DERBoolean=function(){Er.asn1.DERBoolean.superclass.constructor.call(this),this.hT="01",this.hTLV="0101ff";},o.lang.extend(Er.asn1.DERBoolean,Er.asn1.ASN1Object),Er.asn1.DERInteger=function(t){Er.asn1.DERInteger.superclass.constructor.call(this),this.hT="02",this.setByBigInteger=function(t){this.hTLV=null,this.isModified=!0,this.hV=Er.asn1.ASN1Util.bigIntToMinTwosComplementsHex(t);},this.setByInteger=function(t){var e=new E(String(t),10);this.setByBigInteger(e);},this.setValueHex=function(t){this.hV=t;},this.getFreshValueHex=function(){return this.hV},void 0!==t&&(void 0!==t.bigint?this.setByBigInteger(t.bigint):void 0!==t.int?this.setByInteger(t.int):"number"==typeof t?this.setByInteger(t):void 0!==t.hex&&this.setValueHex(t.hex));},o.lang.extend(Er.asn1.DERInteger,Er.asn1.ASN1Object),Er.asn1.DERBitString=function(t){if(void 0!==t&&void 0!==t.obj){var e=Er.asn1.ASN1Util.newObject(t.obj);t.hex="00"+e.getEncodedHex();}Er.asn1.DERBitString.superclass.constructor.call(this),this.hT="03",this.setHexValueIncludingUnusedBits=function(t){this.hTLV=null,this.isModified=!0,this.hV=t;},this.setUnusedBitsAndHexValue=function(t,e){if(t<0||7<t)throw "unused bits shall be from 0 to 7: u = "+t;var r="0"+t;this.hTLV=null,this.isModified=!0,this.hV=r+e;},this.setByBinaryString=function(t){var e=8-(t=t.replace(/0+$/,"")).length%8;8==e&&(e=0);for(var r=0;r<=e;r++)t+="0";var n="";for(r=0;r<t.length-1;r+=8){var i=t.substr(r,8),o=parseInt(i,2).toString(16);1==o.length&&(o="0"+o),n+=o;}this.hTLV=null,this.isModified=!0,this.hV="0"+e+n;},this.setByBooleanArray=function(t){for(var e="",r=0;r<t.length;r++)1==t[r]?e+="1":e+="0";this.setByBinaryString(e);},this.newFalseArray=function(t){for(var e=new Array(t),r=0;r<t;r++)e[r]=!1;return e},this.getFreshValueHex=function(){return this.hV},void 0!==t&&("string"==typeof t&&t.toLowerCase().match(/^[0-9a-f]+$/)?this.setHexValueIncludingUnusedBits(t):void 0!==t.hex?this.setHexValueIncludingUnusedBits(t.hex):void 0!==t.bin?this.setByBinaryString(t.bin):void 0!==t.array&&this.setByBooleanArray(t.array));},o.lang.extend(Er.asn1.DERBitString,Er.asn1.ASN1Object),Er.asn1.DEROctetString=function(t){if(void 0!==t&&void 0!==t.obj){var e=Er.asn1.ASN1Util.newObject(t.obj);t.hex=e.getEncodedHex();}Er.asn1.DEROctetString.superclass.constructor.call(this,t),this.hT="04";},o.lang.extend(Er.asn1.DEROctetString,Er.asn1.DERAbstractString),Er.asn1.DERNull=function(){Er.asn1.DERNull.superclass.constructor.call(this),this.hT="05",this.hTLV="0500";},o.lang.extend(Er.asn1.DERNull,Er.asn1.ASN1Object),Er.asn1.DERObjectIdentifier=function(t){var e=function t(e){var r=e.toString(16);return 1==r.length&&(r="0"+r),r},r=function t(r){var n="",i=new E(r,10).toString(2),o=7-i.length%7;7==o&&(o=0);for(var s="",a=0;a<o;a++)s+="0";i=s+i;for(a=0;a<i.length-1;a+=7){var u=i.substr(a,7);a!=i.length-7&&(u="1"+u),n+=e(parseInt(u,2));}return n};Er.asn1.DERObjectIdentifier.superclass.constructor.call(this),this.hT="06",this.setValueHex=function(t){this.hTLV=null,this.isModified=!0,this.s=null,this.hV=t;},this.setValueOidString=function(t){if(!t.match(/^[0-9.]+$/))throw "malformed oid string: "+t;var n="",i=t.split("."),o=40*parseInt(i[0])+parseInt(i[1]);n+=e(o),i.splice(0,2);for(var s=0;s<i.length;s++)n+=r(i[s]);this.hTLV=null,this.isModified=!0,this.s=null,this.hV=n;},this.setValueName=function(t){var e=Er.asn1.x509.OID.name2oid(t);if(""===e)throw "DERObjectIdentifier oidName undefined: "+t;this.setValueOidString(e);},this.getFreshValueHex=function(){return this.hV},void 0!==t&&("string"==typeof t?t.match(/^[0-2].[0-9.]+$/)?this.setValueOidString(t):this.setValueName(t):void 0!==t.oid?this.setValueOidString(t.oid):void 0!==t.hex?this.setValueHex(t.hex):void 0!==t.name&&this.setValueName(t.name));},o.lang.extend(Er.asn1.DERObjectIdentifier,Er.asn1.ASN1Object),Er.asn1.DEREnumerated=function(t){Er.asn1.DEREnumerated.superclass.constructor.call(this),this.hT="0a",this.setByBigInteger=function(t){this.hTLV=null,this.isModified=!0,this.hV=Er.asn1.ASN1Util.bigIntToMinTwosComplementsHex(t);},this.setByInteger=function(t){var e=new E(String(t),10);this.setByBigInteger(e);},this.setValueHex=function(t){this.hV=t;},this.getFreshValueHex=function(){return this.hV},void 0!==t&&(void 0!==t.int?this.setByInteger(t.int):"number"==typeof t?this.setByInteger(t):void 0!==t.hex&&this.setValueHex(t.hex));},o.lang.extend(Er.asn1.DEREnumerated,Er.asn1.ASN1Object),Er.asn1.DERUTF8String=function(t){Er.asn1.DERUTF8String.superclass.constructor.call(this,t),this.hT="0c";},o.lang.extend(Er.asn1.DERUTF8String,Er.asn1.DERAbstractString),Er.asn1.DERNumericString=function(t){Er.asn1.DERNumericString.superclass.constructor.call(this,t),this.hT="12";},o.lang.extend(Er.asn1.DERNumericString,Er.asn1.DERAbstractString),Er.asn1.DERPrintableString=function(t){Er.asn1.DERPrintableString.superclass.constructor.call(this,t),this.hT="13";},o.lang.extend(Er.asn1.DERPrintableString,Er.asn1.DERAbstractString),Er.asn1.DERTeletexString=function(t){Er.asn1.DERTeletexString.superclass.constructor.call(this,t),this.hT="14";},o.lang.extend(Er.asn1.DERTeletexString,Er.asn1.DERAbstractString),Er.asn1.DERIA5String=function(t){Er.asn1.DERIA5String.superclass.constructor.call(this,t),this.hT="16";},o.lang.extend(Er.asn1.DERIA5String,Er.asn1.DERAbstractString),Er.asn1.DERUTCTime=function(t){Er.asn1.DERUTCTime.superclass.constructor.call(this,t),this.hT="17",this.setByDate=function(t){this.hTLV=null,this.isModified=!0,this.date=t,this.s=this.formatDate(this.date,"utc"),this.hV=Rr(this.s);},this.getFreshValueHex=function(){return void 0===this.date&&void 0===this.s&&(this.date=new Date,this.s=this.formatDate(this.date,"utc"),this.hV=Rr(this.s)),this.hV},void 0!==t&&(void 0!==t.str?this.setString(t.str):"string"==typeof t&&t.match(/^[0-9]{12}Z$/)?this.setString(t):void 0!==t.hex?this.setStringHex(t.hex):void 0!==t.date&&this.setByDate(t.date));},o.lang.extend(Er.asn1.DERUTCTime,Er.asn1.DERAbstractTime),Er.asn1.DERGeneralizedTime=function(t){Er.asn1.DERGeneralizedTime.superclass.constructor.call(this,t),this.hT="18",this.withMillis=!1,this.setByDate=function(t){this.hTLV=null,this.isModified=!0,this.date=t,this.s=this.formatDate(this.date,"gen",this.withMillis),this.hV=Rr(this.s);},this.getFreshValueHex=function(){return void 0===this.date&&void 0===this.s&&(this.date=new Date,this.s=this.formatDate(this.date,"gen",this.withMillis),this.hV=Rr(this.s)),this.hV},void 0!==t&&(void 0!==t.str?this.setString(t.str):"string"==typeof t&&t.match(/^[0-9]{14}Z$/)?this.setString(t):void 0!==t.hex?this.setStringHex(t.hex):void 0!==t.date&&this.setByDate(t.date),!0===t.millis&&(this.withMillis=!0));},o.lang.extend(Er.asn1.DERGeneralizedTime,Er.asn1.DERAbstractTime),Er.asn1.DERSequence=function(t){Er.asn1.DERSequence.superclass.constructor.call(this,t),this.hT="30",this.getFreshValueHex=function(){for(var t="",e=0;e<this.asn1Array.length;e++){t+=this.asn1Array[e].getEncodedHex();}return this.hV=t,this.hV};},o.lang.extend(Er.asn1.DERSequence,Er.asn1.DERAbstractStructured),Er.asn1.DERSet=function(t){Er.asn1.DERSet.superclass.constructor.call(this,t),this.hT="31",this.sortFlag=!0,this.getFreshValueHex=function(){for(var t=new Array,e=0;e<this.asn1Array.length;e++){var r=this.asn1Array[e];t.push(r.getEncodedHex());}return 1==this.sortFlag&&t.sort(),this.hV=t.join(""),this.hV},void 0!==t&&void 0!==t.sortflag&&0==t.sortflag&&(this.sortFlag=!1);},o.lang.extend(Er.asn1.DERSet,Er.asn1.DERAbstractStructured),Er.asn1.DERTaggedObject=function(t){Er.asn1.DERTaggedObject.superclass.constructor.call(this),this.hT="a0",this.hV="",this.isExplicit=!0,this.asn1Object=null,this.setASN1Object=function(t,e,r){this.hT=e,this.isExplicit=t,this.asn1Object=r,this.isExplicit?(this.hV=this.asn1Object.getEncodedHex(),this.hTLV=null,this.isModified=!0):(this.hV=null,this.hTLV=r.getEncodedHex(),this.hTLV=this.hTLV.replace(/^../,e),this.isModified=!1);},this.getFreshValueHex=function(){return this.hV},void 0!==t&&(void 0!==t.tag&&(this.hT=t.tag),void 0!==t.explicit&&(this.isExplicit=t.explicit),void 0!==t.obj&&(this.asn1Object=t.obj,this.setASN1Object(this.isExplicit,this.hT,this.asn1Object)));},o.lang.extend(Er.asn1.DERTaggedObject,Er.asn1.ASN1Object);var Er,xr,kr,Ar=new function(){};function Pr(t){for(var e=new Array,r=0;r<t.length;r++)e[r]=t.charCodeAt(r);return e}function Cr(t){for(var e="",r=0;r<t.length;r++)e+=String.fromCharCode(t[r]);return e}function Tr(t){for(var e="",r=0;r<t.length;r++){var n=t[r].toString(16);1==n.length&&(n="0"+n),e+=n;}return e}function Rr(t){return Tr(Pr(t))}function Ir(t){return t=(t=(t=t.replace(/\=/g,"")).replace(/\+/g,"-")).replace(/\//g,"_")}function Dr(t){return t.length%4==2?t+="==":t.length%4==3&&(t+="="),t=(t=t.replace(/-/g,"+")).replace(/_/g,"/")}function Ur(t){return t.length%2==1&&(t="0"+t),Ir(F(t))}function Lr(t){return b(Dr(t))}function Br(t){return zr($r(t))}function Nr(t){return decodeURIComponent(Yr(t))}function Or(t){for(var e="",r=0;r<t.length-1;r+=2)e+=String.fromCharCode(parseInt(t.substr(r,2),16));return e}function jr(t){for(var e="",r=0;r<t.length;r++)e+=("0"+t.charCodeAt(r).toString(16)).slice(-2);return e}function Mr(t){return F(t)}function Hr(t){var e=Mr(t).replace(/(.{64})/g,"$1\r\n");return e=e.replace(/\r\n$/,"")}function Kr(t){return b(t.replace(/[^0-9A-Za-z\/+=]*/g,""))}function Vr(t,e){return "-----BEGIN "+e+"-----\r\n"+Hr(t)+"\r\n-----END "+e+"-----\r\n"}function qr(t,e){if(-1==t.indexOf("-----BEGIN "))throw "can't find PEM header: "+e;return Kr(t=void 0!==e?(t=t.replace("-----BEGIN "+e+"-----","")).replace("-----END "+e+"-----",""):(t=t.replace(/-----BEGIN [^-]+-----/,"")).replace(/-----END [^-]+-----/,""))}function Jr(t){var e,r,n,i,o,s,a,u,c,h,l;if(l=t.match(/^(\d{2}|\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(|\.\d+)Z$/))return u=l[1],e=parseInt(u),2===u.length&&(50<=e&&e<100?e=1900+e:0<=e&&e<50&&(e=2e3+e)),r=parseInt(l[2])-1,n=parseInt(l[3]),i=parseInt(l[4]),o=parseInt(l[5]),s=parseInt(l[6]),a=0,""!==(c=l[7])&&(h=(c.substr(1)+"00").substr(0,3),a=parseInt(h)),Date.UTC(e,r,n,i,o,s,a);throw "unsupported zulu format: "+t}function Wr(t){return ~~(Jr(t)/1e3)}function zr(t){return t.replace(/%/g,"")}function Yr(t){return t.replace(/(..)/g,"%$1")}function Gr(t){var e="malformed IPv6 address";if(!t.match(/^[0-9A-Fa-f:]+$/))throw e;var r=(t=t.toLowerCase()).split(":").length-1;if(r<2)throw e;var n=":".repeat(7-r+2),i=(t=t.replace("::",n)).split(":");if(8!=i.length)throw e;for(var o=0;o<8;o++)i[o]=("0000"+i[o]).slice(-4);return i.join("")}function Xr(t){if(!t.match(/^[0-9A-Fa-f]{32}$/))throw "malformed IPv6 address octet";for(var e=(t=t.toLowerCase()).match(/.{1,4}/g),r=0;r<8;r++)e[r]=e[r].replace(/^0+/,""),""==e[r]&&(e[r]="0");var n=(t=":"+e.join(":")+":").match(/:(0:){2,}/g);if(null===n)return t.slice(1,-1);var i="";for(r=0;r<n.length;r++)n[r].length>i.length&&(i=n[r]);return (t=t.replace(i,"::")).slice(1,-1)}function Qr(t){var e="malformed hex value";if(!t.match(/^([0-9A-Fa-f][0-9A-Fa-f]){1,}$/))throw e;if(8!=t.length)return 32==t.length?Xr(t):t;try{return parseInt(t.substr(0,2),16)+"."+parseInt(t.substr(2,2),16)+"."+parseInt(t.substr(4,2),16)+"."+parseInt(t.substr(6,2),16)}catch(t){throw e}}function $r(t){for(var e=encodeURIComponent(t),r="",n=0;n<e.length;n++)"%"==e[n]?(r+=e.substr(n,3),n+=2):r=r+"%"+Rr(e[n]);return r}function Zr(t){return t.length%2==1?"0"+t:t.substr(0,1)>"7"?"00"+t:t}Ar.getLblen=function(t,e){if("8"!=t.substr(e+2,1))return 1;var r=parseInt(t.substr(e+3,1));return 0==r?-1:0<r&&r<10?r+1:-2},Ar.getL=function(t,e){var r=Ar.getLblen(t,e);return r<1?"":t.substr(e+2,2*r)},Ar.getVblen=function(t,e){var r;return ""==(r=Ar.getL(t,e))?-1:("8"===r.substr(0,1)?new E(r.substr(2),16):new E(r,16)).intValue()},Ar.getVidx=function(t,e){var r=Ar.getLblen(t,e);return r<0?r:e+2*(r+1)},Ar.getV=function(t,e){var r=Ar.getVidx(t,e),n=Ar.getVblen(t,e);return t.substr(r,2*n)},Ar.getTLV=function(t,e){return t.substr(e,2)+Ar.getL(t,e)+Ar.getV(t,e)},Ar.getNextSiblingIdx=function(t,e){return Ar.getVidx(t,e)+2*Ar.getVblen(t,e)},Ar.getChildIdx=function(t,e){var r=Ar,n=new Array,i=r.getVidx(t,e);"03"==t.substr(e,2)?n.push(i+2):n.push(i);for(var o=r.getVblen(t,e),s=i,a=0;;){var u=r.getNextSiblingIdx(t,s);if(null==u||u-i>=2*o)break;if(a>=200)break;n.push(u),s=u,a++;}return n},Ar.getNthChildIdx=function(t,e,r){return Ar.getChildIdx(t,e)[r]},Ar.getIdxbyList=function(t,e,r,n){var i,o,s=Ar;if(0==r.length){if(void 0!==n&&t.substr(e,2)!==n)throw "checking tag doesn't match: "+t.substr(e,2)+"!="+n;return e}return i=r.shift(),o=s.getChildIdx(t,e),s.getIdxbyList(t,o[i],r,n)},Ar.getTLVbyList=function(t,e,r,n){var i=Ar,o=i.getIdxbyList(t,e,r);if(void 0===o)throw "can't find nthList object";if(void 0!==n&&t.substr(o,2)!=n)throw "checking tag doesn't match: "+t.substr(o,2)+"!="+n;return i.getTLV(t,o)},Ar.getVbyList=function(t,e,r,n,i){var o,s,a=Ar;if(void 0===(o=a.getIdxbyList(t,e,r,n)))throw "can't find nthList object";return s=a.getV(t,o),!0===i&&(s=s.substr(2)),s},Ar.hextooidstr=function(t){var e=function t(e,r){return e.length>=r?e:new Array(r-e.length+1).join("0")+e},r=[],n=t.substr(0,2),i=parseInt(n,16);r[0]=new String(Math.floor(i/40)),r[1]=new String(i%40);for(var o=t.substr(2),s=[],a=0;a<o.length/2;a++)s.push(parseInt(o.substr(2*a,2),16));var u=[],c="";for(a=0;a<s.length;a++)128&s[a]?c+=e((127&s[a]).toString(2),7):(c+=e((127&s[a]).toString(2),7),u.push(new String(parseInt(c,2))),c="");var h=r.join(".");return u.length>0&&(h=h+"."+u.join(".")),h},Ar.dump=function(t,e,r,n){var i=Ar,o=i.getV,s=i.dump,a=i.getChildIdx,u=t;t instanceof Er.asn1.ASN1Object&&(u=t.getEncodedHex());var c=function t(e,r){return e.length<=2*r?e:e.substr(0,r)+"..(total "+e.length/2+"bytes).."+e.substr(e.length-r,r)};void 0===e&&(e={ommit_long_octet:32}),void 0===r&&(r=0),void 0===n&&(n="");var h=e.ommit_long_octet;if("01"==u.substr(r,2))return "00"==(l=o(u,r))?n+"BOOLEAN FALSE\n":n+"BOOLEAN TRUE\n";if("02"==u.substr(r,2))return n+"INTEGER "+c(l=o(u,r),h)+"\n";if("03"==u.substr(r,2))return n+"BITSTRING "+c(l=o(u,r),h)+"\n";if("04"==u.substr(r,2)){var l=o(u,r);if(i.isASN1HEX(l)){var f=n+"OCTETSTRING, encapsulates\n";return f+=s(l,e,0,n+"  ")}return n+"OCTETSTRING "+c(l,h)+"\n"}if("05"==u.substr(r,2))return n+"NULL\n";if("06"==u.substr(r,2)){var d=o(u,r),g=Er.asn1.ASN1Util.oidHexToInt(d),p=Er.asn1.x509.OID.oid2name(g),v=g.replace(/\./g," ");return ""!=p?n+"ObjectIdentifier "+p+" ("+v+")\n":n+"ObjectIdentifier ("+v+")\n"}if("0c"==u.substr(r,2))return n+"UTF8String '"+Nr(o(u,r))+"'\n";if("13"==u.substr(r,2))return n+"PrintableString '"+Nr(o(u,r))+"'\n";if("14"==u.substr(r,2))return n+"TeletexString '"+Nr(o(u,r))+"'\n";if("16"==u.substr(r,2))return n+"IA5String '"+Nr(o(u,r))+"'\n";if("17"==u.substr(r,2))return n+"UTCTime "+Nr(o(u,r))+"\n";if("18"==u.substr(r,2))return n+"GeneralizedTime "+Nr(o(u,r))+"\n";if("30"==u.substr(r,2)){if("3000"==u.substr(r,4))return n+"SEQUENCE {}\n";f=n+"SEQUENCE\n";var y=e;if((2==(S=a(u,r)).length||3==S.length)&&"06"==u.substr(S[0],2)&&"04"==u.substr(S[S.length-1],2)){p=i.oidname(o(u,S[0]));var m=JSON.parse(JSON.stringify(e));m.x509ExtName=p,y=m;}for(var _=0;_<S.length;_++)f+=s(u,y,S[_],n+"  ");return f}if("31"==u.substr(r,2)){f=n+"SET\n";var S=a(u,r);for(_=0;_<S.length;_++)f+=s(u,e,S[_],n+"  ");return f}var F=parseInt(u.substr(r,2),16);if(0!=(128&F)){var b=31&F;if(0!=(32&F)){var f=n+"["+b+"]\n";for(S=a(u,r),_=0;_<S.length;_++)f+=s(u,e,S[_],n+"  ");return f}return "68747470"==(l=o(u,r)).substr(0,8)&&(l=Nr(l)),"subjectAltName"===e.x509ExtName&&2==b&&(l=Nr(l)),f=n+"["+b+"] "+l+"\n"}return n+"UNKNOWN("+u.substr(r,2)+") "+o(u,r)+"\n"},Ar.isASN1HEX=function(t){var e=Ar;if(t.length%2==1)return !1;var r=e.getVblen(t,0),n=t.substr(0,2),i=e.getL(t,0);return t.length-n.length-i.length==2*r},Ar.oidname=function(t){var e=Er.asn1;Er.lang.String.isHex(t)&&(t=e.ASN1Util.oidHexToInt(t));var r=e.x509.OID.oid2name(t);return ""===r&&(r=t),r},void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.lang&&Er.lang||(Er.lang={}),Er.lang.String=function(){},"function"==typeof t?(e.utf8tob64u=xr=function e(r){return Ir(new t(r,"utf8").toString("base64"))},e.b64utoutf8=kr=function e(r){return new t(Dr(r),"base64").toString("utf8")}):(e.utf8tob64u=xr=function t(e){return Ur(zr($r(e)))},e.b64utoutf8=kr=function t(e){return decodeURIComponent(Yr(Lr(e)))}),Er.lang.String.isInteger=function(t){return !!t.match(/^[0-9]+$/)||!!t.match(/^-[0-9]+$/)},Er.lang.String.isHex=function(t){return !(t.length%2!=0||!t.match(/^[0-9a-f]+$/)&&!t.match(/^[0-9A-F]+$/))},Er.lang.String.isBase64=function(t){return !(!(t=t.replace(/\s+/g,"")).match(/^[0-9A-Za-z+\/]+={0,3}$/)||t.length%4!=0)},Er.lang.String.isBase64URL=function(t){return !t.match(/[+/=]/)&&(t=Dr(t),Er.lang.String.isBase64(t))},Er.lang.String.isIntegerArray=function(t){return !!(t=t.replace(/\s+/g,"")).match(/^\[[0-9,]+\]$/)};void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.crypto&&Er.crypto||(Er.crypto={}),Er.crypto.Util=new function(){this.DIGESTINFOHEAD={sha1:"3021300906052b0e03021a05000414",sha224:"302d300d06096086480165030402040500041c",sha256:"3031300d060960864801650304020105000420",sha384:"3041300d060960864801650304020205000430",sha512:"3051300d060960864801650304020305000440",md2:"3020300c06082a864886f70d020205000410",md5:"3020300c06082a864886f70d020505000410",ripemd160:"3021300906052b2403020105000414"},this.DEFAULTPROVIDER={md5:"cryptojs",sha1:"cryptojs",sha224:"cryptojs",sha256:"cryptojs",sha384:"cryptojs",sha512:"cryptojs",ripemd160:"cryptojs",hmacmd5:"cryptojs",hmacsha1:"cryptojs",hmacsha224:"cryptojs",hmacsha256:"cryptojs",hmacsha384:"cryptojs",hmacsha512:"cryptojs",hmacripemd160:"cryptojs",MD5withRSA:"cryptojs/jsrsa",SHA1withRSA:"cryptojs/jsrsa",SHA224withRSA:"cryptojs/jsrsa",SHA256withRSA:"cryptojs/jsrsa",SHA384withRSA:"cryptojs/jsrsa",SHA512withRSA:"cryptojs/jsrsa",RIPEMD160withRSA:"cryptojs/jsrsa",MD5withECDSA:"cryptojs/jsrsa",SHA1withECDSA:"cryptojs/jsrsa",SHA224withECDSA:"cryptojs/jsrsa",SHA256withECDSA:"cryptojs/jsrsa",SHA384withECDSA:"cryptojs/jsrsa",SHA512withECDSA:"cryptojs/jsrsa",RIPEMD160withECDSA:"cryptojs/jsrsa",SHA1withDSA:"cryptojs/jsrsa",SHA224withDSA:"cryptojs/jsrsa",SHA256withDSA:"cryptojs/jsrsa",MD5withRSAandMGF1:"cryptojs/jsrsa",SHA1withRSAandMGF1:"cryptojs/jsrsa",SHA224withRSAandMGF1:"cryptojs/jsrsa",SHA256withRSAandMGF1:"cryptojs/jsrsa",SHA384withRSAandMGF1:"cryptojs/jsrsa",SHA512withRSAandMGF1:"cryptojs/jsrsa",RIPEMD160withRSAandMGF1:"cryptojs/jsrsa"},this.CRYPTOJSMESSAGEDIGESTNAME={md5:y.algo.MD5,sha1:y.algo.SHA1,sha224:y.algo.SHA224,sha256:y.algo.SHA256,sha384:y.algo.SHA384,sha512:y.algo.SHA512,ripemd160:y.algo.RIPEMD160},this.getDigestInfoHex=function(t,e){if(void 0===this.DIGESTINFOHEAD[e])throw "alg not supported in Util.DIGESTINFOHEAD: "+e;return this.DIGESTINFOHEAD[e]+t},this.getPaddedDigestInfoHex=function(t,e,r){var n=this.getDigestInfoHex(t,e),i=r/4;if(n.length+22>i)throw "key is too short for SigAlg: keylen="+r+","+e;for(var o="0001",s="00"+n,a="",u=i-o.length-s.length,c=0;c<u;c+=2)a+="ff";return o+a+s},this.hashString=function(t,e){return new Er.crypto.MessageDigest({alg:e}).digestString(t)},this.hashHex=function(t,e){return new Er.crypto.MessageDigest({alg:e}).digestHex(t)},this.sha1=function(t){return new Er.crypto.MessageDigest({alg:"sha1",prov:"cryptojs"}).digestString(t)},this.sha256=function(t){return new Er.crypto.MessageDigest({alg:"sha256",prov:"cryptojs"}).digestString(t)},this.sha256Hex=function(t){return new Er.crypto.MessageDigest({alg:"sha256",prov:"cryptojs"}).digestHex(t)},this.sha512=function(t){return new Er.crypto.MessageDigest({alg:"sha512",prov:"cryptojs"}).digestString(t)},this.sha512Hex=function(t){return new Er.crypto.MessageDigest({alg:"sha512",prov:"cryptojs"}).digestHex(t)};},Er.crypto.Util.md5=function(t){return new Er.crypto.MessageDigest({alg:"md5",prov:"cryptojs"}).digestString(t)},Er.crypto.Util.ripemd160=function(t){return new Er.crypto.MessageDigest({alg:"ripemd160",prov:"cryptojs"}).digestString(t)},Er.crypto.Util.SECURERANDOMGEN=new He,Er.crypto.Util.getRandomHexOfNbytes=function(t){var e=new Array(t);return Er.crypto.Util.SECURERANDOMGEN.nextBytes(e),Tr(e)},Er.crypto.Util.getRandomBigIntegerOfNbytes=function(t){return new E(Er.crypto.Util.getRandomHexOfNbytes(t),16)},Er.crypto.Util.getRandomHexOfNbits=function(t){var e=t%8,r=new Array((t-e)/8+1);return Er.crypto.Util.SECURERANDOMGEN.nextBytes(r),r[0]=(255<<e&255^255)&r[0],Tr(r)},Er.crypto.Util.getRandomBigIntegerOfNbits=function(t){return new E(Er.crypto.Util.getRandomHexOfNbits(t),16)},Er.crypto.Util.getRandomBigIntegerZeroToMax=function(t){for(var e=t.bitLength();;){var r=Er.crypto.Util.getRandomBigIntegerOfNbits(e);if(-1!=t.compareTo(r))return r}},Er.crypto.Util.getRandomBigIntegerMinToMax=function(t,e){var r=t.compareTo(e);if(1==r)throw "biMin is greater than biMax";if(0==r)return t;var n=e.subtract(t);return Er.crypto.Util.getRandomBigIntegerZeroToMax(n).add(t)},Er.crypto.MessageDigest=function(t){this.setAlgAndProvider=function(t,e){if(null!==(t=Er.crypto.MessageDigest.getCanonicalAlgName(t))&&void 0===e&&(e=Er.crypto.Util.DEFAULTPROVIDER[t]),-1!=":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(t)&&"cryptojs"==e){try{this.md=Er.crypto.Util.CRYPTOJSMESSAGEDIGESTNAME[t].create();}catch(e){throw "setAlgAndProvider hash alg set fail alg="+t+"/"+e}this.updateString=function(t){this.md.update(t);},this.updateHex=function(t){var e=y.enc.Hex.parse(t);this.md.update(e);},this.digest=function(){return this.md.finalize().toString(y.enc.Hex)},this.digestString=function(t){return this.updateString(t),this.digest()},this.digestHex=function(t){return this.updateHex(t),this.digest()};}if(-1!=":sha256:".indexOf(t)&&"sjcl"==e){try{this.md=new sjcl.hash.sha256;}catch(e){throw "setAlgAndProvider hash alg set fail alg="+t+"/"+e}this.updateString=function(t){this.md.update(t);},this.updateHex=function(t){var e=sjcl.codec.hex.toBits(t);this.md.update(e);},this.digest=function(){var t=this.md.finalize();return sjcl.codec.hex.fromBits(t)},this.digestString=function(t){return this.updateString(t),this.digest()},this.digestHex=function(t){return this.updateHex(t),this.digest()};}},this.updateString=function(t){throw "updateString(str) not supported for this alg/prov: "+this.algName+"/"+this.provName},this.updateHex=function(t){throw "updateHex(hex) not supported for this alg/prov: "+this.algName+"/"+this.provName},this.digest=function(){throw "digest() not supported for this alg/prov: "+this.algName+"/"+this.provName},this.digestString=function(t){throw "digestString(str) not supported for this alg/prov: "+this.algName+"/"+this.provName},this.digestHex=function(t){throw "digestHex(hex) not supported for this alg/prov: "+this.algName+"/"+this.provName},void 0!==t&&void 0!==t.alg&&(this.algName=t.alg,void 0===t.prov&&(this.provName=Er.crypto.Util.DEFAULTPROVIDER[this.algName]),this.setAlgAndProvider(this.algName,this.provName));},Er.crypto.MessageDigest.getCanonicalAlgName=function(t){return "string"==typeof t&&(t=(t=t.toLowerCase()).replace(/-/,"")),t},Er.crypto.MessageDigest.getHashLength=function(t){var e=Er.crypto.MessageDigest,r=e.getCanonicalAlgName(t);if(void 0===e.HASHLENGTH[r])throw "not supported algorithm: "+t;return e.HASHLENGTH[r]},Er.crypto.MessageDigest.HASHLENGTH={md5:16,sha1:20,sha224:28,sha256:32,sha384:48,sha512:64,ripemd160:20},Er.crypto.Mac=function(t){this.setAlgAndProvider=function(t,e){if(null==(t=t.toLowerCase())&&(t="hmacsha1"),"hmac"!=(t=t.toLowerCase()).substr(0,4))throw "setAlgAndProvider unsupported HMAC alg: "+t;void 0===e&&(e=Er.crypto.Util.DEFAULTPROVIDER[t]),this.algProv=t+"/"+e;var r=t.substr(4);if(-1!=":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(r)&&"cryptojs"==e){try{var n=Er.crypto.Util.CRYPTOJSMESSAGEDIGESTNAME[r];this.mac=y.algo.HMAC.create(n,this.pass);}catch(t){throw "setAlgAndProvider hash alg set fail hashAlg="+r+"/"+t}this.updateString=function(t){this.mac.update(t);},this.updateHex=function(t){var e=y.enc.Hex.parse(t);this.mac.update(e);},this.doFinal=function(){return this.mac.finalize().toString(y.enc.Hex)},this.doFinalString=function(t){return this.updateString(t),this.doFinal()},this.doFinalHex=function(t){return this.updateHex(t),this.doFinal()};}},this.updateString=function(t){throw "updateString(str) not supported for this alg/prov: "+this.algProv},this.updateHex=function(t){throw "updateHex(hex) not supported for this alg/prov: "+this.algProv},this.doFinal=function(){throw "digest() not supported for this alg/prov: "+this.algProv},this.doFinalString=function(t){throw "digestString(str) not supported for this alg/prov: "+this.algProv},this.doFinalHex=function(t){throw "digestHex(hex) not supported for this alg/prov: "+this.algProv},this.setPassword=function(t){if("string"==typeof t){var e=t;return t.length%2!=1&&t.match(/^[0-9A-Fa-f]+$/)||(e=jr(t)),void(this.pass=y.enc.Hex.parse(e))}if("object"!=(void 0===t?"undefined":r(t)))throw "KJUR.crypto.Mac unsupported password type: "+t;e=null;if(void 0!==t.hex){if(t.hex.length%2!=0||!t.hex.match(/^[0-9A-Fa-f]+$/))throw "Mac: wrong hex password: "+t.hex;e=t.hex;}if(void 0!==t.utf8&&(e=Br(t.utf8)),void 0!==t.rstr&&(e=jr(t.rstr)),void 0!==t.b64&&(e=b(t.b64)),void 0!==t.b64u&&(e=Lr(t.b64u)),null==e)throw "KJUR.crypto.Mac unsupported password type: "+t;this.pass=y.enc.Hex.parse(e);},void 0!==t&&(void 0!==t.pass&&this.setPassword(t.pass),void 0!==t.alg&&(this.algName=t.alg,void 0===t.prov&&(this.provName=Er.crypto.Util.DEFAULTPROVIDER[this.algName]),this.setAlgAndProvider(this.algName,this.provName)));},Er.crypto.Signature=function(t){var e=null;if(this._setAlgNames=function(){var t=this.algName.match(/^(.+)with(.+)$/);t&&(this.mdAlgName=t[1].toLowerCase(),this.pubkeyAlgName=t[2].toLowerCase());},this._zeroPaddingOfSignature=function(t,e){for(var r="",n=e/4-t.length,i=0;i<n;i++)r+="0";return r+t},this.setAlgAndProvider=function(t,e){if(this._setAlgNames(),"cryptojs/jsrsa"!=e)throw "provider not supported: "+e;if(-1!=":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(this.mdAlgName)){try{this.md=new Er.crypto.MessageDigest({alg:this.mdAlgName});}catch(t){throw "setAlgAndProvider hash alg set fail alg="+this.mdAlgName+"/"+t}this.init=function(t,e){var r=null;try{r=void 0===e?tn.getKey(t):tn.getKey(t,e);}catch(t){throw "init failed:"+t}if(!0===r.isPrivate)this.prvKey=r,this.state="SIGN";else{if(!0!==r.isPublic)throw "init failed.:"+r;this.pubKey=r,this.state="VERIFY";}},this.updateString=function(t){this.md.updateString(t);},this.updateHex=function(t){this.md.updateHex(t);},this.sign=function(){if(this.sHashHex=this.md.digest(),void 0!==this.ecprvhex&&void 0!==this.eccurvename){var t=new Er.crypto.ECDSA({curve:this.eccurvename});this.hSign=t.signHex(this.sHashHex,this.ecprvhex);}else if(this.prvKey instanceof qe&&"rsaandmgf1"===this.pubkeyAlgName)this.hSign=this.prvKey.signWithMessageHashPSS(this.sHashHex,this.mdAlgName,this.pssSaltLen);else if(this.prvKey instanceof qe&&"rsa"===this.pubkeyAlgName)this.hSign=this.prvKey.signWithMessageHash(this.sHashHex,this.mdAlgName);else if(this.prvKey instanceof Er.crypto.ECDSA)this.hSign=this.prvKey.signWithMessageHash(this.sHashHex);else{if(!(this.prvKey instanceof Er.crypto.DSA))throw "Signature: unsupported private key alg: "+this.pubkeyAlgName;this.hSign=this.prvKey.signWithMessageHash(this.sHashHex);}return this.hSign},this.signString=function(t){return this.updateString(t),this.sign()},this.signHex=function(t){return this.updateHex(t),this.sign()},this.verify=function(t){if(this.sHashHex=this.md.digest(),void 0!==this.ecpubhex&&void 0!==this.eccurvename)return new Er.crypto.ECDSA({curve:this.eccurvename}).verifyHex(this.sHashHex,t,this.ecpubhex);if(this.pubKey instanceof qe&&"rsaandmgf1"===this.pubkeyAlgName)return this.pubKey.verifyWithMessageHashPSS(this.sHashHex,t,this.mdAlgName,this.pssSaltLen);if(this.pubKey instanceof qe&&"rsa"===this.pubkeyAlgName)return this.pubKey.verifyWithMessageHash(this.sHashHex,t);if(void 0!==Er.crypto.ECDSA&&this.pubKey instanceof Er.crypto.ECDSA)return this.pubKey.verifyWithMessageHash(this.sHashHex,t);if(void 0!==Er.crypto.DSA&&this.pubKey instanceof Er.crypto.DSA)return this.pubKey.verifyWithMessageHash(this.sHashHex,t);throw "Signature: unsupported public key alg: "+this.pubkeyAlgName};}},this.init=function(t,e){throw "init(key, pass) not supported for this alg:prov="+this.algProvName},this.updateString=function(t){throw "updateString(str) not supported for this alg:prov="+this.algProvName},this.updateHex=function(t){throw "updateHex(hex) not supported for this alg:prov="+this.algProvName},this.sign=function(){throw "sign() not supported for this alg:prov="+this.algProvName},this.signString=function(t){throw "digestString(str) not supported for this alg:prov="+this.algProvName},this.signHex=function(t){throw "digestHex(hex) not supported for this alg:prov="+this.algProvName},this.verify=function(t){throw "verify(hSigVal) not supported for this alg:prov="+this.algProvName},this.initParams=t,void 0!==t&&(void 0!==t.alg&&(this.algName=t.alg,void 0===t.prov?this.provName=Er.crypto.Util.DEFAULTPROVIDER[this.algName]:this.provName=t.prov,this.algProvName=this.algName+":"+this.provName,this.setAlgAndProvider(this.algName,this.provName),this._setAlgNames()),void 0!==t.psssaltlen&&(this.pssSaltLen=t.psssaltlen),void 0!==t.prvkeypem)){if(void 0!==t.prvkeypas)throw "both prvkeypem and prvkeypas parameters not supported";try{e=tn.getKey(t.prvkeypem);this.init(e);}catch(t){throw "fatal error to load pem private key: "+t}}},Er.crypto.Cipher=function(t){},Er.crypto.Cipher.encrypt=function(t,e,r){if(e instanceof qe&&e.isPublic){var n=Er.crypto.Cipher.getAlgByKeyAndName(e,r);if("RSA"===n)return e.encrypt(t);if("RSAOAEP"===n)return e.encryptOAEP(t,"sha1");var i=n.match(/^RSAOAEP(\d+)$/);if(null!==i)return e.encryptOAEP(t,"sha"+i[1]);throw "Cipher.encrypt: unsupported algorithm for RSAKey: "+r}throw "Cipher.encrypt: unsupported key or algorithm"},Er.crypto.Cipher.decrypt=function(t,e,r){if(e instanceof qe&&e.isPrivate){var n=Er.crypto.Cipher.getAlgByKeyAndName(e,r);if("RSA"===n)return e.decrypt(t);if("RSAOAEP"===n)return e.decryptOAEP(t,"sha1");var i=n.match(/^RSAOAEP(\d+)$/);if(null!==i)return e.decryptOAEP(t,"sha"+i[1]);throw "Cipher.decrypt: unsupported algorithm for RSAKey: "+r}throw "Cipher.decrypt: unsupported key or algorithm"},Er.crypto.Cipher.getAlgByKeyAndName=function(t,e){if(t instanceof qe){if(-1!=":RSA:RSAOAEP:RSAOAEP224:RSAOAEP256:RSAOAEP384:RSAOAEP512:".indexOf(e))return e;if(null===e||void 0===e)return "RSA";throw "getAlgByKeyAndName: not supported algorithm name for RSAKey: "+e}throw "getAlgByKeyAndName: not supported algorithm name: "+e},Er.crypto.OID=new function(){this.oidhex2name={"2a864886f70d010101":"rsaEncryption","2a8648ce3d0201":"ecPublicKey","2a8648ce380401":"dsa","2a8648ce3d030107":"secp256r1","2b8104001f":"secp192k1","2b81040021":"secp224r1","2b8104000a":"secp256k1","2b81040023":"secp521r1","2b81040022":"secp384r1","2a8648ce380403":"SHA1withDSA","608648016503040301":"SHA224withDSA","608648016503040302":"SHA256withDSA"};},void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.crypto&&Er.crypto||(Er.crypto={}),Er.crypto.ECDSA=function(t){var e=new He;this.type="EC",this.isPrivate=!1,this.isPublic=!1,this.getBigRandom=function(t){return new E(t.bitLength(),e).mod(t.subtract(E.ONE)).add(E.ONE)},this.setNamedCurve=function(t){this.ecparams=Er.crypto.ECParameterDB.getByName(t),this.prvKeyHex=null,this.pubKeyHex=null,this.curveName=t;},this.setPrivateKeyHex=function(t){this.isPrivate=!0,this.prvKeyHex=t;},this.setPublicKeyHex=function(t){this.isPublic=!0,this.pubKeyHex=t;},this.getPublicKeyXYHex=function(){var t=this.pubKeyHex;if("04"!==t.substr(0,2))throw "this method supports uncompressed format(04) only";var e=this.ecparams.keylen/4;if(t.length!==2+2*e)throw "malformed public key hex length";var r={};return r.x=t.substr(2,e),r.y=t.substr(2+e),r},this.getShortNISTPCurveName=function(){var t=this.curveName;return "secp256r1"===t||"NIST P-256"===t||"P-256"===t||"prime256v1"===t?"P-256":"secp384r1"===t||"NIST P-384"===t||"P-384"===t?"P-384":null},this.generateKeyPairHex=function(){var t=this.ecparams.n,e=this.getBigRandom(t),r=this.ecparams.G.multiply(e),n=r.getX().toBigInteger(),i=r.getY().toBigInteger(),o=this.ecparams.keylen/4,s=("0000000000"+e.toString(16)).slice(-o),a="04"+("0000000000"+n.toString(16)).slice(-o)+("0000000000"+i.toString(16)).slice(-o);return this.setPrivateKeyHex(s),this.setPublicKeyHex(a),{ecprvhex:s,ecpubhex:a}},this.signWithMessageHash=function(t){return this.signHex(t,this.prvKeyHex)},this.signHex=function(t,e){var r=new E(e,16),n=this.ecparams.n,i=new E(t,16);do{var o=this.getBigRandom(n),s=this.ecparams.G.multiply(o).getX().toBigInteger().mod(n);}while(s.compareTo(E.ZERO)<=0);var a=o.modInverse(n).multiply(i.add(r.multiply(s))).mod(n);return Er.crypto.ECDSA.biRSSigToASN1Sig(s,a)},this.sign=function(t,e){var r=e,n=this.ecparams.n,i=E.fromByteArrayUnsigned(t);do{var o=this.getBigRandom(n),s=this.ecparams.G.multiply(o).getX().toBigInteger().mod(n);}while(s.compareTo(E.ZERO)<=0);var a=o.modInverse(n).multiply(i.add(r.multiply(s))).mod(n);return this.serializeSig(s,a)},this.verifyWithMessageHash=function(t,e){return this.verifyHex(t,e,this.pubKeyHex)},this.verifyHex=function(t,e,r){var n,i,o,s=Er.crypto.ECDSA.parseSigHex(e);n=s.r,i=s.s,o=We.decodeFromHex(this.ecparams.curve,r);var a=new E(t,16);return this.verifyRaw(a,n,i,o)},this.verify=function(t,e,n){var i,o,s;if(Bitcoin.Util.isArray(e)){var a=this.parseSig(e);i=a.r,o=a.s;}else{if("object"!==(void 0===e?"undefined":r(e))||!e.r||!e.s)throw "Invalid value for signature";i=e.r,o=e.s;}if(n instanceof We)s=n;else{if(!Bitcoin.Util.isArray(n))throw "Invalid format for pubkey value, must be byte array or ECPointFp";s=We.decodeFrom(this.ecparams.curve,n);}var u=E.fromByteArrayUnsigned(t);return this.verifyRaw(u,i,o,s)},this.verifyRaw=function(t,e,r,n){var i=this.ecparams.n,o=this.ecparams.G;if(e.compareTo(E.ONE)<0||e.compareTo(i)>=0)return !1;if(r.compareTo(E.ONE)<0||r.compareTo(i)>=0)return !1;var s=r.modInverse(i),a=t.multiply(s).mod(i),u=e.multiply(s).mod(i);return o.multiply(a).add(n.multiply(u)).getX().toBigInteger().mod(i).equals(e)},this.serializeSig=function(t,e){var r=t.toByteArraySigned(),n=e.toByteArraySigned(),i=[];return i.push(2),i.push(r.length),(i=i.concat(r)).push(2),i.push(n.length),(i=i.concat(n)).unshift(i.length),i.unshift(48),i},this.parseSig=function(t){var e;if(48!=t[0])throw new Error("Signature not a valid DERSequence");if(2!=t[e=2])throw new Error("First element in signature must be a DERInteger");var r=t.slice(e+2,e+2+t[e+1]);if(2!=t[e+=2+t[e+1]])throw new Error("Second element in signature must be a DERInteger");var n=t.slice(e+2,e+2+t[e+1]);return e+=2+t[e+1],{r:E.fromByteArrayUnsigned(r),s:E.fromByteArrayUnsigned(n)}},this.parseSigCompact=function(t){if(65!==t.length)throw "Signature has the wrong length";var e=t[0]-27;if(e<0||e>7)throw "Invalid signature type";var r=this.ecparams.n;return {r:E.fromByteArrayUnsigned(t.slice(1,33)).mod(r),s:E.fromByteArrayUnsigned(t.slice(33,65)).mod(r),i:e}},this.readPKCS5PrvKeyHex=function(t){var e,r,n,i=Ar,o=Er.crypto.ECDSA.getName,s=i.getVbyList;if(!1===i.isASN1HEX(t))throw "not ASN.1 hex string";try{e=s(t,0,[2,0],"06"),r=s(t,0,[1],"04");try{n=s(t,0,[3,0],"03").substr(2);}catch(t){}}catch(t){throw "malformed PKCS#1/5 plain ECC private key"}if(this.curveName=o(e),void 0===this.curveName)throw "unsupported curve name";this.setNamedCurve(this.curveName),this.setPublicKeyHex(n),this.setPrivateKeyHex(r),this.isPublic=!1;},this.readPKCS8PrvKeyHex=function(t){var e,r,n,i=Ar,o=Er.crypto.ECDSA.getName,s=i.getVbyList;if(!1===i.isASN1HEX(t))throw "not ASN.1 hex string";try{s(t,0,[1,0],"06"),e=s(t,0,[1,1],"06"),r=s(t,0,[2,0,1],"04");try{n=s(t,0,[2,0,2,0],"03").substr(2);}catch(t){}}catch(t){throw "malformed PKCS#8 plain ECC private key"}if(this.curveName=o(e),void 0===this.curveName)throw "unsupported curve name";this.setNamedCurve(this.curveName),this.setPublicKeyHex(n),this.setPrivateKeyHex(r),this.isPublic=!1;},this.readPKCS8PubKeyHex=function(t){var e,r,n=Ar,i=Er.crypto.ECDSA.getName,o=n.getVbyList;if(!1===n.isASN1HEX(t))throw "not ASN.1 hex string";try{o(t,0,[0,0],"06"),e=o(t,0,[0,1],"06"),r=o(t,0,[1],"03").substr(2);}catch(t){throw "malformed PKCS#8 ECC public key"}if(this.curveName=i(e),null===this.curveName)throw "unsupported curve name";this.setNamedCurve(this.curveName),this.setPublicKeyHex(r);},this.readCertPubKeyHex=function(t,e){5!==e&&(e=6);var r,n,i=Ar,o=Er.crypto.ECDSA.getName,s=i.getVbyList;if(!1===i.isASN1HEX(t))throw "not ASN.1 hex string";try{r=s(t,0,[0,e,0,1],"06"),n=s(t,0,[0,e,1],"03").substr(2);}catch(t){throw "malformed X.509 certificate ECC public key"}if(this.curveName=o(r),null===this.curveName)throw "unsupported curve name";this.setNamedCurve(this.curveName),this.setPublicKeyHex(n);},void 0!==t&&void 0!==t.curve&&(this.curveName=t.curve),void 0===this.curveName&&(this.curveName="secp256r1"),this.setNamedCurve(this.curveName),void 0!==t&&(void 0!==t.prv&&this.setPrivateKeyHex(t.prv),void 0!==t.pub&&this.setPublicKeyHex(t.pub));},Er.crypto.ECDSA.parseSigHex=function(t){var e=Er.crypto.ECDSA.parseSigHexInHexRS(t);return {r:new E(e.r,16),s:new E(e.s,16)}},Er.crypto.ECDSA.parseSigHexInHexRS=function(t){var e=Ar,r=e.getChildIdx,n=e.getV;if("30"!=t.substr(0,2))throw "signature is not a ASN.1 sequence";var i=r(t,0);if(2!=i.length)throw "number of signature ASN.1 sequence elements seem wrong";var o=i[0],s=i[1];if("02"!=t.substr(o,2))throw "1st item of sequene of signature is not ASN.1 integer";if("02"!=t.substr(s,2))throw "2nd item of sequene of signature is not ASN.1 integer";return {r:n(t,o),s:n(t,s)}},Er.crypto.ECDSA.asn1SigToConcatSig=function(t){var e=Er.crypto.ECDSA.parseSigHexInHexRS(t),r=e.r,n=e.s;if("00"==r.substr(0,2)&&r.length%32==2&&(r=r.substr(2)),"00"==n.substr(0,2)&&n.length%32==2&&(n=n.substr(2)),r.length%32==30&&(r="00"+r),n.length%32==30&&(n="00"+n),r.length%32!=0)throw "unknown ECDSA sig r length error";if(n.length%32!=0)throw "unknown ECDSA sig s length error";return r+n},Er.crypto.ECDSA.concatSigToASN1Sig=function(t){if(t.length/2*8%128!=0)throw "unknown ECDSA concatinated r-s sig  length error";var e=t.substr(0,t.length/2),r=t.substr(t.length/2);return Er.crypto.ECDSA.hexRSSigToASN1Sig(e,r)},Er.crypto.ECDSA.hexRSSigToASN1Sig=function(t,e){var r=new E(t,16),n=new E(e,16);return Er.crypto.ECDSA.biRSSigToASN1Sig(r,n)},Er.crypto.ECDSA.biRSSigToASN1Sig=function(t,e){var r=Er.asn1,n=new r.DERInteger({bigint:t}),i=new r.DERInteger({bigint:e});return new r.DERSequence({array:[n,i]}).getEncodedHex()},Er.crypto.ECDSA.getName=function(t){return "2a8648ce3d030107"===t?"secp256r1":"2b8104000a"===t?"secp256k1":"2b81040022"===t?"secp384r1":-1!=="|secp256r1|NIST P-256|P-256|prime256v1|".indexOf(t)?"secp256r1":-1!=="|secp256k1|".indexOf(t)?"secp256k1":-1!=="|secp384r1|NIST P-384|P-384|".indexOf(t)?"secp384r1":null},void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.crypto&&Er.crypto||(Er.crypto={}),Er.crypto.ECParameterDB=new function(){var t={},e={};function r(t){return new E(t,16)}this.getByName=function(r){var n=r;if(void 0!==e[n]&&(n=e[r]),void 0!==t[n])return t[n];throw "unregistered EC curve name: "+n},this.regist=function(n,i,o,s,a,u,c,h,l,f,d,g){t[n]={};var p=r(o),v=r(s),y=r(a),m=r(u),_=r(c),S=new ze(p,v,y),F=S.decodePointHex("04"+h+l);t[n].name=n,t[n].keylen=i,t[n].curve=S,t[n].G=F,t[n].n=m,t[n].h=_,t[n].oid=d,t[n].info=g;for(var b=0;b<f.length;b++)e[f[b]]=n;};},Er.crypto.ECParameterDB.regist("secp128r1",128,"FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF","FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC","E87579C11079F43DD824993C2CEE5ED3","FFFFFFFE0000000075A30D1B9038A115","1","161FF7528B899B2D0C28607CA52C5B86","CF5AC8395BAFEB13C02DA292DDED7A83",[],"","secp128r1 : SECG curve over a 128 bit prime field"),Er.crypto.ECParameterDB.regist("secp160k1",160,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73","0","7","0100000000000000000001B8FA16DFAB9ACA16B6B3","1","3B4C382CE37AA192A4019E763036F4F5DD4D7EBB","938CF935318FDCED6BC28286531733C3F03C4FEE",[],"","secp160k1 : SECG curve over a 160 bit prime field"),Er.crypto.ECParameterDB.regist("secp160r1",160,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC","1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45","0100000000000000000001F4C8F927AED3CA752257","1","4A96B5688EF573284664698968C38BB913CBFC82","23A628553168947D59DCC912042351377AC5FB32",[],"","secp160r1 : SECG curve over a 160 bit prime field"),Er.crypto.ECParameterDB.regist("secp192k1",192,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37","0","3","FFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D","1","DB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D","9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D",[]),Er.crypto.ECParameterDB.regist("secp192r1",192,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFC","64210519E59C80E70FA7E9AB72243049FEB8DEECC146B9B1","FFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831","1","188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012","07192B95FFC8DA78631011ED6B24CDD573F977A11E794811",[]),Er.crypto.ECParameterDB.regist("secp224r1",224,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFE","B4050A850C04B3ABF54132565044B0B7D7BFD8BA270B39432355FFB4","FFFFFFFFFFFFFFFFFFFFFFFFFFFF16A2E0B8F03E13DD29455C5C2A3D","1","B70E0CBD6BB4BF7F321390B94A03C1D356C21122343280D6115C1D21","BD376388B5F723FB4C22DFE6CD4375A05A07476444D5819985007E34",[]),Er.crypto.ECParameterDB.regist("secp256k1",256,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F","0","7","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141","1","79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798","483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",[]),Er.crypto.ECParameterDB.regist("secp256r1",256,"FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF","FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC","5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B","FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551","1","6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296","4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",["NIST P-256","P-256","prime256v1"]),Er.crypto.ECParameterDB.regist("secp384r1",384,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFC","B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973","1","AA87CA22BE8B05378EB1C71EF320AD746E1D3B628BA79B9859F741E082542A385502F25DBF55296C3A545E3872760AB7","3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f",["NIST P-384","P-384"]),Er.crypto.ECParameterDB.regist("secp521r1",521,"1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF","1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC","051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00","1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409","1","C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66","011839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650",["NIST P-521","P-521"]);var tn=function(){var t=function t(r,n,i){return e(y.AES,r,n,i)},e=function t(e,r,n,i){var o=y.enc.Hex.parse(r),s=y.enc.Hex.parse(n),a=y.enc.Hex.parse(i),u={};u.key=s,u.iv=a,u.ciphertext=o;var c=e.decrypt(u,s,{iv:a});return y.enc.Hex.stringify(c)},r=function t(e,r,i){return n(y.AES,e,r,i)},n=function t(e,r,n,i){var o=y.enc.Hex.parse(r),s=y.enc.Hex.parse(n),a=y.enc.Hex.parse(i),u=e.encrypt(o,s,{iv:a}),c=y.enc.Hex.parse(u.toString());return y.enc.Base64.stringify(c)},i={"AES-256-CBC":{proc:t,eproc:r,keylen:32,ivlen:16},"AES-192-CBC":{proc:t,eproc:r,keylen:24,ivlen:16},"AES-128-CBC":{proc:t,eproc:r,keylen:16,ivlen:16},"DES-EDE3-CBC":{proc:function t(r,n,i){return e(y.TripleDES,r,n,i)},eproc:function t(e,r,i){return n(y.TripleDES,e,r,i)},keylen:24,ivlen:8},"DES-CBC":{proc:function t(r,n,i){return e(y.DES,r,n,i)},eproc:function t(e,r,i){return n(y.DES,e,r,i)},keylen:8,ivlen:8}},o=function t(e){var r={},n=e.match(new RegExp("DEK-Info: ([^,]+),([0-9A-Fa-f]+)","m"));n&&(r.cipher=n[1],r.ivsalt=n[2]);var i=e.match(new RegExp("-----BEGIN ([A-Z]+) PRIVATE KEY-----"));i&&(r.type=i[1]);var o=-1,s=0;-1!=e.indexOf("\r\n\r\n")&&(o=e.indexOf("\r\n\r\n"),s=2),-1!=e.indexOf("\n\n")&&(o=e.indexOf("\n\n"),s=1);var a=e.indexOf("-----END");if(-1!=o&&-1!=a){var u=e.substring(o+2*s,a-s);u=u.replace(/\s+/g,""),r.data=u;}return r},s=function t(e,r,n){for(var o=n.substring(0,16),s=y.enc.Hex.parse(o),a=y.enc.Utf8.parse(r),u=i[e].keylen+i[e].ivlen,c="",h=null;;){var l=y.algo.MD5.create();if(null!=h&&l.update(h),l.update(a),l.update(s),h=l.finalize(),(c+=y.enc.Hex.stringify(h)).length>=2*u)break}var f={};return f.keyhex=c.substr(0,2*i[e].keylen),f.ivhex=c.substr(2*i[e].keylen,2*i[e].ivlen),f},a=function t(e,r,n,o){var s=y.enc.Base64.parse(e),a=y.enc.Hex.stringify(s);return (0, i[r].proc)(a,n,o)};return {version:"1.0.0",parsePKCS5PEM:function t(e){return o(e)},getKeyAndUnusedIvByPasscodeAndIvsalt:function t(e,r,n){return s(e,r,n)},decryptKeyB64:function t(e,r,n,i){return a(e,r,n,i)},getDecryptedKeyHex:function t(e,r){var n=o(e),i=(n.cipher),u=n.ivsalt,c=n.data,h=s(i,r,u).keyhex;return a(c,i,h,u)},getEncryptedPKCS5PEMFromPrvKeyHex:function t(e,r,n,o,a){var u="";if(void 0!==o&&null!=o||(o="AES-256-CBC"),void 0===i[o])throw "KEYUTIL unsupported algorithm: "+o;void 0!==a&&null!=a||(a=function t(e){var r=y.lib.WordArray.random(e);return y.enc.Hex.stringify(r)}(i[o].ivlen).toUpperCase());var c=function t(e,r,n,o){return (0, i[r].eproc)(e,n,o)}(r,o,s(o,n,a).keyhex,a);u="-----BEGIN "+e+" PRIVATE KEY-----\r\n";return u+="Proc-Type: 4,ENCRYPTED\r\n",u+="DEK-Info: "+o+","+a+"\r\n",u+="\r\n",u+=c.replace(/(.{64})/g,"$1\r\n"),u+="\r\n-----END "+e+" PRIVATE KEY-----\r\n"},parseHexOfEncryptedPKCS8:function t(e){var r=Ar,n=r.getChildIdx,i=r.getV,o={},s=n(e,0);if(2!=s.length)throw "malformed format: SEQUENCE(0).items != 2: "+s.length;o.ciphertext=i(e,s[1]);var a=n(e,s[0]);if(2!=a.length)throw "malformed format: SEQUENCE(0.0).items != 2: "+a.length;if("2a864886f70d01050d"!=i(e,a[0]))throw "this only supports pkcs5PBES2";var u=n(e,a[1]);if(2!=a.length)throw "malformed format: SEQUENCE(0.0.1).items != 2: "+u.length;var c=n(e,u[1]);if(2!=c.length)throw "malformed format: SEQUENCE(0.0.1.1).items != 2: "+c.length;if("2a864886f70d0307"!=i(e,c[0]))throw "this only supports TripleDES";o.encryptionSchemeAlg="TripleDES",o.encryptionSchemeIV=i(e,c[1]);var h=n(e,u[0]);if(2!=h.length)throw "malformed format: SEQUENCE(0.0.1.0).items != 2: "+h.length;if("2a864886f70d01050c"!=i(e,h[0]))throw "this only supports pkcs5PBKDF2";var l=n(e,h[1]);if(l.length<2)throw "malformed format: SEQUENCE(0.0.1.0.1).items < 2: "+l.length;o.pbkdf2Salt=i(e,l[0]);var f=i(e,l[1]);try{o.pbkdf2Iter=parseInt(f,16);}catch(t){throw "malformed format pbkdf2Iter: "+f}return o},getPBKDF2KeyHexFromParam:function t(e,r){var n=y.enc.Hex.parse(e.pbkdf2Salt),i=e.pbkdf2Iter,o=y.PBKDF2(r,n,{keySize:6,iterations:i});return y.enc.Hex.stringify(o)},_getPlainPKCS8HexFromEncryptedPKCS8PEM:function t(e,r){var n=qr(e,"ENCRYPTED PRIVATE KEY"),i=this.parseHexOfEncryptedPKCS8(n),o=tn.getPBKDF2KeyHexFromParam(i,r),s={};s.ciphertext=y.enc.Hex.parse(i.ciphertext);var a=y.enc.Hex.parse(o),u=y.enc.Hex.parse(i.encryptionSchemeIV),c=y.TripleDES.decrypt(s,a,{iv:u});return y.enc.Hex.stringify(c)},getKeyFromEncryptedPKCS8PEM:function t(e,r){var n=this._getPlainPKCS8HexFromEncryptedPKCS8PEM(e,r);return this.getKeyFromPlainPrivatePKCS8Hex(n)},parsePlainPrivatePKCS8Hex:function t(e){var r=Ar,n=r.getChildIdx,i=r.getV,o={algparam:null};if("30"!=e.substr(0,2))throw "malformed plain PKCS8 private key(code:001)";var s=n(e,0);if(3!=s.length)throw "malformed plain PKCS8 private key(code:002)";if("30"!=e.substr(s[1],2))throw "malformed PKCS8 private key(code:003)";var a=n(e,s[1]);if(2!=a.length)throw "malformed PKCS8 private key(code:004)";if("06"!=e.substr(a[0],2))throw "malformed PKCS8 private key(code:005)";if(o.algoid=i(e,a[0]),"06"==e.substr(a[1],2)&&(o.algparam=i(e,a[1])),"04"!=e.substr(s[2],2))throw "malformed PKCS8 private key(code:006)";return o.keyidx=r.getVidx(e,s[2]),o},getKeyFromPlainPrivatePKCS8PEM:function t(e){var r=qr(e,"PRIVATE KEY");return this.getKeyFromPlainPrivatePKCS8Hex(r)},getKeyFromPlainPrivatePKCS8Hex:function t(e){var r,n=this.parsePlainPrivatePKCS8Hex(e);if("2a864886f70d010101"==n.algoid)r=new qe;else if("2a8648ce380401"==n.algoid)r=new Er.crypto.DSA;else{if("2a8648ce3d0201"!=n.algoid)throw "unsupported private key algorithm";r=new Er.crypto.ECDSA;}return r.readPKCS8PrvKeyHex(e),r},_getKeyFromPublicPKCS8Hex:function t(e){var r,n=Ar.getVbyList(e,0,[0,0],"06");if("2a864886f70d010101"===n)r=new qe;else if("2a8648ce380401"===n)r=new Er.crypto.DSA;else{if("2a8648ce3d0201"!==n)throw "unsupported PKCS#8 public key hex";r=new Er.crypto.ECDSA;}return r.readPKCS8PubKeyHex(e),r},parsePublicRawRSAKeyHex:function t(e){var r=Ar,n=r.getChildIdx,i=r.getV,o={};if("30"!=e.substr(0,2))throw "malformed RSA key(code:001)";var s=n(e,0);if(2!=s.length)throw "malformed RSA key(code:002)";if("02"!=e.substr(s[0],2))throw "malformed RSA key(code:003)";if(o.n=i(e,s[0]),"02"!=e.substr(s[1],2))throw "malformed RSA key(code:004)";return o.e=i(e,s[1]),o},parsePublicPKCS8Hex:function t(e){var r=Ar,n=r.getChildIdx,i=r.getV,o={algparam:null},s=n(e,0);if(2!=s.length)throw "outer DERSequence shall have 2 elements: "+s.length;var a=s[0];if("30"!=e.substr(a,2))throw "malformed PKCS8 public key(code:001)";var u=n(e,a);if(2!=u.length)throw "malformed PKCS8 public key(code:002)";if("06"!=e.substr(u[0],2))throw "malformed PKCS8 public key(code:003)";if(o.algoid=i(e,u[0]),"06"==e.substr(u[1],2)?o.algparam=i(e,u[1]):"30"==e.substr(u[1],2)&&(o.algparam={},o.algparam.p=r.getVbyList(e,u[1],[0],"02"),o.algparam.q=r.getVbyList(e,u[1],[1],"02"),o.algparam.g=r.getVbyList(e,u[1],[2],"02")),"03"!=e.substr(s[1],2))throw "malformed PKCS8 public key(code:004)";return o.key=i(e,s[1]).substr(2),o}}}();tn.getKey=function(t,e,r){var n=(v=Ar).getChildIdx,i=(v.getV,v.getVbyList),o=Er.crypto,s=o.ECDSA,a=o.DSA,u=qe,c=qr,h=tn;if(void 0!==u&&t instanceof u)return t;if(void 0!==s&&t instanceof s)return t;if(void 0!==a&&t instanceof a)return t;if(void 0!==t.curve&&void 0!==t.xy&&void 0===t.d)return new s({pub:t.xy,curve:t.curve});if(void 0!==t.curve&&void 0!==t.d)return new s({prv:t.d,curve:t.curve});if(void 0===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0===t.d)return (P=new u).setPublic(t.n,t.e),P;if(void 0===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0!==t.d&&void 0!==t.p&&void 0!==t.q&&void 0!==t.dp&&void 0!==t.dq&&void 0!==t.co&&void 0===t.qi)return (P=new u).setPrivateEx(t.n,t.e,t.d,t.p,t.q,t.dp,t.dq,t.co),P;if(void 0===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0!==t.d&&void 0===t.p)return (P=new u).setPrivate(t.n,t.e,t.d),P;if(void 0!==t.p&&void 0!==t.q&&void 0!==t.g&&void 0!==t.y&&void 0===t.x)return (P=new a).setPublic(t.p,t.q,t.g,t.y),P;if(void 0!==t.p&&void 0!==t.q&&void 0!==t.g&&void 0!==t.y&&void 0!==t.x)return (P=new a).setPrivate(t.p,t.q,t.g,t.y,t.x),P;if("RSA"===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0===t.d)return (P=new u).setPublic(Lr(t.n),Lr(t.e)),P;if("RSA"===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0!==t.d&&void 0!==t.p&&void 0!==t.q&&void 0!==t.dp&&void 0!==t.dq&&void 0!==t.qi)return (P=new u).setPrivateEx(Lr(t.n),Lr(t.e),Lr(t.d),Lr(t.p),Lr(t.q),Lr(t.dp),Lr(t.dq),Lr(t.qi)),P;if("RSA"===t.kty&&void 0!==t.n&&void 0!==t.e&&void 0!==t.d)return (P=new u).setPrivate(Lr(t.n),Lr(t.e),Lr(t.d)),P;if("EC"===t.kty&&void 0!==t.crv&&void 0!==t.x&&void 0!==t.y&&void 0===t.d){var l=(A=new s({curve:t.crv})).ecparams.keylen/4,f="04"+("0000000000"+Lr(t.x)).slice(-l)+("0000000000"+Lr(t.y)).slice(-l);return A.setPublicKeyHex(f),A}if("EC"===t.kty&&void 0!==t.crv&&void 0!==t.x&&void 0!==t.y&&void 0!==t.d){l=(A=new s({curve:t.crv})).ecparams.keylen/4,f="04"+("0000000000"+Lr(t.x)).slice(-l)+("0000000000"+Lr(t.y)).slice(-l);var d=("0000000000"+Lr(t.d)).slice(-l);return A.setPublicKeyHex(f),A.setPrivateKeyHex(d),A}if("pkcs5prv"===r){var g,p=t,v=Ar;if(9===(g=n(p,0)).length)(P=new u).readPKCS5PrvKeyHex(p);else if(6===g.length)(P=new a).readPKCS5PrvKeyHex(p);else{if(!(g.length>2&&"04"===p.substr(g[1],2)))throw "unsupported PKCS#1/5 hexadecimal key";(P=new s).readPKCS5PrvKeyHex(p);}return P}if("pkcs8prv"===r)return P=h.getKeyFromPlainPrivatePKCS8Hex(t);if("pkcs8pub"===r)return h._getKeyFromPublicPKCS8Hex(t);if("x509pub"===r)return sn.getPublicKeyFromCertHex(t);if(-1!=t.indexOf("-END CERTIFICATE-",0)||-1!=t.indexOf("-END X509 CERTIFICATE-",0)||-1!=t.indexOf("-END TRUSTED CERTIFICATE-",0))return sn.getPublicKeyFromCertPEM(t);if(-1!=t.indexOf("-END PUBLIC KEY-")){var y=qr(t,"PUBLIC KEY");return h._getKeyFromPublicPKCS8Hex(y)}if(-1!=t.indexOf("-END RSA PRIVATE KEY-")&&-1==t.indexOf("4,ENCRYPTED")){var m=c(t,"RSA PRIVATE KEY");return h.getKey(m,null,"pkcs5prv")}if(-1!=t.indexOf("-END DSA PRIVATE KEY-")&&-1==t.indexOf("4,ENCRYPTED")){var _=i(R=c(t,"DSA PRIVATE KEY"),0,[1],"02"),S=i(R,0,[2],"02"),F=i(R,0,[3],"02"),b=i(R,0,[4],"02"),w=i(R,0,[5],"02");return (P=new a).setPrivate(new E(_,16),new E(S,16),new E(F,16),new E(b,16),new E(w,16)),P}if(-1!=t.indexOf("-END PRIVATE KEY-"))return h.getKeyFromPlainPrivatePKCS8PEM(t);if(-1!=t.indexOf("-END RSA PRIVATE KEY-")&&-1!=t.indexOf("4,ENCRYPTED")){var x=h.getDecryptedKeyHex(t,e),k=new qe;return k.readPKCS5PrvKeyHex(x),k}if(-1!=t.indexOf("-END EC PRIVATE KEY-")&&-1!=t.indexOf("4,ENCRYPTED")){var A,P=i(R=h.getDecryptedKeyHex(t,e),0,[1],"04"),C=i(R,0,[2,0],"06"),T=i(R,0,[3,0],"03").substr(2);if(void 0===Er.crypto.OID.oidhex2name[C])throw "undefined OID(hex) in KJUR.crypto.OID: "+C;return (A=new s({curve:Er.crypto.OID.oidhex2name[C]})).setPublicKeyHex(T),A.setPrivateKeyHex(P),A.isPublic=!1,A}if(-1!=t.indexOf("-END DSA PRIVATE KEY-")&&-1!=t.indexOf("4,ENCRYPTED")){var R;_=i(R=h.getDecryptedKeyHex(t,e),0,[1],"02"),S=i(R,0,[2],"02"),F=i(R,0,[3],"02"),b=i(R,0,[4],"02"),w=i(R,0,[5],"02");return (P=new a).setPrivate(new E(_,16),new E(S,16),new E(F,16),new E(b,16),new E(w,16)),P}if(-1!=t.indexOf("-END ENCRYPTED PRIVATE KEY-"))return h.getKeyFromEncryptedPKCS8PEM(t,e);throw "not supported argument"},tn.generateKeypair=function(t,e){if("RSA"==t){var r=e;(s=new qe).generate(r,"10001"),s.isPrivate=!0,s.isPublic=!0;var n=new qe,i=s.n.toString(16),o=s.e.toString(16);return n.setPublic(i,o),n.isPrivate=!1,n.isPublic=!0,(a={}).prvKeyObj=s,a.pubKeyObj=n,a}if("EC"==t){var s,a,u=e,c=new Er.crypto.ECDSA({curve:u}).generateKeyPairHex();return (s=new Er.crypto.ECDSA({curve:u})).setPublicKeyHex(c.ecpubhex),s.setPrivateKeyHex(c.ecprvhex),s.isPrivate=!0,s.isPublic=!1,(n=new Er.crypto.ECDSA({curve:u})).setPublicKeyHex(c.ecpubhex),n.isPrivate=!1,n.isPublic=!0,(a={}).prvKeyObj=s,a.pubKeyObj=n,a}throw "unknown algorithm: "+t},tn.getPEM=function(t,e,r,n,i,o){var s=Er,a=s.asn1,u=a.DERObjectIdentifier,c=a.DERInteger,h=a.ASN1Util.newObject,l=a.x509.SubjectPublicKeyInfo,f=s.crypto,d=f.DSA,g=f.ECDSA,p=qe;function v(t){return h({seq:[{int:0},{int:{bigint:t.n}},{int:t.e},{int:{bigint:t.d}},{int:{bigint:t.p}},{int:{bigint:t.q}},{int:{bigint:t.dmp1}},{int:{bigint:t.dmq1}},{int:{bigint:t.coeff}}]})}function m(t){return h({seq:[{int:1},{octstr:{hex:t.prvKeyHex}},{tag:["a0",!0,{oid:{name:t.curveName}}]},{tag:["a1",!0,{bitstr:{hex:"00"+t.pubKeyHex}}]}]})}function _(t){return h({seq:[{int:0},{int:{bigint:t.p}},{int:{bigint:t.q}},{int:{bigint:t.g}},{int:{bigint:t.y}},{int:{bigint:t.x}}]})}if((void 0!==p&&t instanceof p||void 0!==d&&t instanceof d||void 0!==g&&t instanceof g)&&1==t.isPublic&&(void 0===e||"PKCS8PUB"==e))return Vr(w=new l(t).getEncodedHex(),"PUBLIC KEY");if("PKCS1PRV"==e&&void 0!==p&&t instanceof p&&(void 0===r||null==r)&&1==t.isPrivate)return Vr(w=v(t).getEncodedHex(),"RSA PRIVATE KEY");if("PKCS1PRV"==e&&void 0!==g&&t instanceof g&&(void 0===r||null==r)&&1==t.isPrivate){var S=new u({name:t.curveName}).getEncodedHex(),F=m(t).getEncodedHex(),b="";return b+=Vr(S,"EC PARAMETERS"),b+=Vr(F,"EC PRIVATE KEY")}if("PKCS1PRV"==e&&void 0!==d&&t instanceof d&&(void 0===r||null==r)&&1==t.isPrivate)return Vr(w=_(t).getEncodedHex(),"DSA PRIVATE KEY");if("PKCS5PRV"==e&&void 0!==p&&t instanceof p&&void 0!==r&&null!=r&&1==t.isPrivate){var w=v(t).getEncodedHex();return void 0===n&&(n="DES-EDE3-CBC"),this.getEncryptedPKCS5PEMFromPrvKeyHex("RSA",w,r,n,o)}if("PKCS5PRV"==e&&void 0!==g&&t instanceof g&&void 0!==r&&null!=r&&1==t.isPrivate){w=m(t).getEncodedHex();return void 0===n&&(n="DES-EDE3-CBC"),this.getEncryptedPKCS5PEMFromPrvKeyHex("EC",w,r,n,o)}if("PKCS5PRV"==e&&void 0!==d&&t instanceof d&&void 0!==r&&null!=r&&1==t.isPrivate){w=_(t).getEncodedHex();return void 0===n&&(n="DES-EDE3-CBC"),this.getEncryptedPKCS5PEMFromPrvKeyHex("DSA",w,r,n,o)}var E=function t(e,r){var n=x(e,r);return new h({seq:[{seq:[{oid:{name:"pkcs5PBES2"}},{seq:[{seq:[{oid:{name:"pkcs5PBKDF2"}},{seq:[{octstr:{hex:n.pbkdf2Salt}},{int:n.pbkdf2Iter}]}]},{seq:[{oid:{name:"des-EDE3-CBC"}},{octstr:{hex:n.encryptionSchemeIV}}]}]}]},{octstr:{hex:n.ciphertext}}]}).getEncodedHex()},x=function t(e,r){var n=y.lib.WordArray.random(8),i=y.lib.WordArray.random(8),o=y.PBKDF2(r,n,{keySize:6,iterations:100}),s=y.enc.Hex.parse(e),a=y.TripleDES.encrypt(s,o,{iv:i})+"",u={};return u.ciphertext=a,u.pbkdf2Salt=y.enc.Hex.stringify(n),u.pbkdf2Iter=100,u.encryptionSchemeAlg="DES-EDE3-CBC",u.encryptionSchemeIV=y.enc.Hex.stringify(i),u};if("PKCS8PRV"==e&&void 0!=p&&t instanceof p&&1==t.isPrivate){var k=v(t).getEncodedHex();w=h({seq:[{int:0},{seq:[{oid:{name:"rsaEncryption"}},{null:!0}]},{octstr:{hex:k}}]}).getEncodedHex();return void 0===r||null==r?Vr(w,"PRIVATE KEY"):Vr(F=E(w,r),"ENCRYPTED PRIVATE KEY")}if("PKCS8PRV"==e&&void 0!==g&&t instanceof g&&1==t.isPrivate){k=new h({seq:[{int:1},{octstr:{hex:t.prvKeyHex}},{tag:["a1",!0,{bitstr:{hex:"00"+t.pubKeyHex}}]}]}).getEncodedHex(),w=h({seq:[{int:0},{seq:[{oid:{name:"ecPublicKey"}},{oid:{name:t.curveName}}]},{octstr:{hex:k}}]}).getEncodedHex();return void 0===r||null==r?Vr(w,"PRIVATE KEY"):Vr(F=E(w,r),"ENCRYPTED PRIVATE KEY")}if("PKCS8PRV"==e&&void 0!==d&&t instanceof d&&1==t.isPrivate){k=new c({bigint:t.x}).getEncodedHex(),w=h({seq:[{int:0},{seq:[{oid:{name:"dsa"}},{seq:[{int:{bigint:t.p}},{int:{bigint:t.q}},{int:{bigint:t.g}}]}]},{octstr:{hex:k}}]}).getEncodedHex();return void 0===r||null==r?Vr(w,"PRIVATE KEY"):Vr(F=E(w,r),"ENCRYPTED PRIVATE KEY")}throw "unsupported object nor format"},tn.getKeyFromCSRPEM=function(t){var e=qr(t,"CERTIFICATE REQUEST");return tn.getKeyFromCSRHex(e)},tn.getKeyFromCSRHex=function(t){var e=tn.parseCSRHex(t);return tn.getKey(e.p8pubkeyhex,null,"pkcs8pub")},tn.parseCSRHex=function(t){var e=Ar,r=e.getChildIdx,n=e.getTLV,i={},o=t;if("30"!=o.substr(0,2))throw "malformed CSR(code:001)";var s=r(o,0);if(s.length<1)throw "malformed CSR(code:002)";if("30"!=o.substr(s[0],2))throw "malformed CSR(code:003)";var a=r(o,s[0]);if(a.length<3)throw "malformed CSR(code:004)";return i.p8pubkeyhex=n(o,a[2]),i},tn.getJWKFromKey=function(t){var e={};if(t instanceof qe&&t.isPrivate)return e.kty="RSA",e.n=Ur(t.n.toString(16)),e.e=Ur(t.e.toString(16)),e.d=Ur(t.d.toString(16)),e.p=Ur(t.p.toString(16)),e.q=Ur(t.q.toString(16)),e.dp=Ur(t.dmp1.toString(16)),e.dq=Ur(t.dmq1.toString(16)),e.qi=Ur(t.coeff.toString(16)),e;if(t instanceof qe&&t.isPublic)return e.kty="RSA",e.n=Ur(t.n.toString(16)),e.e=Ur(t.e.toString(16)),e;if(t instanceof Er.crypto.ECDSA&&t.isPrivate){if("P-256"!==(n=t.getShortNISTPCurveName())&&"P-384"!==n)throw "unsupported curve name for JWT: "+n;var r=t.getPublicKeyXYHex();return e.kty="EC",e.crv=n,e.x=Ur(r.x),e.y=Ur(r.y),e.d=Ur(t.prvKeyHex),e}if(t instanceof Er.crypto.ECDSA&&t.isPublic){var n;if("P-256"!==(n=t.getShortNISTPCurveName())&&"P-384"!==n)throw "unsupported curve name for JWT: "+n;r=t.getPublicKeyXYHex();return e.kty="EC",e.crv=n,e.x=Ur(r.x),e.y=Ur(r.y),e}throw "not supported key object"},qe.getPosArrayOfChildrenFromHex=function(t){return Ar.getChildIdx(t,0)},qe.getHexValueArrayOfChildrenFromHex=function(t){var e,r=Ar.getV,n=r(t,(e=qe.getPosArrayOfChildrenFromHex(t))[0]),i=r(t,e[1]),o=r(t,e[2]),s=r(t,e[3]),a=r(t,e[4]),u=r(t,e[5]),c=r(t,e[6]),h=r(t,e[7]),l=r(t,e[8]);return (e=new Array).push(n,i,o,s,a,u,c,h,l),e},qe.prototype.readPrivateKeyFromPEMString=function(t){var e=qr(t),r=qe.getHexValueArrayOfChildrenFromHex(e);this.setPrivateEx(r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]);},qe.prototype.readPKCS5PrvKeyHex=function(t){var e=qe.getHexValueArrayOfChildrenFromHex(t);this.setPrivateEx(e[1],e[2],e[3],e[4],e[5],e[6],e[7],e[8]);},qe.prototype.readPKCS8PrvKeyHex=function(t){var e,r,n,i,o,s,a,u,c=Ar,h=c.getVbyList;if(!1===c.isASN1HEX(t))throw "not ASN.1 hex string";try{e=h(t,0,[2,0,1],"02"),r=h(t,0,[2,0,2],"02"),n=h(t,0,[2,0,3],"02"),i=h(t,0,[2,0,4],"02"),o=h(t,0,[2,0,5],"02"),s=h(t,0,[2,0,6],"02"),a=h(t,0,[2,0,7],"02"),u=h(t,0,[2,0,8],"02");}catch(t){throw "malformed PKCS#8 plain RSA private key"}this.setPrivateEx(e,r,n,i,o,s,a,u);},qe.prototype.readPKCS5PubKeyHex=function(t){var e=Ar,r=e.getV;if(!1===e.isASN1HEX(t))throw "keyHex is not ASN.1 hex string";var n=e.getChildIdx(t,0);if(2!==n.length||"02"!==t.substr(n[0],2)||"02"!==t.substr(n[1],2))throw "wrong hex for PKCS#5 public key";var i=r(t,n[0]),o=r(t,n[1]);this.setPublic(i,o);},qe.prototype.readPKCS8PubKeyHex=function(t){var e=Ar;if(!1===e.isASN1HEX(t))throw "not ASN.1 hex string";if("06092a864886f70d010101"!==e.getTLVbyList(t,0,[0,0]))throw "not PKCS8 RSA public key";var r=e.getTLVbyList(t,0,[1,0]);this.readPKCS5PubKeyHex(r);},qe.prototype.readCertPubKeyHex=function(t,e){var r,n;(r=new sn).readCertHex(t),n=r.getPublicKeyHex(),this.readPKCS8PubKeyHex(n);};var en=new RegExp("");function rn(t,e){for(var r="",n=e/4-t.length,i=0;i<n;i++)r+="0";return r+t}function nn(t,e,r){for(var n="",i=0;n.length<e;)n+=Or(r(jr(t+String.fromCharCode.apply(String,[(4278190080&i)>>24,(16711680&i)>>16,(65280&i)>>8,255&i])))),i+=1;return n}function on(t){for(var e in Er.crypto.Util.DIGESTINFOHEAD){var r=Er.crypto.Util.DIGESTINFOHEAD[e],n=r.length;if(t.substring(0,n)==r)return [e,t.substring(n)]}return []}function sn(){var t=Ar,e=t.getChildIdx,r=t.getV,n=t.getTLV,i=t.getVbyList,o=t.getTLVbyList,s=t.getIdxbyList,a=t.getVidx,u=t.oidname,c=sn,h=qr;this.hex=null,this.version=0,this.foffset=0,this.aExtInfo=null,this.getVersion=function(){return null===this.hex||0!==this.version?this.version:"a003020102"!==o(this.hex,0,[0,0])?(this.version=1,this.foffset=-1,1):(this.version=3,3)},this.getSerialNumberHex=function(){return i(this.hex,0,[0,1+this.foffset],"02")},this.getSignatureAlgorithmField=function(){return u(i(this.hex,0,[0,2+this.foffset,0],"06"))},this.getIssuerHex=function(){return o(this.hex,0,[0,3+this.foffset],"30")},this.getIssuerString=function(){return c.hex2dn(this.getIssuerHex())},this.getSubjectHex=function(){return o(this.hex,0,[0,5+this.foffset],"30")},this.getSubjectString=function(){return c.hex2dn(this.getSubjectHex())},this.getNotBefore=function(){var t=i(this.hex,0,[0,4+this.foffset,0]);return t=t.replace(/(..)/g,"%$1"),t=decodeURIComponent(t)},this.getNotAfter=function(){var t=i(this.hex,0,[0,4+this.foffset,1]);return t=t.replace(/(..)/g,"%$1"),t=decodeURIComponent(t)},this.getPublicKeyHex=function(){return t.getTLVbyList(this.hex,0,[0,6+this.foffset],"30")},this.getPublicKeyIdx=function(){return s(this.hex,0,[0,6+this.foffset],"30")},this.getPublicKeyContentIdx=function(){var t=this.getPublicKeyIdx();return s(this.hex,t,[1,0],"30")},this.getPublicKey=function(){return tn.getKey(this.getPublicKeyHex(),null,"pkcs8pub")},this.getSignatureAlgorithmName=function(){return u(i(this.hex,0,[1,0],"06"))},this.getSignatureValueHex=function(){return i(this.hex,0,[2],"03",!0)},this.verifySignature=function(t){var e=this.getSignatureAlgorithmName(),r=this.getSignatureValueHex(),n=o(this.hex,0,[0],"30"),i=new Er.crypto.Signature({alg:e});return i.init(t),i.updateHex(n),i.verify(r)},this.parseExt=function(){if(3!==this.version)return -1;var r=s(this.hex,0,[0,7,0],"30"),n=e(this.hex,r);this.aExtInfo=new Array;for(var o=0;o<n.length;o++){var u={critical:!1},c=0;3===e(this.hex,n[o]).length&&(u.critical=!0,c=1),u.oid=t.hextooidstr(i(this.hex,n[o],[0],"06"));var h=s(this.hex,n[o],[1+c]);u.vidx=a(this.hex,h),this.aExtInfo.push(u);}},this.getExtInfo=function(t){var e=this.aExtInfo,r=t;if(t.match(/^[0-9.]+$/)||(r=Er.asn1.x509.OID.name2oid(t)),""!==r)for(var n=0;n<e.length;n++)if(e[n].oid===r)return e[n]},this.getExtBasicConstraints=function(){var t=this.getExtInfo("basicConstraints");if(void 0===t)return t;var e=r(this.hex,t.vidx);if(""===e)return {};if("0101ff"===e)return {cA:!0};if("0101ff02"===e.substr(0,8)){var n=r(e,6);return {cA:!0,pathLen:parseInt(n,16)}}throw "basicConstraints parse error"},this.getExtKeyUsageBin=function(){var t=this.getExtInfo("keyUsage");if(void 0===t)return "";var e=r(this.hex,t.vidx);if(e.length%2!=0||e.length<=2)throw "malformed key usage value";var n=parseInt(e.substr(0,2)),i=parseInt(e.substr(2),16).toString(2);return i.substr(0,i.length-n)},this.getExtKeyUsageString=function(){for(var t=this.getExtKeyUsageBin(),e=new Array,r=0;r<t.length;r++)"1"==t.substr(r,1)&&e.push(sn.KEYUSAGE_NAME[r]);return e.join(",")},this.getExtSubjectKeyIdentifier=function(){var t=this.getExtInfo("subjectKeyIdentifier");return void 0===t?t:r(this.hex,t.vidx)},this.getExtAuthorityKeyIdentifier=function(){var t=this.getExtInfo("authorityKeyIdentifier");if(void 0===t)return t;for(var i={},o=n(this.hex,t.vidx),s=e(o,0),a=0;a<s.length;a++)"80"===o.substr(s[a],2)&&(i.kid=r(o,s[a]));return i},this.getExtExtKeyUsageName=function(){var t=this.getExtInfo("extKeyUsage");if(void 0===t)return t;var i=new Array,o=n(this.hex,t.vidx);if(""===o)return i;for(var s=e(o,0),a=0;a<s.length;a++)i.push(u(r(o,s[a])));return i},this.getExtSubjectAltName=function(){for(var t=this.getExtSubjectAltName2(),e=new Array,r=0;r<t.length;r++)"DNS"===t[r][0]&&e.push(t[r][1]);return e},this.getExtSubjectAltName2=function(){var t,i,o,s=this.getExtInfo("subjectAltName");if(void 0===s)return s;for(var a=new Array,u=n(this.hex,s.vidx),c=e(u,0),h=0;h<c.length;h++)o=u.substr(c[h],2),t=r(u,c[h]),"81"===o&&(i=Nr(t),a.push(["MAIL",i])),"82"===o&&(i=Nr(t),a.push(["DNS",i])),"84"===o&&(i=sn.hex2dn(t,0),a.push(["DN",i])),"86"===o&&(i=Nr(t),a.push(["URI",i])),"87"===o&&(i=Qr(t),a.push(["IP",i]));return a},this.getExtCRLDistributionPointsURI=function(){var t=this.getExtInfo("cRLDistributionPoints");if(void 0===t)return t;for(var r=new Array,n=e(this.hex,t.vidx),o=0;o<n.length;o++)try{var s=Nr(i(this.hex,n[o],[0,0,0],"86"));r.push(s);}catch(t){}return r},this.getExtAIAInfo=function(){var t=this.getExtInfo("authorityInfoAccess");if(void 0===t)return t;for(var r={ocsp:[],caissuer:[]},n=e(this.hex,t.vidx),o=0;o<n.length;o++){var s=i(this.hex,n[o],[0],"06"),a=i(this.hex,n[o],[1],"86");"2b06010505073001"===s&&r.ocsp.push(Nr(a)),"2b06010505073002"===s&&r.caissuer.push(Nr(a));}return r},this.getExtCertificatePolicies=function(){var t=this.getExtInfo("certificatePolicies");if(void 0===t)return t;for(var o=n(this.hex,t.vidx),s=[],a=e(o,0),c=0;c<a.length;c++){var h={},l=e(o,a[c]);if(h.id=u(r(o,l[0])),2===l.length)for(var f=e(o,l[1]),d=0;d<f.length;d++){var g=i(o,f[d],[0],"06");"2b06010505070201"===g?h.cps=Nr(i(o,f[d],[1])):"2b06010505070202"===g&&(h.unotice=Nr(i(o,f[d],[1,0])));}s.push(h);}return s},this.readCertPEM=function(t){this.readCertHex(h(t));},this.readCertHex=function(t){this.hex=t,this.getVersion();try{s(this.hex,0,[0,7],"a3"),this.parseExt();}catch(t){}},this.getInfo=function(){var t,e,r;if(t="Basic Fields\n",t+="  serial number: "+this.getSerialNumberHex()+"\n",t+="  signature algorithm: "+this.getSignatureAlgorithmField()+"\n",t+="  issuer: "+this.getIssuerString()+"\n",t+="  notBefore: "+this.getNotBefore()+"\n",t+="  notAfter: "+this.getNotAfter()+"\n",t+="  subject: "+this.getSubjectString()+"\n",t+="  subject public key info: \n",t+="    key algorithm: "+(e=this.getPublicKey()).type+"\n","RSA"===e.type&&(t+="    n="+Zr(e.n.toString(16)).substr(0,16)+"...\n",t+="    e="+Zr(e.e.toString(16))+"\n"),void 0!==(r=this.aExtInfo)&&null!==r){t+="X509v3 Extensions:\n";for(var n=0;n<r.length;n++){var i=r[n],o=Er.asn1.x509.OID.oid2name(i.oid);""===o&&(o=i.oid);var s="";if(!0===i.critical&&(s="CRITICAL"),t+="  "+o+" "+s+":\n","basicConstraints"===o){var a=this.getExtBasicConstraints();void 0===a.cA?t+="    {}\n":(t+="    cA=true",void 0!==a.pathLen&&(t+=", pathLen="+a.pathLen),t+="\n");}else if("keyUsage"===o)t+="    "+this.getExtKeyUsageString()+"\n";else if("subjectKeyIdentifier"===o)t+="    "+this.getExtSubjectKeyIdentifier()+"\n";else if("authorityKeyIdentifier"===o){var u=this.getExtAuthorityKeyIdentifier();void 0!==u.kid&&(t+="    kid="+u.kid+"\n");}else{if("extKeyUsage"===o)t+="    "+this.getExtExtKeyUsageName().join(", ")+"\n";else if("subjectAltName"===o)t+="    "+this.getExtSubjectAltName2()+"\n";else if("cRLDistributionPoints"===o)t+="    "+this.getExtCRLDistributionPointsURI()+"\n";else if("authorityInfoAccess"===o){var c=this.getExtAIAInfo();void 0!==c.ocsp&&(t+="    ocsp: "+c.ocsp.join(",")+"\n"),void 0!==c.caissuer&&(t+="    caissuer: "+c.caissuer.join(",")+"\n");}else if("certificatePolicies"===o)for(var h=this.getExtCertificatePolicies(),l=0;l<h.length;l++)void 0!==h[l].id&&(t+="    policy oid: "+h[l].id+"\n"),void 0!==h[l].cps&&(t+="    cps: "+h[l].cps+"\n");}}}return t+="signature algorithm: "+this.getSignatureAlgorithmName()+"\n",t+="signature: "+this.getSignatureValueHex().substr(0,16)+"...\n"};}en.compile("[^0-9a-f]","gi"),qe.prototype.sign=function(t,e){var r=function t(r){return Er.crypto.Util.hashString(r,e)}(t);return this.signWithMessageHash(r,e)},qe.prototype.signWithMessageHash=function(t,e){var r=Ke(Er.crypto.Util.getPaddedDigestInfoHex(t,e,this.n.bitLength()),16);return rn(this.doPrivate(r).toString(16),this.n.bitLength())},qe.prototype.signPSS=function(t,e,r){var n=function t(r){return Er.crypto.Util.hashHex(r,e)}(jr(t));return void 0===r&&(r=-1),this.signWithMessageHashPSS(n,e,r)},qe.prototype.signWithMessageHashPSS=function(t,e,r){var n,i=Or(t),o=i.length,s=this.n.bitLength()-1,a=Math.ceil(s/8),u=function t(r){return Er.crypto.Util.hashHex(r,e)};if(-1===r||void 0===r)r=o;else if(-2===r)r=a-o-2;else if(r<-2)throw "invalid salt length";if(a<o+r+2)throw "data too long";var c="";r>0&&(c=new Array(r),(new He).nextBytes(c),c=String.fromCharCode.apply(String,c));var h=Or(u(jr("\0\0\0\0\0\0\0\0"+i+c))),l=[];for(n=0;n<a-r-o-2;n+=1)l[n]=0;var f=String.fromCharCode.apply(String,l)+""+c,d=nn(h,f.length,u),g=[];for(n=0;n<f.length;n+=1)g[n]=f.charCodeAt(n)^d.charCodeAt(n);var p=65280>>8*a-s&255;for(g[0]&=~p,n=0;n<o;n++)g.push(h.charCodeAt(n));return g.push(188),rn(this.doPrivate(new E(g)).toString(16),this.n.bitLength())},qe.prototype.verify=function(t,e){var r=Ke(e=(e=e.replace(en,"")).replace(/[ \n]+/g,""),16);if(r.bitLength()>this.n.bitLength())return 0;var n=on(this.doPublic(r).toString(16).replace(/^1f+00/,""));if(0==n.length)return !1;var i=n[0];return n[1]==function t(e){return Er.crypto.Util.hashString(e,i)}(t)},qe.prototype.verifyWithMessageHash=function(t,e){var r=Ke(e=(e=e.replace(en,"")).replace(/[ \n]+/g,""),16);if(r.bitLength()>this.n.bitLength())return 0;var n=on(this.doPublic(r).toString(16).replace(/^1f+00/,""));if(0==n.length)return !1;n[0];return n[1]==t},qe.prototype.verifyPSS=function(t,e,r,n){var i=function t(e){return Er.crypto.Util.hashHex(e,r)}(jr(t));return void 0===n&&(n=-1),this.verifyWithMessageHashPSS(i,e,r,n)},qe.prototype.verifyWithMessageHashPSS=function(t,e,r,n){var i=new E(e,16);if(i.bitLength()>this.n.bitLength())return !1;var o,s=function t(e){return Er.crypto.Util.hashHex(e,r)},a=Or(t),u=a.length,c=this.n.bitLength()-1,h=Math.ceil(c/8);if(-1===n||void 0===n)n=u;else if(-2===n)n=h-u-2;else if(n<-2)throw "invalid salt length";if(h<u+n+2)throw "data too long";var l=this.doPublic(i).toByteArray();for(o=0;o<l.length;o+=1)l[o]&=255;for(;l.length<h;)l.unshift(0);if(188!==l[h-1])throw "encoded message does not end in 0xbc";var f=(l=String.fromCharCode.apply(String,l)).substr(0,h-u-1),d=l.substr(f.length,u),g=65280>>8*h-c&255;if(0!=(f.charCodeAt(0)&g))throw "bits beyond keysize not zero";var p=nn(d,f.length,s),v=[];for(o=0;o<f.length;o+=1)v[o]=f.charCodeAt(o)^p.charCodeAt(o);v[0]&=~g;var y=h-u-n-2;for(o=0;o<y;o+=1)if(0!==v[o])throw "leftmost octets not zero";if(1!==v[y])throw "0x01 marker not found";return d===Or(s(jr("\0\0\0\0\0\0\0\0"+a+String.fromCharCode.apply(String,v.slice(-n)))))},qe.SALT_LEN_HLEN=-1,qe.SALT_LEN_MAX=-2,qe.SALT_LEN_RECOVER=-2,sn.hex2dn=function(t,e){if(void 0===e&&(e=0),"30"!==t.substr(e,2))throw "malformed DN";for(var r=new Array,n=Ar.getChildIdx(t,e),i=0;i<n.length;i++)r.push(sn.hex2rdn(t,n[i]));return "/"+(r=r.map(function(t){return t.replace("/","\\/")})).join("/")},sn.hex2rdn=function(t,e){if(void 0===e&&(e=0),"31"!==t.substr(e,2))throw "malformed RDN";for(var r=new Array,n=Ar.getChildIdx(t,e),i=0;i<n.length;i++)r.push(sn.hex2attrTypeValue(t,n[i]));return (r=r.map(function(t){return t.replace("+","\\+")})).join("+")},sn.hex2attrTypeValue=function(t,e){var r=Ar,n=r.getV;if(void 0===e&&(e=0),"30"!==t.substr(e,2))throw "malformed attribute type and value";var i=r.getChildIdx(t,e);2!==i.length||t.substr(i[0],2);var o=n(t,i[0]),s=Er.asn1.ASN1Util.oidHexToInt(o);return Er.asn1.x509.OID.oid2atype(s)+"="+Or(n(t,i[1]))},sn.getPublicKeyFromCertHex=function(t){var e=new sn;return e.readCertHex(t),e.getPublicKey()},sn.getPublicKeyFromCertPEM=function(t){var e=new sn;return e.readCertPEM(t),e.getPublicKey()},sn.getPublicKeyInfoPropOfCertPEM=function(t){var e,r,n=Ar.getVbyList,i={};return i.algparam=null,(e=new sn).readCertPEM(t),r=e.getPublicKeyHex(),i.keyhex=n(r,0,[1],"03").substr(2),i.algoid=n(r,0,[0,0],"06"),"2a8648ce3d0201"===i.algoid&&(i.algparam=n(r,0,[0,1],"06")),i},sn.KEYUSAGE_NAME=["digitalSignature","nonRepudiation","keyEncipherment","dataEncipherment","keyAgreement","keyCertSign","cRLSign","encipherOnly","decipherOnly"],void 0!==Er&&Er||(e.KJUR=Er={}),void 0!==Er.jws&&Er.jws||(Er.jws={}),Er.jws.JWS=function(){var t=Er.jws.JWS.isSafeJSONString;this.parseJWS=function(e,r){if(void 0===this.parsedJWS||!r&&void 0===this.parsedJWS.sigvalH){var n=e.match(/^([^.]+)\.([^.]+)\.([^.]+)$/);if(null==n)throw "JWS signature is not a form of 'Head.Payload.SigValue'.";var i=n[1],o=n[2],s=n[3],a=i+"."+o;if(this.parsedJWS={},this.parsedJWS.headB64U=i,this.parsedJWS.payloadB64U=o,this.parsedJWS.sigvalB64U=s,this.parsedJWS.si=a,!r){var u=Lr(s),c=Ke(u,16);this.parsedJWS.sigvalH=u,this.parsedJWS.sigvalBI=c;}var h=kr(i),l=kr(o);if(this.parsedJWS.headS=h,this.parsedJWS.payloadS=l,!t(h,this.parsedJWS,"headP"))throw "malformed JSON string for JWS Head: "+h}};},Er.jws.JWS.sign=function(t,e,n,i,o){var s,a,u,c=Er,h=c.jws.JWS,l=h.readSafeJSONString,f=h.isSafeJSONString,d=c.crypto,g=(d.ECDSA,d.Mac),p=d.Signature,v=JSON;if("string"!=typeof e&&"object"!=(void 0===e?"undefined":r(e)))throw "spHeader must be JSON string or object: "+e;if("object"==(void 0===e?"undefined":r(e))&&(a=e,s=v.stringify(a)),"string"==typeof e){if(!f(s=e))throw "JWS Head is not safe JSON string: "+s;a=l(s);}if(u=n,"object"==(void 0===n?"undefined":r(n))&&(u=v.stringify(n)),""!=t&&null!=t||void 0===a.alg||(t=a.alg),""!=t&&null!=t&&void 0===a.alg&&(a.alg=t,s=v.stringify(a)),t!==a.alg)throw "alg and sHeader.alg doesn't match: "+t+"!="+a.alg;var y=null;if(void 0===h.jwsalg2sigalg[t])throw "unsupported alg name: "+t;y=h.jwsalg2sigalg[t];var m=xr(s)+"."+xr(u),_="";if("Hmac"==y.substr(0,4)){if(void 0===i)throw "mac key shall be specified for HS* alg";var S=new g({alg:y,prov:"cryptojs",pass:i});S.updateString(m),_=S.doFinal();}else{var F;if(-1!=y.indexOf("withECDSA"))(F=new p({alg:y})).init(i,o),F.updateString(m),hASN1Sig=F.sign(),_=Er.crypto.ECDSA.asn1SigToConcatSig(hASN1Sig);else if("none"!=y)(F=new p({alg:y})).init(i,o),F.updateString(m),_=F.sign();}return m+"."+Ur(_)},Er.jws.JWS.verify=function(t,e,n){var i,o=Er,s=o.jws.JWS,a=s.readSafeJSONString,u=o.crypto,c=u.ECDSA,h=u.Mac,l=u.Signature;void 0!==r(qe)&&(i=qe);var f=t.split(".");if(3!==f.length)return !1;var d=f[0]+"."+f[1],g=Lr(f[2]),p=a(kr(f[0])),v=null,y=null;if(void 0===p.alg)throw "algorithm not specified in header";if((y=(v=p.alg).substr(0,2),null!=n&&"[object Array]"===Object.prototype.toString.call(n)&&n.length>0)&&-1==(":"+n.join(":")+":").indexOf(":"+v+":"))throw "algorithm '"+v+"' not accepted in the list";if("none"!=v&&null===e)throw "key shall be specified to verify.";if("string"==typeof e&&-1!=e.indexOf("-----BEGIN ")&&(e=tn.getKey(e)),!("RS"!=y&&"PS"!=y||e instanceof i))throw "key shall be a RSAKey obj for RS* and PS* algs";if("ES"==y&&!(e instanceof c))throw "key shall be a ECDSA obj for ES* algs";var m=null;if(void 0===s.jwsalg2sigalg[p.alg])throw "unsupported alg name: "+v;if("none"==(m=s.jwsalg2sigalg[v]))throw "not supported";if("Hmac"==m.substr(0,4)){if(void 0===e)throw "hexadecimal key shall be specified for HMAC";var _=new h({alg:m,pass:e});return _.updateString(d),g==_.doFinal()}if(-1!=m.indexOf("withECDSA")){var S,F=null;try{F=c.concatSigToASN1Sig(g);}catch(t){return !1}return (S=new l({alg:m})).init(e),S.updateString(d),S.verify(F)}return (S=new l({alg:m})).init(e),S.updateString(d),S.verify(g)},Er.jws.JWS.parse=function(t){var e,r,n,i=t.split("."),o={};if(2!=i.length&&3!=i.length)throw "malformed sJWS: wrong number of '.' splitted elements";return e=i[0],r=i[1],3==i.length&&(n=i[2]),o.headerObj=Er.jws.JWS.readSafeJSONString(kr(e)),o.payloadObj=Er.jws.JWS.readSafeJSONString(kr(r)),o.headerPP=JSON.stringify(o.headerObj,null,"  "),null==o.payloadObj?o.payloadPP=kr(r):o.payloadPP=JSON.stringify(o.payloadObj,null,"  "),void 0!==n&&(o.sigHex=Lr(n)),o},Er.jws.JWS.verifyJWT=function(t,e,n){var i=Er.jws,o=i.JWS,s=o.readSafeJSONString,a=o.inArray,u=o.includedArray,c=t.split("."),h=c[0],l=c[1],f=(Lr(c[2]),s(kr(h))),d=s(kr(l));if(void 0===f.alg)return !1;if(void 0===n.alg)throw "acceptField.alg shall be specified";if(!a(f.alg,n.alg))return !1;if(void 0!==d.iss&&"object"===r(n.iss)&&!a(d.iss,n.iss))return !1;if(void 0!==d.sub&&"object"===r(n.sub)&&!a(d.sub,n.sub))return !1;if(void 0!==d.aud&&"object"===r(n.aud))if("string"==typeof d.aud){if(!a(d.aud,n.aud))return !1}else if("object"==r(d.aud)&&!u(d.aud,n.aud))return !1;var g=i.IntDate.getNow();return void 0!==n.verifyAt&&"number"==typeof n.verifyAt&&(g=n.verifyAt),void 0!==n.gracePeriod&&"number"==typeof n.gracePeriod||(n.gracePeriod=0),!(void 0!==d.exp&&"number"==typeof d.exp&&d.exp+n.gracePeriod<g)&&(!(void 0!==d.nbf&&"number"==typeof d.nbf&&g<d.nbf-n.gracePeriod)&&(!(void 0!==d.iat&&"number"==typeof d.iat&&g<d.iat-n.gracePeriod)&&((void 0===d.jti||void 0===n.jti||d.jti===n.jti)&&!!o.verify(t,e,n.alg))))},Er.jws.JWS.includedArray=function(t,e){var n=Er.jws.JWS.inArray;if(null===t)return !1;if("object"!==(void 0===t?"undefined":r(t)))return !1;if("number"!=typeof t.length)return !1;for(var i=0;i<t.length;i++)if(!n(t[i],e))return !1;return !0},Er.jws.JWS.inArray=function(t,e){if(null===e)return !1;if("object"!==(void 0===e?"undefined":r(e)))return !1;if("number"!=typeof e.length)return !1;for(var n=0;n<e.length;n++)if(e[n]==t)return !0;return !1},Er.jws.JWS.jwsalg2sigalg={HS256:"HmacSHA256",HS384:"HmacSHA384",HS512:"HmacSHA512",RS256:"SHA256withRSA",RS384:"SHA384withRSA",RS512:"SHA512withRSA",ES256:"SHA256withECDSA",ES384:"SHA384withECDSA",PS256:"SHA256withRSAandMGF1",PS384:"SHA384withRSAandMGF1",PS512:"SHA512withRSAandMGF1",none:"none"},Er.jws.JWS.isSafeJSONString=function(t,e,n){var i=null;try{return "object"!=(void 0===(i=wr(t))?"undefined":r(i))?0:i.constructor===Array?0:(e&&(e[n]=i),1)}catch(t){return 0}},Er.jws.JWS.readSafeJSONString=function(t){var e=null;try{return "object"!=(void 0===(e=wr(t))?"undefined":r(e))?null:e.constructor===Array?null:e}catch(t){return null}},Er.jws.JWS.getEncodedSignatureValueFromJWS=function(t){var e=t.match(/^[^.]+\.[^.]+\.([^.]+)$/);if(null==e)throw "JWS signature is not a form of 'Head.Payload.SigValue'.";return e[1]},Er.jws.JWS.getJWKthumbprint=function(t){if("RSA"!==t.kty&&"EC"!==t.kty&&"oct"!==t.kty)throw "unsupported algorithm for JWK Thumprint";var e="{";if("RSA"===t.kty){if("string"!=typeof t.n||"string"!=typeof t.e)throw "wrong n and e value for RSA key";e+='"e":"'+t.e+'",',e+='"kty":"'+t.kty+'",',e+='"n":"'+t.n+'"}';}else if("EC"===t.kty){if("string"!=typeof t.crv||"string"!=typeof t.x||"string"!=typeof t.y)throw "wrong crv, x and y value for EC key";e+='"crv":"'+t.crv+'",',e+='"kty":"'+t.kty+'",',e+='"x":"'+t.x+'",',e+='"y":"'+t.y+'"}';}else if("oct"===t.kty){if("string"!=typeof t.k)throw "wrong k value for oct(symmetric) key";e+='"kty":"'+t.kty+'",',e+='"k":"'+t.k+'"}';}var r=jr(e);return Ur(Er.crypto.Util.hashHex(r,"sha256"))},Er.jws.IntDate={},Er.jws.IntDate.get=function(t){var e=Er.jws.IntDate,r=e.getNow,n=e.getZulu;if("now"==t)return r();if("now + 1hour"==t)return r()+3600;if("now + 1day"==t)return r()+86400;if("now + 1month"==t)return r()+2592e3;if("now + 1year"==t)return r()+31536e3;if(t.match(/Z$/))return n(t);if(t.match(/^[0-9]+$/))return parseInt(t);throw "unsupported format: "+t},Er.jws.IntDate.getZulu=function(t){return Wr(t)},Er.jws.IntDate.getNow=function(){return ~~(new Date/1e3)},Er.jws.IntDate.intDate2UTCString=function(t){return new Date(1e3*t).toUTCString()},Er.jws.IntDate.intDate2Zulu=function(t){var e=new Date(1e3*t);return ("0000"+e.getUTCFullYear()).slice(-4)+("00"+(e.getUTCMonth()+1)).slice(-2)+("00"+e.getUTCDate()).slice(-2)+("00"+e.getUTCHours()).slice(-2)+("00"+e.getUTCMinutes()).slice(-2)+("00"+e.getUTCSeconds()).slice(-2)+"Z"},e.SecureRandom=He,e.rng_seed_time=Le,e.BigInteger=E,e.RSAKey=qe;var an=Er.crypto.EDSA;e.EDSA=an;var un=Er.crypto.DSA;e.DSA=un;var cn=Er.crypto.Signature;e.Signature=cn;var hn=Er.crypto.MessageDigest;e.MessageDigest=hn;var ln=Er.crypto.Mac;e.Mac=ln;var fn=Er.crypto.Cipher;e.Cipher=fn,e.KEYUTIL=tn,e.ASN1HEX=Ar,e.X509=sn,e.CryptoJS=y,e.b64tohex=b,e.b64toBA=w,e.stoBA=Pr,e.BAtos=Cr,e.BAtohex=Tr,e.stohex=Rr,e.stob64=function dn(t){return F(Rr(t))},e.stob64u=function gn(t){return Ir(F(Rr(t)))},e.b64utos=function pn(t){return Cr(w(Dr(t)))},e.b64tob64u=Ir,e.b64utob64=Dr,e.hex2b64=F,e.hextob64u=Ur,e.b64utohex=Lr,e.utf8tob64u=xr,e.b64utoutf8=kr,e.utf8tob64=function vn(t){return F(zr($r(t)))},e.b64toutf8=function yn(t){return decodeURIComponent(Yr(b(t)))},e.utf8tohex=Br,e.hextoutf8=Nr,e.hextorstr=Or,e.rstrtohex=jr,e.hextob64=Mr,e.hextob64nl=Hr,e.b64nltohex=Kr,e.hextopem=Vr,e.pemtohex=qr,e.hextoArrayBuffer=function mn(t){if(t.length%2!=0)throw "input is not even length";if(null==t.match(/^[0-9A-Fa-f]+$/))throw "input is not hexadecimal";for(var e=new ArrayBuffer(t.length/2),r=new DataView(e),n=0;n<t.length/2;n++)r.setUint8(n,parseInt(t.substr(2*n,2),16));return e},e.ArrayBuffertohex=function _n(t){for(var e="",r=new DataView(t),n=0;n<t.byteLength;n++)e+=("00"+r.getUint8(n).toString(16)).slice(-2);return e},e.zulutomsec=Jr,e.zulutosec=Wr,e.zulutodate=function Sn(t){return new Date(Jr(t))},e.datetozulu=function Fn(t,e,r){var n,i=t.getUTCFullYear();if(e){if(i<1950||2049<i)throw "not proper year for UTCTime: "+i;n=(""+i).slice(-2);}else n=("000"+i).slice(-4);if(n+=("0"+(t.getUTCMonth()+1)).slice(-2),n+=("0"+t.getUTCDate()).slice(-2),n+=("0"+t.getUTCHours()).slice(-2),n+=("0"+t.getUTCMinutes()).slice(-2),n+=("0"+t.getUTCSeconds()).slice(-2),r){var o=t.getUTCMilliseconds();0!==o&&(n+="."+(o=(o=("00"+o).slice(-3)).replace(/0+$/g,"")));}return n+="Z"},e.uricmptohex=zr,e.hextouricmp=Yr,e.ipv6tohex=Gr,e.hextoipv6=Xr,e.hextoip=Qr,e.iptohex=function bn(t){var e="malformed IP address";if(!(t=t.toLowerCase(t)).match(/^[0-9.]+$/)){if(t.match(/^[0-9a-f:]+$/)&&-1!==t.indexOf(":"))return Gr(t);throw e}var r=t.split(".");if(4!==r.length)throw e;var n="";try{for(var i=0;i<4;i++)n+=("0"+parseInt(r[i]).toString(16)).slice(-2);return n}catch(t){throw e}},e.encodeURIComponentAll=$r,e.newline_toUnix=function wn(t){return t=t.replace(/\r\n/gm,"\n")},e.newline_toDos=function En(t){return t=(t=t.replace(/\r\n/gm,"\n")).replace(/\n/gm,"\r\n")},e.hextoposhex=Zr,e.intarystrtohex=function xn(t){t=(t=(t=t.replace(/^\s*\[\s*/,"")).replace(/\s*\]\s*$/,"")).replace(/\s*/g,"");try{return t.split(/,/).map(function(t,e,r){var n=parseInt(t);if(n<0||255<n)throw "integer not in range 0-255";return ("00"+n.toString(16)).slice(-2)}).join("")}catch(t){throw "malformed integer array string: "+t}},e.strdiffidx=function t(e,r){var n=e.length;e.length>r.length&&(n=r.length);for(var i=0;i<n;i++)if(e.charCodeAt(i)!=r.charCodeAt(i))return i;return e.length!=r.length?n:-1},e.KJUR=Er;var kn=Er.crypto;e.crypto=kn;var An=Er.asn1;e.asn1=An;var Pn=Er.jws;e.jws=Pn;var Cn=Er.lang;e.lang=Cn;}).call(this,r(27).Buffer);},function(t,e,r){(function(t){
-    /*!
-     * The buffer module from node.js, for the browser.
-     *
-     * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
-     * @license  MIT
-     */
-    var n=r(29),i=r(30),o=r(31);function s(){return u.TYPED_ARRAY_SUPPORT?2147483647:1073741823}function a(t,e){if(s()<e)throw new RangeError("Invalid typed array length");return u.TYPED_ARRAY_SUPPORT?(t=new Uint8Array(e)).__proto__=u.prototype:(null===t&&(t=new u(e)),t.length=e),t}function u(t,e,r){if(!(u.TYPED_ARRAY_SUPPORT||this instanceof u))return new u(t,e,r);if("number"==typeof t){if("string"==typeof e)throw new Error("If encoding is specified then the first argument must be a string");return l(this,t)}return c(this,t,e,r)}function c(t,e,r,n){if("number"==typeof e)throw new TypeError('"value" argument must not be a number');return "undefined"!=typeof ArrayBuffer&&e instanceof ArrayBuffer?function i(t,e,r,n){if(e.byteLength,r<0||e.byteLength<r)throw new RangeError("'offset' is out of bounds");if(e.byteLength<r+(n||0))throw new RangeError("'length' is out of bounds");e=void 0===r&&void 0===n?new Uint8Array(e):void 0===n?new Uint8Array(e,r):new Uint8Array(e,r,n);u.TYPED_ARRAY_SUPPORT?(t=e).__proto__=u.prototype:t=f(t,e);return t}(t,e,r,n):"string"==typeof e?function s(t,e,r){"string"==typeof r&&""!==r||(r="utf8");if(!u.isEncoding(r))throw new TypeError('"encoding" must be a valid string encoding');var n=0|g(e,r),i=(t=a(t,n)).write(e,r);i!==n&&(t=t.slice(0,i));return t}(t,e,r):function c(t,e){if(u.isBuffer(e)){var r=0|d(e.length);return 0===(t=a(t,r)).length?t:(e.copy(t,0,0,r),t)}if(e){if("undefined"!=typeof ArrayBuffer&&e.buffer instanceof ArrayBuffer||"length"in e)return "number"!=typeof e.length||function n(t){return t!=t}(e.length)?a(t,0):f(t,e);if("Buffer"===e.type&&o(e.data))return f(t,e.data)}throw new TypeError("First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.")}(t,e)}function h(t){if("number"!=typeof t)throw new TypeError('"size" argument must be a number');if(t<0)throw new RangeError('"size" argument must not be negative')}function l(t,e){if(h(e),t=a(t,e<0?0:0|d(e)),!u.TYPED_ARRAY_SUPPORT)for(var r=0;r<e;++r)t[r]=0;return t}function f(t,e){var r=e.length<0?0:0|d(e.length);t=a(t,r);for(var n=0;n<r;n+=1)t[n]=255&e[n];return t}function d(t){if(t>=s())throw new RangeError("Attempt to allocate Buffer larger than maximum size: 0x"+s().toString(16)+" bytes");return 0|t}function g(t,e){if(u.isBuffer(t))return t.length;if("undefined"!=typeof ArrayBuffer&&"function"==typeof ArrayBuffer.isView&&(ArrayBuffer.isView(t)||t instanceof ArrayBuffer))return t.byteLength;"string"!=typeof t&&(t=""+t);var r=t.length;if(0===r)return 0;for(var n=!1;;)switch(e){case"ascii":case"latin1":case"binary":return r;case"utf8":case"utf-8":case void 0:return K(t).length;case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return 2*r;case"hex":return r>>>1;case"base64":return V(t).length;default:if(n)return K(t).length;e=(""+e).toLowerCase(),n=!0;}}function p(t,e,r){var n=t[e];t[e]=t[r],t[r]=n;}function v(t,e,r,n,i){if(0===t.length)return -1;if("string"==typeof r?(n=r,r=0):r>2147483647?r=2147483647:r<-2147483648&&(r=-2147483648),r=+r,isNaN(r)&&(r=i?0:t.length-1),r<0&&(r=t.length+r),r>=t.length){if(i)return -1;r=t.length-1;}else if(r<0){if(!i)return -1;r=0;}if("string"==typeof e&&(e=u.from(e,n)),u.isBuffer(e))return 0===e.length?-1:y(t,e,r,n,i);if("number"==typeof e)return e&=255,u.TYPED_ARRAY_SUPPORT&&"function"==typeof Uint8Array.prototype.indexOf?i?Uint8Array.prototype.indexOf.call(t,e,r):Uint8Array.prototype.lastIndexOf.call(t,e,r):y(t,[e],r,n,i);throw new TypeError("val must be string, number or Buffer")}function y(t,e,r,n,i){var o,s=1,a=t.length,u=e.length;if(void 0!==n&&("ucs2"===(n=String(n).toLowerCase())||"ucs-2"===n||"utf16le"===n||"utf-16le"===n)){if(t.length<2||e.length<2)return -1;s=2,a/=2,u/=2,r/=2;}function c(t,e){return 1===s?t[e]:t.readUInt16BE(e*s)}if(i){var h=-1;for(o=r;o<a;o++)if(c(t,o)===c(e,-1===h?0:o-h)){if(-1===h&&(h=o),o-h+1===u)return h*s}else-1!==h&&(o-=o-h),h=-1;}else for(r+u>a&&(r=a-u),o=r;o>=0;o--){for(var l=!0,f=0;f<u;f++)if(c(t,o+f)!==c(e,f)){l=!1;break}if(l)return o}return -1}function m(t,e,r,n){r=Number(r)||0;var i=t.length-r;n?(n=Number(n))>i&&(n=i):n=i;var o=e.length;if(o%2!=0)throw new TypeError("Invalid hex string");n>o/2&&(n=o/2);for(var s=0;s<n;++s){var a=parseInt(e.substr(2*s,2),16);if(isNaN(a))return s;t[r+s]=a;}return s}function _(t,e,r,n){return q(K(e,t.length-r),t,r,n)}function S(t,e,r,n){return q(function i(t){for(var e=[],r=0;r<t.length;++r)e.push(255&t.charCodeAt(r));return e}(e),t,r,n)}function F(t,e,r,n){return S(t,e,r,n)}function b(t,e,r,n){return q(V(e),t,r,n)}function w(t,e,r,n){return q(function i(t,e){for(var r,n,i,o=[],s=0;s<t.length&&!((e-=2)<0);++s)r=t.charCodeAt(s),n=r>>8,i=r%256,o.push(i),o.push(n);return o}(e,t.length-r),t,r,n)}function E(t,e,r){return 0===e&&r===t.length?n.fromByteArray(t):n.fromByteArray(t.slice(e,r))}function x(t,e,r){r=Math.min(t.length,r);for(var n=[],i=e;i<r;){var o,s,a,u,c=t[i],h=null,l=c>239?4:c>223?3:c>191?2:1;if(i+l<=r)switch(l){case 1:c<128&&(h=c);break;case 2:128==(192&(o=t[i+1]))&&(u=(31&c)<<6|63&o)>127&&(h=u);break;case 3:o=t[i+1],s=t[i+2],128==(192&o)&&128==(192&s)&&(u=(15&c)<<12|(63&o)<<6|63&s)>2047&&(u<55296||u>57343)&&(h=u);break;case 4:o=t[i+1],s=t[i+2],a=t[i+3],128==(192&o)&&128==(192&s)&&128==(192&a)&&(u=(15&c)<<18|(63&o)<<12|(63&s)<<6|63&a)>65535&&u<1114112&&(h=u);}null===h?(h=65533,l=1):h>65535&&(h-=65536,n.push(h>>>10&1023|55296),h=56320|1023&h),n.push(h),i+=l;}return function f(t){var e=t.length;if(e<=P)return String.fromCharCode.apply(String,t);var r="",n=0;for(;n<e;)r+=String.fromCharCode.apply(String,t.slice(n,n+=P));return r}(n)}e.Buffer=u,e.SlowBuffer=function k(t){+t!=t&&(t=0);return u.alloc(+t)},e.INSPECT_MAX_BYTES=50,u.TYPED_ARRAY_SUPPORT=void 0!==t.TYPED_ARRAY_SUPPORT?t.TYPED_ARRAY_SUPPORT:function A(){try{var t=new Uint8Array(1);return t.__proto__={__proto__:Uint8Array.prototype,foo:function(){return 42}},42===t.foo()&&"function"==typeof t.subarray&&0===t.subarray(1,1).byteLength}catch(t){return !1}}(),e.kMaxLength=s(),u.poolSize=8192,u._augment=function(t){return t.__proto__=u.prototype,t},u.from=function(t,e,r){return c(null,t,e,r)},u.TYPED_ARRAY_SUPPORT&&(u.prototype.__proto__=Uint8Array.prototype,u.__proto__=Uint8Array,"undefined"!=typeof Symbol&&Symbol.species&&u[Symbol.species]===u&&Object.defineProperty(u,Symbol.species,{value:null,configurable:!0})),u.alloc=function(t,e,r){return function n(t,e,r,i){return h(e),e<=0?a(t,e):void 0!==r?"string"==typeof i?a(t,e).fill(r,i):a(t,e).fill(r):a(t,e)}(null,t,e,r)},u.allocUnsafe=function(t){return l(null,t)},u.allocUnsafeSlow=function(t){return l(null,t)},u.isBuffer=function t(e){return !(null==e||!e._isBuffer)},u.compare=function t(e,r){if(!u.isBuffer(e)||!u.isBuffer(r))throw new TypeError("Arguments must be Buffers");if(e===r)return 0;for(var n=e.length,i=r.length,o=0,s=Math.min(n,i);o<s;++o)if(e[o]!==r[o]){n=e[o],i=r[o];break}return n<i?-1:i<n?1:0},u.isEncoding=function t(e){switch(String(e).toLowerCase()){case"hex":case"utf8":case"utf-8":case"ascii":case"latin1":case"binary":case"base64":case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return !0;default:return !1}},u.concat=function t(e,r){if(!o(e))throw new TypeError('"list" argument must be an Array of Buffers');if(0===e.length)return u.alloc(0);var n;if(void 0===r)for(r=0,n=0;n<e.length;++n)r+=e[n].length;var i=u.allocUnsafe(r),s=0;for(n=0;n<e.length;++n){var a=e[n];if(!u.isBuffer(a))throw new TypeError('"list" argument must be an Array of Buffers');a.copy(i,s),s+=a.length;}return i},u.byteLength=g,u.prototype._isBuffer=!0,u.prototype.swap16=function t(){var e=this.length;if(e%2!=0)throw new RangeError("Buffer size must be a multiple of 16-bits");for(var r=0;r<e;r+=2)p(this,r,r+1);return this},u.prototype.swap32=function t(){var e=this.length;if(e%4!=0)throw new RangeError("Buffer size must be a multiple of 32-bits");for(var r=0;r<e;r+=4)p(this,r,r+3),p(this,r+1,r+2);return this},u.prototype.swap64=function t(){var e=this.length;if(e%8!=0)throw new RangeError("Buffer size must be a multiple of 64-bits");for(var r=0;r<e;r+=8)p(this,r,r+7),p(this,r+1,r+6),p(this,r+2,r+5),p(this,r+3,r+4);return this},u.prototype.toString=function t(){var e=0|this.length;return 0===e?"":0===arguments.length?x(this,0,e):function r(t,e,n){var i=!1;if((void 0===e||e<0)&&(e=0),e>this.length)return "";if((void 0===n||n>this.length)&&(n=this.length),n<=0)return "";if((n>>>=0)<=(e>>>=0))return "";for(t||(t="utf8");;)switch(t){case"hex":return R(this,e,n);case"utf8":case"utf-8":return x(this,e,n);case"ascii":return C(this,e,n);case"latin1":case"binary":return T(this,e,n);case"base64":return E(this,e,n);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return I(this,e,n);default:if(i)throw new TypeError("Unknown encoding: "+t);t=(t+"").toLowerCase(),i=!0;}}.apply(this,arguments)},u.prototype.equals=function t(e){if(!u.isBuffer(e))throw new TypeError("Argument must be a Buffer");return this===e||0===u.compare(this,e)},u.prototype.inspect=function t(){var r="",n=e.INSPECT_MAX_BYTES;return this.length>0&&(r=this.toString("hex",0,n).match(/.{2}/g).join(" "),this.length>n&&(r+=" ... ")),"<Buffer "+r+">"},u.prototype.compare=function t(e,r,n,i,o){if(!u.isBuffer(e))throw new TypeError("Argument must be a Buffer");if(void 0===r&&(r=0),void 0===n&&(n=e?e.length:0),void 0===i&&(i=0),void 0===o&&(o=this.length),r<0||n>e.length||i<0||o>this.length)throw new RangeError("out of range index");if(i>=o&&r>=n)return 0;if(i>=o)return -1;if(r>=n)return 1;if(r>>>=0,n>>>=0,i>>>=0,o>>>=0,this===e)return 0;for(var s=o-i,a=n-r,c=Math.min(s,a),h=this.slice(i,o),l=e.slice(r,n),f=0;f<c;++f)if(h[f]!==l[f]){s=h[f],a=l[f];break}return s<a?-1:a<s?1:0},u.prototype.includes=function t(e,r,n){return -1!==this.indexOf(e,r,n)},u.prototype.indexOf=function t(e,r,n){return v(this,e,r,n,!0)},u.prototype.lastIndexOf=function t(e,r,n){return v(this,e,r,n,!1)},u.prototype.write=function t(e,r,n,i){if(void 0===r)i="utf8",n=this.length,r=0;else if(void 0===n&&"string"==typeof r)i=r,n=this.length,r=0;else{if(!isFinite(r))throw new Error("Buffer.write(string, encoding, offset[, length]) is no longer supported");r|=0,isFinite(n)?(n|=0,void 0===i&&(i="utf8")):(i=n,n=void 0);}var o=this.length-r;if((void 0===n||n>o)&&(n=o),e.length>0&&(n<0||r<0)||r>this.length)throw new RangeError("Attempt to write outside buffer bounds");i||(i="utf8");for(var s=!1;;)switch(i){case"hex":return m(this,e,r,n);case"utf8":case"utf-8":return _(this,e,r,n);case"ascii":return S(this,e,r,n);case"latin1":case"binary":return F(this,e,r,n);case"base64":return b(this,e,r,n);case"ucs2":case"ucs-2":case"utf16le":case"utf-16le":return w(this,e,r,n);default:if(s)throw new TypeError("Unknown encoding: "+i);i=(""+i).toLowerCase(),s=!0;}},u.prototype.toJSON=function t(){return {type:"Buffer",data:Array.prototype.slice.call(this._arr||this,0)}};var P=4096;function C(t,e,r){var n="";r=Math.min(t.length,r);for(var i=e;i<r;++i)n+=String.fromCharCode(127&t[i]);return n}function T(t,e,r){var n="";r=Math.min(t.length,r);for(var i=e;i<r;++i)n+=String.fromCharCode(t[i]);return n}function R(t,e,r){var n=t.length;(!e||e<0)&&(e=0),(!r||r<0||r>n)&&(r=n);for(var i="",o=e;o<r;++o)i+=H(t[o]);return i}function I(t,e,r){for(var n=t.slice(e,r),i="",o=0;o<n.length;o+=2)i+=String.fromCharCode(n[o]+256*n[o+1]);return i}function D(t,e,r){if(t%1!=0||t<0)throw new RangeError("offset is not uint");if(t+e>r)throw new RangeError("Trying to access beyond buffer length")}function U(t,e,r,n,i,o){if(!u.isBuffer(t))throw new TypeError('"buffer" argument must be a Buffer instance');if(e>i||e<o)throw new RangeError('"value" argument is out of bounds');if(r+n>t.length)throw new RangeError("Index out of range")}function L(t,e,r,n){e<0&&(e=65535+e+1);for(var i=0,o=Math.min(t.length-r,2);i<o;++i)t[r+i]=(e&255<<8*(n?i:1-i))>>>8*(n?i:1-i);}function B(t,e,r,n){e<0&&(e=4294967295+e+1);for(var i=0,o=Math.min(t.length-r,4);i<o;++i)t[r+i]=e>>>8*(n?i:3-i)&255;}function N(t,e,r,n,i,o){if(r+n>t.length)throw new RangeError("Index out of range");if(r<0)throw new RangeError("Index out of range")}function O(t,e,r,n,o){return o||N(t,0,r,4),i.write(t,e,r,n,23,4),r+4}function j(t,e,r,n,o){return o||N(t,0,r,8),i.write(t,e,r,n,52,8),r+8}u.prototype.slice=function t(e,r){var n,i=this.length;if(e=~~e,r=void 0===r?i:~~r,e<0?(e+=i)<0&&(e=0):e>i&&(e=i),r<0?(r+=i)<0&&(r=0):r>i&&(r=i),r<e&&(r=e),u.TYPED_ARRAY_SUPPORT)(n=this.subarray(e,r)).__proto__=u.prototype;else{var o=r-e;n=new u(o,void 0);for(var s=0;s<o;++s)n[s]=this[s+e];}return n},u.prototype.readUIntLE=function t(e,r,n){e|=0,r|=0,n||D(e,r,this.length);for(var i=this[e],o=1,s=0;++s<r&&(o*=256);)i+=this[e+s]*o;return i},u.prototype.readUIntBE=function t(e,r,n){e|=0,r|=0,n||D(e,r,this.length);for(var i=this[e+--r],o=1;r>0&&(o*=256);)i+=this[e+--r]*o;return i},u.prototype.readUInt8=function t(e,r){return r||D(e,1,this.length),this[e]},u.prototype.readUInt16LE=function t(e,r){return r||D(e,2,this.length),this[e]|this[e+1]<<8},u.prototype.readUInt16BE=function t(e,r){return r||D(e,2,this.length),this[e]<<8|this[e+1]},u.prototype.readUInt32LE=function t(e,r){return r||D(e,4,this.length),(this[e]|this[e+1]<<8|this[e+2]<<16)+16777216*this[e+3]},u.prototype.readUInt32BE=function t(e,r){return r||D(e,4,this.length),16777216*this[e]+(this[e+1]<<16|this[e+2]<<8|this[e+3])},u.prototype.readIntLE=function t(e,r,n){e|=0,r|=0,n||D(e,r,this.length);for(var i=this[e],o=1,s=0;++s<r&&(o*=256);)i+=this[e+s]*o;return i>=(o*=128)&&(i-=Math.pow(2,8*r)),i},u.prototype.readIntBE=function t(e,r,n){e|=0,r|=0,n||D(e,r,this.length);for(var i=r,o=1,s=this[e+--i];i>0&&(o*=256);)s+=this[e+--i]*o;return s>=(o*=128)&&(s-=Math.pow(2,8*r)),s},u.prototype.readInt8=function t(e,r){return r||D(e,1,this.length),128&this[e]?-1*(255-this[e]+1):this[e]},u.prototype.readInt16LE=function t(e,r){r||D(e,2,this.length);var n=this[e]|this[e+1]<<8;return 32768&n?4294901760|n:n},u.prototype.readInt16BE=function t(e,r){r||D(e,2,this.length);var n=this[e+1]|this[e]<<8;return 32768&n?4294901760|n:n},u.prototype.readInt32LE=function t(e,r){return r||D(e,4,this.length),this[e]|this[e+1]<<8|this[e+2]<<16|this[e+3]<<24},u.prototype.readInt32BE=function t(e,r){return r||D(e,4,this.length),this[e]<<24|this[e+1]<<16|this[e+2]<<8|this[e+3]},u.prototype.readFloatLE=function t(e,r){return r||D(e,4,this.length),i.read(this,e,!0,23,4)},u.prototype.readFloatBE=function t(e,r){return r||D(e,4,this.length),i.read(this,e,!1,23,4)},u.prototype.readDoubleLE=function t(e,r){return r||D(e,8,this.length),i.read(this,e,!0,52,8)},u.prototype.readDoubleBE=function t(e,r){return r||D(e,8,this.length),i.read(this,e,!1,52,8)},u.prototype.writeUIntLE=function t(e,r,n,i){(e=+e,r|=0,n|=0,i)||U(this,e,r,n,Math.pow(2,8*n)-1,0);var o=1,s=0;for(this[r]=255&e;++s<n&&(o*=256);)this[r+s]=e/o&255;return r+n},u.prototype.writeUIntBE=function t(e,r,n,i){(e=+e,r|=0,n|=0,i)||U(this,e,r,n,Math.pow(2,8*n)-1,0);var o=n-1,s=1;for(this[r+o]=255&e;--o>=0&&(s*=256);)this[r+o]=e/s&255;return r+n},u.prototype.writeUInt8=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,1,255,0),u.TYPED_ARRAY_SUPPORT||(e=Math.floor(e)),this[r]=255&e,r+1},u.prototype.writeUInt16LE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,2,65535,0),u.TYPED_ARRAY_SUPPORT?(this[r]=255&e,this[r+1]=e>>>8):L(this,e,r,!0),r+2},u.prototype.writeUInt16BE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,2,65535,0),u.TYPED_ARRAY_SUPPORT?(this[r]=e>>>8,this[r+1]=255&e):L(this,e,r,!1),r+2},u.prototype.writeUInt32LE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,4,4294967295,0),u.TYPED_ARRAY_SUPPORT?(this[r+3]=e>>>24,this[r+2]=e>>>16,this[r+1]=e>>>8,this[r]=255&e):B(this,e,r,!0),r+4},u.prototype.writeUInt32BE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,4,4294967295,0),u.TYPED_ARRAY_SUPPORT?(this[r]=e>>>24,this[r+1]=e>>>16,this[r+2]=e>>>8,this[r+3]=255&e):B(this,e,r,!1),r+4},u.prototype.writeIntLE=function t(e,r,n,i){if(e=+e,r|=0,!i){var o=Math.pow(2,8*n-1);U(this,e,r,n,o-1,-o);}var s=0,a=1,u=0;for(this[r]=255&e;++s<n&&(a*=256);)e<0&&0===u&&0!==this[r+s-1]&&(u=1),this[r+s]=(e/a>>0)-u&255;return r+n},u.prototype.writeIntBE=function t(e,r,n,i){if(e=+e,r|=0,!i){var o=Math.pow(2,8*n-1);U(this,e,r,n,o-1,-o);}var s=n-1,a=1,u=0;for(this[r+s]=255&e;--s>=0&&(a*=256);)e<0&&0===u&&0!==this[r+s+1]&&(u=1),this[r+s]=(e/a>>0)-u&255;return r+n},u.prototype.writeInt8=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,1,127,-128),u.TYPED_ARRAY_SUPPORT||(e=Math.floor(e)),e<0&&(e=255+e+1),this[r]=255&e,r+1},u.prototype.writeInt16LE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,2,32767,-32768),u.TYPED_ARRAY_SUPPORT?(this[r]=255&e,this[r+1]=e>>>8):L(this,e,r,!0),r+2},u.prototype.writeInt16BE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,2,32767,-32768),u.TYPED_ARRAY_SUPPORT?(this[r]=e>>>8,this[r+1]=255&e):L(this,e,r,!1),r+2},u.prototype.writeInt32LE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,4,2147483647,-2147483648),u.TYPED_ARRAY_SUPPORT?(this[r]=255&e,this[r+1]=e>>>8,this[r+2]=e>>>16,this[r+3]=e>>>24):B(this,e,r,!0),r+4},u.prototype.writeInt32BE=function t(e,r,n){return e=+e,r|=0,n||U(this,e,r,4,2147483647,-2147483648),e<0&&(e=4294967295+e+1),u.TYPED_ARRAY_SUPPORT?(this[r]=e>>>24,this[r+1]=e>>>16,this[r+2]=e>>>8,this[r+3]=255&e):B(this,e,r,!1),r+4},u.prototype.writeFloatLE=function t(e,r,n){return O(this,e,r,!0,n)},u.prototype.writeFloatBE=function t(e,r,n){return O(this,e,r,!1,n)},u.prototype.writeDoubleLE=function t(e,r,n){return j(this,e,r,!0,n)},u.prototype.writeDoubleBE=function t(e,r,n){return j(this,e,r,!1,n)},u.prototype.copy=function t(e,r,n,i){if(n||(n=0),i||0===i||(i=this.length),r>=e.length&&(r=e.length),r||(r=0),i>0&&i<n&&(i=n),i===n)return 0;if(0===e.length||0===this.length)return 0;if(r<0)throw new RangeError("targetStart out of bounds");if(n<0||n>=this.length)throw new RangeError("sourceStart out of bounds");if(i<0)throw new RangeError("sourceEnd out of bounds");i>this.length&&(i=this.length),e.length-r<i-n&&(i=e.length-r+n);var o,s=i-n;if(this===e&&n<r&&r<i)for(o=s-1;o>=0;--o)e[o+r]=this[o+n];else if(s<1e3||!u.TYPED_ARRAY_SUPPORT)for(o=0;o<s;++o)e[o+r]=this[o+n];else Uint8Array.prototype.set.call(e,this.subarray(n,n+s),r);return s},u.prototype.fill=function t(e,r,n,i){if("string"==typeof e){if("string"==typeof r?(i=r,r=0,n=this.length):"string"==typeof n&&(i=n,n=this.length),1===e.length){var o=e.charCodeAt(0);o<256&&(e=o);}if(void 0!==i&&"string"!=typeof i)throw new TypeError("encoding must be a string");if("string"==typeof i&&!u.isEncoding(i))throw new TypeError("Unknown encoding: "+i)}else"number"==typeof e&&(e&=255);if(r<0||this.length<r||this.length<n)throw new RangeError("Out of range index");if(n<=r)return this;var s;if(r>>>=0,n=void 0===n?this.length:n>>>0,e||(e=0),"number"==typeof e)for(s=r;s<n;++s)this[s]=e;else{var a=u.isBuffer(e)?e:K(new u(e,i).toString()),c=a.length;for(s=0;s<n-r;++s)this[s+r]=a[s%c];}return this};var M=/[^+\/0-9A-Za-z-_]/g;function H(t){return t<16?"0"+t.toString(16):t.toString(16)}function K(t,e){var r;e=e||1/0;for(var n=t.length,i=null,o=[],s=0;s<n;++s){if((r=t.charCodeAt(s))>55295&&r<57344){if(!i){if(r>56319){(e-=3)>-1&&o.push(239,191,189);continue}if(s+1===n){(e-=3)>-1&&o.push(239,191,189);continue}i=r;continue}if(r<56320){(e-=3)>-1&&o.push(239,191,189),i=r;continue}r=65536+(i-55296<<10|r-56320);}else i&&(e-=3)>-1&&o.push(239,191,189);if(i=null,r<128){if((e-=1)<0)break;o.push(r);}else if(r<2048){if((e-=2)<0)break;o.push(r>>6|192,63&r|128);}else if(r<65536){if((e-=3)<0)break;o.push(r>>12|224,r>>6&63|128,63&r|128);}else{if(!(r<1114112))throw new Error("Invalid code point");if((e-=4)<0)break;o.push(r>>18|240,r>>12&63|128,r>>6&63|128,63&r|128);}}return o}function V(t){return n.toByteArray(function e(t){if((t=function e(t){return t.trim?t.trim():t.replace(/^\s+|\s+$/g,"")}(t).replace(M,"")).length<2)return "";for(;t.length%4!=0;)t+="=";return t}(t))}function q(t,e,r,n){for(var i=0;i<n&&!(i+r>=e.length||i>=t.length);++i)e[i+r]=t[i];return i}}).call(this,r(28));},function(t,e){var r;r=function(){return this}();try{r=r||new Function("return this")();}catch(t){"object"==typeof window&&(r=window);}t.exports=r;},function(t,e,r){e.byteLength=function n(t){var e=f(t),r=e[0],n=e[1];return 3*(r+n)/4-n},e.toByteArray=function i(t){for(var e,r=f(t),n=r[0],i=r[1],o=new u(function s(t,e,r){return 3*(e+r)/4-r}(0,n,i)),c=0,h=i>0?n-4:n,l=0;l<h;l+=4)e=a[t.charCodeAt(l)]<<18|a[t.charCodeAt(l+1)]<<12|a[t.charCodeAt(l+2)]<<6|a[t.charCodeAt(l+3)],o[c++]=e>>16&255,o[c++]=e>>8&255,o[c++]=255&e;2===i&&(e=a[t.charCodeAt(l)]<<2|a[t.charCodeAt(l+1)]>>4,o[c++]=255&e);1===i&&(e=a[t.charCodeAt(l)]<<10|a[t.charCodeAt(l+1)]<<4|a[t.charCodeAt(l+2)]>>2,o[c++]=e>>8&255,o[c++]=255&e);return o},e.fromByteArray=function o(t){for(var e,r=t.length,n=r%3,i=[],o=0,a=r-n;o<a;o+=16383)i.push(d(t,o,o+16383>a?a:o+16383));1===n?(e=t[r-1],i.push(s[e>>2]+s[e<<4&63]+"==")):2===n&&(e=(t[r-2]<<8)+t[r-1],i.push(s[e>>10]+s[e>>4&63]+s[e<<2&63]+"="));return i.join("")};for(var s=[],a=[],u="undefined"!=typeof Uint8Array?Uint8Array:Array,c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",h=0,l=c.length;h<l;++h)s[h]=c[h],a[c.charCodeAt(h)]=h;function f(t){var e=t.length;if(e%4>0)throw new Error("Invalid string. Length must be a multiple of 4");var r=t.indexOf("=");return -1===r&&(r=e),[r,r===e?0:4-r%4]}function d(t,e,r){for(var n,i,o=[],a=e;a<r;a+=3)n=(t[a]<<16&16711680)+(t[a+1]<<8&65280)+(255&t[a+2]),o.push(s[(i=n)>>18&63]+s[i>>12&63]+s[i>>6&63]+s[63&i]);return o.join("")}a["-".charCodeAt(0)]=62,a["_".charCodeAt(0)]=63;},function(t,e){e.read=function(t,e,r,n,i){var o,s,a=8*i-n-1,u=(1<<a)-1,c=u>>1,h=-7,l=r?i-1:0,f=r?-1:1,d=t[e+l];for(l+=f,o=d&(1<<-h)-1,d>>=-h,h+=a;h>0;o=256*o+t[e+l],l+=f,h-=8);for(s=o&(1<<-h)-1,o>>=-h,h+=n;h>0;s=256*s+t[e+l],l+=f,h-=8);if(0===o)o=1-c;else{if(o===u)return s?NaN:1/0*(d?-1:1);s+=Math.pow(2,n),o-=c;}return (d?-1:1)*s*Math.pow(2,o-n)},e.write=function(t,e,r,n,i,o){var s,a,u,c=8*o-i-1,h=(1<<c)-1,l=h>>1,f=23===i?Math.pow(2,-24)-Math.pow(2,-77):0,d=n?0:o-1,g=n?1:-1,p=e<0||0===e&&1/e<0?1:0;for(e=Math.abs(e),isNaN(e)||e===1/0?(a=isNaN(e)?1:0,s=h):(s=Math.floor(Math.log(e)/Math.LN2),e*(u=Math.pow(2,-s))<1&&(s--,u*=2),(e+=s+l>=1?f/u:f*Math.pow(2,1-l))*u>=2&&(s++,u/=2),s+l>=h?(a=0,s=h):s+l>=1?(a=(e*u-1)*Math.pow(2,i),s+=l):(a=e*Math.pow(2,l-1)*Math.pow(2,i),s=0));i>=8;t[r+d]=255&a,d+=g,a/=256,i-=8);for(s=s<<i|a,c+=i;c>0;t[r+d]=255&s,d+=g,s/=256,c-=8);t[r+d-g]|=128*p;};},function(t,e){var r={}.toString;t.exports=Array.isArray||function(t){return "[object Array]"==r.call(t)};},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function n(t){var e=t.jws,r=t.KeyUtil,n=t.X509,o=t.crypto,s=t.hextob64u,a=t.b64tohex,u=t.AllowedSigningAlgs;return function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.parseJwt=function t(r){i.Log.debug("JoseUtil.parseJwt");try{var n=e.JWS.parse(r);return {header:n.headerObj,payload:n.payloadObj}}catch(t){i.Log.error(t);}},t.validateJwt=function e(o,s,u,c,h,l,f){i.Log.debug("JoseUtil.validateJwt");try{if("RSA"===s.kty)if(s.e&&s.n)s=r.getKey(s);else{if(!s.x5c||!s.x5c.length)return i.Log.error("JoseUtil.validateJwt: RSA key missing key material",s),Promise.reject(new Error("RSA key missing key material"));var d=a(s.x5c[0]);s=n.getPublicKeyFromCertHex(d);}else{if("EC"!==s.kty)return i.Log.error("JoseUtil.validateJwt: Unsupported key type",s&&s.kty),Promise.reject(new Error(s.kty));if(!(s.crv&&s.x&&s.y))return i.Log.error("JoseUtil.validateJwt: EC key missing key material",s),Promise.reject(new Error("EC key missing key material"));s=r.getKey(s);}return t._validateJwt(o,s,u,c,h,l,f)}catch(t){return i.Log.error(t&&t.message||t),Promise.reject("JWT validation failed")}},t.validateJwtAttributes=function e(r,n,o,s,a,u){s||(s=0),a||(a=parseInt(Date.now()/1e3));var c=t.parseJwt(r).payload;if(!c.iss)return i.Log.error("JoseUtil._validateJwt: issuer was not provided"),Promise.reject(new Error("issuer was not provided"));if(c.iss!==n)return i.Log.error("JoseUtil._validateJwt: Invalid issuer in token",c.iss),Promise.reject(new Error("Invalid issuer in token: "+c.iss));if(!c.aud)return i.Log.error("JoseUtil._validateJwt: aud was not provided"),Promise.reject(new Error("aud was not provided"));var h=c.aud===o||Array.isArray(c.aud)&&c.aud.indexOf(o)>=0;if(!h)return i.Log.error("JoseUtil._validateJwt: Invalid audience in token",c.aud),Promise.reject(new Error("Invalid audience in token: "+c.aud));if(c.azp&&c.azp!==o)return i.Log.error("JoseUtil._validateJwt: Invalid azp in token",c.azp),Promise.reject(new Error("Invalid azp in token: "+c.azp));if(!u){var l=a+s,f=a-s;if(!c.iat)return i.Log.error("JoseUtil._validateJwt: iat was not provided"),Promise.reject(new Error("iat was not provided"));if(l<c.iat)return i.Log.error("JoseUtil._validateJwt: iat is in the future",c.iat),Promise.reject(new Error("iat is in the future: "+c.iat));if(c.nbf&&l<c.nbf)return i.Log.error("JoseUtil._validateJwt: nbf is in the future",c.nbf),Promise.reject(new Error("nbf is in the future: "+c.nbf));if(!c.exp)return i.Log.error("JoseUtil._validateJwt: exp was not provided"),Promise.reject(new Error("exp was not provided"));if(c.exp<f)return i.Log.error("JoseUtil._validateJwt: exp is in the past",c.exp),Promise.reject(new Error("exp is in the past:"+c.exp))}return Promise.resolve(c)},t._validateJwt=function r(n,o,s,a,c,h,l){return t.validateJwtAttributes(n,s,a,c,h,l).then(function(t){try{return e.JWS.verify(n,o,u)?t:(i.Log.error("JoseUtil._validateJwt: signature validation failed"),Promise.reject(new Error("signature validation failed")))}catch(t){return i.Log.error(t&&t.message||t),Promise.reject(new Error("signature validation failed"))}})},t.hashString=function t(e,r){try{return o.Util.hashString(e,r)}catch(t){i.Log.error(t);}},t.hexToBase64Url=function t(e){try{return s(e)}catch(t){i.Log.error(t);}},t}()};var i=r(0);t.exports=e.default;},function(t,e,r){var n=r(34),i=r(35);t.exports=function o(t,e,r){var o=e&&r||0;"string"==typeof t&&(e="binary"===t?new Array(16):null,t=null);var s=(t=t||{}).random||(t.rng||n)();if(s[6]=15&s[6]|64,s[8]=63&s[8]|128,e)for(var a=0;a<16;++a)e[o+a]=s[a];return e||i(s)};},function(t,e){var r="undefined"!=typeof crypto&&crypto.getRandomValues&&crypto.getRandomValues.bind(crypto)||"undefined"!=typeof msCrypto&&"function"==typeof window.msCrypto.getRandomValues&&msCrypto.getRandomValues.bind(msCrypto);if(r){var n=new Uint8Array(16);t.exports=function t(){return r(n),n};}else{var i=new Array(16);t.exports=function t(){for(var e,r=0;r<16;r++)0==(3&r)&&(e=4294967296*Math.random()),i[r]=e>>>((3&r)<<3)&255;return i};}},function(t,e){for(var r=[],n=0;n<256;++n)r[n]=(n+256).toString(16).substr(1);t.exports=function i(t,e){var n=e||0,i=r;return [i[t[n++]],i[t[n++]],i[t[n++]],i[t[n++]],"-",i[t[n++]],i[t[n++]],"-",i[t[n++]],i[t[n++]],"-",i[t[n++]],i[t[n++]],"-",i[t[n++]],i[t[n++]],i[t[n++]],i[t[n++]],i[t[n++]],i[t[n++]]].join("")};},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SigninResponse=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(3);e.SigninResponse=function(){function t(e){var r=arguments.length>1&&void 0!==arguments[1]?arguments[1]:"#";!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t);var o=i.UrlUtility.parseUrlFragment(e,r);this.error=o.error,this.error_description=o.error_description,this.error_uri=o.error_uri,this.code=o.code,this.state=o.state,this.id_token=o.id_token,this.session_state=o.session_state,this.access_token=o.access_token,this.token_type=o.token_type,this.scope=o.scope,this.profile=void 0,this.expires_in=o.expires_in;}return n(t,[{key:"expires_in",get:function t(){if(this.expires_at){var e=parseInt(Date.now()/1e3);return this.expires_at-e}},set:function t(e){var r=parseInt(e);if("number"==typeof r&&r>0){var n=parseInt(Date.now()/1e3);this.expires_at=n+r;}}},{key:"expired",get:function t(){var e=this.expires_in;if(void 0!==e)return e<=0}},{key:"scopes",get:function t(){return (this.scope||"").split(" ")}},{key:"isOpenIdConnect",get:function t(){return this.scopes.indexOf("openid")>=0||!!this.id_token}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SignoutRequest=void 0;var n=r(0),i=r(3),o=r(8);e.SignoutRequest=function t(e){var r=e.url,s=e.id_token_hint,a=e.post_logout_redirect_uri,u=e.data,c=e.extraQueryParams,h=e.request_type;if(function l(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),!r)throw n.Log.error("SignoutRequest.ctor: No url passed"),new Error("url");for(var f in s&&(r=i.UrlUtility.addQueryParam(r,"id_token_hint",s)),a&&(r=i.UrlUtility.addQueryParam(r,"post_logout_redirect_uri",a),u&&(this.state=new o.State({data:u,request_type:h}),r=i.UrlUtility.addQueryParam(r,"state",this.state.id))),c)r=i.UrlUtility.addQueryParam(r,f,c[f]);this.url=r;};},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SignoutResponse=void 0;var n=r(3);e.SignoutResponse=function t(e){!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t);var i=n.UrlUtility.parseUrlFragment(e,"?");this.error=i.error,this.error_description=i.error_description,this.error_uri=i.error_uri,this.state=i.state;};},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.InMemoryWebStorage=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);e.InMemoryWebStorage=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t),this._data={};}return t.prototype.getItem=function t(e){return i.Log.debug("InMemoryWebStorage.getItem",e),this._data[e]},t.prototype.setItem=function t(e,r){i.Log.debug("InMemoryWebStorage.setItem",e),this._data[e]=r;},t.prototype.removeItem=function t(e){i.Log.debug("InMemoryWebStorage.removeItem",e),delete this._data[e];},t.prototype.key=function t(e){return Object.getOwnPropertyNames(this._data)[e]},n(t,[{key:"length",get:function t(){return Object.getOwnPropertyNames(this._data).length}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UserManager=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(9),s=r(41),a=r(15),u=r(47),c=r(49),h=r(18),l=r(20),f=r(10),d=r(4);e.UserManager=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:c.SilentRenewService,o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:h.SessionMonitor,a=arguments.length>3&&void 0!==arguments[3]?arguments[3]:l.TokenRevocationClient,g=arguments.length>4&&void 0!==arguments[4]?arguments[4]:f.TokenClient,p=arguments.length>5&&void 0!==arguments[5]?arguments[5]:d.JoseUtil;!function v(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e),r instanceof s.UserManagerSettings||(r=new s.UserManagerSettings(r));var y=function m(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,r));return y._events=new u.UserManagerEvents(r),y._silentRenewService=new n(y),y.settings.automaticSilentRenew&&(i.Log.debug("UserManager.ctor: automaticSilentRenew is configured, setting up silent renew"),y.startSilentRenew()),y.settings.monitorSession&&(i.Log.debug("UserManager.ctor: monitorSession is configured, setting up session monitor"),y._sessionMonitor=new o(y)),y._tokenRevocationClient=new a(y._settings),y._tokenClient=new g(y._settings),y._joseUtil=p,y}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e.prototype.getUser=function t(){var e=this;return this._loadUser().then(function(t){return t?(i.Log.info("UserManager.getUser: user loaded"),e._events.load(t,!1),t):(i.Log.info("UserManager.getUser: user not found in storage"),null)})},e.prototype.removeUser=function t(){var e=this;return this.storeUser(null).then(function(){i.Log.info("UserManager.removeUser: user removed from storage"),e._events.unload();})},e.prototype.signinRedirect=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};(e=Object.assign({},e)).request_type="si:r";var r={useReplaceToNavigate:e.useReplaceToNavigate};return this._signinStart(e,this._redirectNavigator,r).then(function(){i.Log.info("UserManager.signinRedirect: successful");})},e.prototype.signinRedirectCallback=function t(e){return this._signinEnd(e||this._redirectNavigator.url).then(function(t){return t.profile&&t.profile.sub?i.Log.info("UserManager.signinRedirectCallback: successful, signed in sub: ",t.profile.sub):i.Log.info("UserManager.signinRedirectCallback: no sub"),t})},e.prototype.signinPopup=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};(e=Object.assign({},e)).request_type="si:p";var r=e.redirect_uri||this.settings.popup_redirect_uri||this.settings.redirect_uri;return r?(e.redirect_uri=r,e.display="popup",this._signin(e,this._popupNavigator,{startUrl:r,popupWindowFeatures:e.popupWindowFeatures||this.settings.popupWindowFeatures,popupWindowTarget:e.popupWindowTarget||this.settings.popupWindowTarget}).then(function(t){return t&&(t.profile&&t.profile.sub?i.Log.info("UserManager.signinPopup: signinPopup successful, signed in sub: ",t.profile.sub):i.Log.info("UserManager.signinPopup: no sub")),t})):(i.Log.error("UserManager.signinPopup: No popup_redirect_uri or redirect_uri configured"),Promise.reject(new Error("No popup_redirect_uri or redirect_uri configured")))},e.prototype.signinPopupCallback=function t(e){return this._signinCallback(e,this._popupNavigator).then(function(t){return t&&(t.profile&&t.profile.sub?i.Log.info("UserManager.signinPopupCallback: successful, signed in sub: ",t.profile.sub):i.Log.info("UserManager.signinPopupCallback: no sub")),t}).catch(function(t){i.Log.error(t.message);})},e.prototype.signinSilent=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return (r=Object.assign({},r)).request_type="si:s",this._loadUser().then(function(t){return t&&t.refresh_token?(r.refresh_token=t.refresh_token,e._useRefreshToken(r)):(r.id_token_hint=r.id_token_hint||e.settings.includeIdTokenInSilentRenew&&t&&t.id_token,t&&e._settings.validateSubOnSilentRenew&&(i.Log.debug("UserManager.signinSilent, subject prior to silent renew: ",t.profile.sub),r.current_sub=t.profile.sub),e._signinSilentIframe(r))})},e.prototype._useRefreshToken=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};return this._tokenClient.exchangeRefreshToken(r).then(function(t){return t?t.access_token?e._loadUser().then(function(r){if(r){var n=Promise.resolve();return t.id_token&&(n=e._validateIdTokenFromTokenRefreshToken(r.profile,t.id_token)),n.then(function(){return i.Log.debug("UserManager._useRefreshToken: refresh token response success"),r.id_token=t.id_token,r.access_token=t.access_token,r.refresh_token=t.refresh_token||r.refresh_token,r.expires_in=t.expires_in,e.storeUser(r).then(function(){return e._events.load(r),r})})}return null}):(i.Log.error("UserManager._useRefreshToken: No access token returned from token endpoint"),Promise.reject("No access token returned from token endpoint")):(i.Log.error("UserManager._useRefreshToken: No response returned from token endpoint"),Promise.reject("No response returned from token endpoint"))})},e.prototype._validateIdTokenFromTokenRefreshToken=function t(e,r){var n=this;return this._metadataService.getIssuer().then(function(t){return n._joseUtil.validateJwtAttributes(r,t,n._settings.client_id,n._settings.clockSkew).then(function(t){return t?t.sub!==e.sub?(i.Log.error("UserManager._validateIdTokenFromTokenRefreshToken: sub in id_token does not match current sub"),Promise.reject(new Error("sub in id_token does not match current sub"))):t.auth_time&&t.auth_time!==e.auth_time?(i.Log.error("UserManager._validateIdTokenFromTokenRefreshToken: auth_time in id_token does not match original auth_time"),Promise.reject(new Error("auth_time in id_token does not match original auth_time"))):t.azp&&t.azp!==e.azp?(i.Log.error("UserManager._validateIdTokenFromTokenRefreshToken: azp in id_token does not match original azp"),Promise.reject(new Error("azp in id_token does not match original azp"))):!t.azp&&e.azp?(i.Log.error("UserManager._validateIdTokenFromTokenRefreshToken: azp not in id_token, but present in original id_token"),Promise.reject(new Error("azp not in id_token, but present in original id_token"))):void 0:(i.Log.error("UserManager._validateIdTokenFromTokenRefreshToken: Failed to validate id_token"),Promise.reject(new Error("Failed to validate id_token")))})})},e.prototype._signinSilentIframe=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=e.redirect_uri||this.settings.silent_redirect_uri||this.settings.redirect_uri;return r?(e.redirect_uri=r,e.prompt=e.prompt||"none",this._signin(e,this._iframeNavigator,{startUrl:r,silentRequestTimeout:e.silentRequestTimeout||this.settings.silentRequestTimeout}).then(function(t){return t&&(t.profile&&t.profile.sub?i.Log.info("UserManager.signinSilent: successful, signed in sub: ",t.profile.sub):i.Log.info("UserManager.signinSilent: no sub")),t})):(i.Log.error("UserManager.signinSilent: No silent_redirect_uri configured"),Promise.reject(new Error("No silent_redirect_uri configured")))},e.prototype.signinSilentCallback=function t(e){return this._signinCallback(e,this._iframeNavigator).then(function(t){return t&&(t.profile&&t.profile.sub?i.Log.info("UserManager.signinSilentCallback: successful, signed in sub: ",t.profile.sub):i.Log.info("UserManager.signinSilentCallback: no sub")),t})},e.prototype.signinCallback=function t(e){var r=this;return this.readSigninResponseState(e).then(function(t){var n=t.state;t.response;return "si:r"===n.request_type?r.signinRedirectCallback(e):"si:p"===n.request_type?r.signinPopupCallback(e):"si:s"===n.request_type?r.signinSilentCallback(e):Promise.reject(new Error("invalid response_type in state"))})},e.prototype.signoutCallback=function t(e,r){var n=this;return this.readSignoutResponseState(e).then(function(t){var i=t.state,o=t.response;return i?"so:r"===i.request_type?n.signoutRedirectCallback(e):"so:p"===i.request_type?n.signoutPopupCallback(e,r):Promise.reject(new Error("invalid response_type in state")):o})},e.prototype.querySessionStatus=function t(){var e=this,r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};(r=Object.assign({},r)).request_type="si:s";var n=r.redirect_uri||this.settings.silent_redirect_uri||this.settings.redirect_uri;return n?(r.redirect_uri=n,r.prompt="none",r.response_type=r.response_type||this.settings.query_status_response_type,r.scope=r.scope||"openid",r.skipUserInfo=!0,this._signinStart(r,this._iframeNavigator,{startUrl:n,silentRequestTimeout:r.silentRequestTimeout||this.settings.silentRequestTimeout}).then(function(t){return e.processSigninResponse(t.url).then(function(t){if(i.Log.debug("UserManager.querySessionStatus: got signin response"),t.session_state&&t.profile.sub)return i.Log.info("UserManager.querySessionStatus: querySessionStatus success for sub: ",t.profile.sub),{session_state:t.session_state,sub:t.profile.sub,sid:t.profile.sid};i.Log.info("querySessionStatus successful, user not authenticated");}).catch(function(t){if(t.session_state&&e.settings.monitorAnonymousSession&&("login_required"==t.message||"consent_required"==t.message||"interaction_required"==t.message||"account_selection_required"==t.message))return i.Log.info("UserManager.querySessionStatus: querySessionStatus success for anonymous user"),{session_state:t.session_state};throw t})})):(i.Log.error("UserManager.querySessionStatus: No silent_redirect_uri configured"),Promise.reject(new Error("No silent_redirect_uri configured")))},e.prototype._signin=function t(e,r){var n=this,i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};return this._signinStart(e,r,i).then(function(t){return n._signinEnd(t.url,e)})},e.prototype._signinStart=function t(e,r){var n=this,o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};return r.prepare(o).then(function(t){return i.Log.debug("UserManager._signinStart: got navigator window handle"),n.createSigninRequest(e).then(function(e){return i.Log.debug("UserManager._signinStart: got signin request"),o.url=e.url,o.id=e.state.id,t.navigate(o)}).catch(function(e){throw t.close&&(i.Log.debug("UserManager._signinStart: Error after preparing navigator, closing navigator window"),t.close()),e})})},e.prototype._signinEnd=function t(e){var r=this,n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{};return this.processSigninResponse(e).then(function(t){i.Log.debug("UserManager._signinEnd: got signin response");var e=new a.User(t);if(n.current_sub){if(n.current_sub!==e.profile.sub)return i.Log.debug("UserManager._signinEnd: current user does not match user returned from signin. sub from signin: ",e.profile.sub),Promise.reject(new Error("login_required"));i.Log.debug("UserManager._signinEnd: current user matches user returned from signin");}return r.storeUser(e).then(function(){return i.Log.debug("UserManager._signinEnd: user stored"),r._events.load(e),e})})},e.prototype._signinCallback=function t(e,r){return i.Log.debug("UserManager._signinCallback"),r.callback(e)},e.prototype.signoutRedirect=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};(e=Object.assign({},e)).request_type="so:r";var r=e.post_logout_redirect_uri||this.settings.post_logout_redirect_uri;r&&(e.post_logout_redirect_uri=r);var n={useReplaceToNavigate:e.useReplaceToNavigate};return this._signoutStart(e,this._redirectNavigator,n).then(function(){i.Log.info("UserManager.signoutRedirect: successful");})},e.prototype.signoutRedirectCallback=function t(e){return this._signoutEnd(e||this._redirectNavigator.url).then(function(t){return i.Log.info("UserManager.signoutRedirectCallback: successful"),t})},e.prototype.signoutPopup=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{};(e=Object.assign({},e)).request_type="so:p";var r=e.post_logout_redirect_uri||this.settings.popup_post_logout_redirect_uri||this.settings.post_logout_redirect_uri;return e.post_logout_redirect_uri=r,e.display="popup",e.post_logout_redirect_uri&&(e.state=e.state||{}),this._signout(e,this._popupNavigator,{startUrl:r,popupWindowFeatures:e.popupWindowFeatures||this.settings.popupWindowFeatures,popupWindowTarget:e.popupWindowTarget||this.settings.popupWindowTarget}).then(function(){i.Log.info("UserManager.signoutPopup: successful");})},e.prototype.signoutPopupCallback=function t(e,r){void 0===r&&"boolean"==typeof e&&(r=e,e=null);return this._popupNavigator.callback(e,r,"?").then(function(){i.Log.info("UserManager.signoutPopupCallback: successful");})},e.prototype._signout=function t(e,r){var n=this,i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};return this._signoutStart(e,r,i).then(function(t){return n._signoutEnd(t.url)})},e.prototype._signoutStart=function t(){var e=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},r=this,n=arguments[1],o=arguments.length>2&&void 0!==arguments[2]?arguments[2]:{};return n.prepare(o).then(function(t){return i.Log.debug("UserManager._signoutStart: got navigator window handle"),r._loadUser().then(function(n){return i.Log.debug("UserManager._signoutStart: loaded current user from storage"),(r._settings.revokeAccessTokenOnSignout?r._revokeInternal(n):Promise.resolve()).then(function(){var s=e.id_token_hint||n&&n.id_token;return s&&(i.Log.debug("UserManager._signoutStart: Setting id_token into signout request"),e.id_token_hint=s),r.removeUser().then(function(){return i.Log.debug("UserManager._signoutStart: user removed, creating signout request"),r.createSignoutRequest(e).then(function(e){return i.Log.debug("UserManager._signoutStart: got signout request"),o.url=e.url,e.state&&(o.id=e.state.id),t.navigate(o)})})})}).catch(function(e){throw t.close&&(i.Log.debug("UserManager._signoutStart: Error after preparing navigator, closing navigator window"),t.close()),e})})},e.prototype._signoutEnd=function t(e){return this.processSignoutResponse(e).then(function(t){return i.Log.debug("UserManager._signoutEnd: got signout response"),t})},e.prototype.revokeAccessToken=function t(){var e=this;return this._loadUser().then(function(t){return e._revokeInternal(t,!0).then(function(r){if(r)return i.Log.debug("UserManager.revokeAccessToken: removing token properties from user and re-storing"),t.access_token=null,t.refresh_token=null,t.expires_at=null,t.token_type=null,e.storeUser(t).then(function(){i.Log.debug("UserManager.revokeAccessToken: user stored"),e._events.load(t);})})}).then(function(){i.Log.info("UserManager.revokeAccessToken: access token revoked successfully");})},e.prototype._revokeInternal=function t(e,r){var n=this;if(e){var o=e.access_token,s=e.refresh_token;return this._revokeAccessTokenInternal(o,r).then(function(t){return n._revokeRefreshTokenInternal(s,r).then(function(e){return t||e||i.Log.debug("UserManager.revokeAccessToken: no need to revoke due to no token(s), or JWT format"),t||e})})}return Promise.resolve(!1)},e.prototype._revokeAccessTokenInternal=function t(e,r){return !e||e.indexOf(".")>=0?Promise.resolve(!1):this._tokenRevocationClient.revoke(e,r).then(function(){return !0})},e.prototype._revokeRefreshTokenInternal=function t(e,r){return e?this._tokenRevocationClient.revoke(e,r,"refresh_token").then(function(){return !0}):Promise.resolve(!1)},e.prototype.startSilentRenew=function t(){this._silentRenewService.start();},e.prototype.stopSilentRenew=function t(){this._silentRenewService.stop();},e.prototype._loadUser=function t(){return this._userStore.get(this._userStoreKey).then(function(t){return t?(i.Log.debug("UserManager._loadUser: user storageString loaded"),a.User.fromStorageString(t)):(i.Log.debug("UserManager._loadUser: no user storageString"),null)})},e.prototype.storeUser=function t(e){if(e){i.Log.debug("UserManager.storeUser: storing user");var r=e.toStorageString();return this._userStore.set(this._userStoreKey,r)}return i.Log.debug("storeUser.storeUser: removing user"),this._userStore.remove(this._userStoreKey)},n(e,[{key:"_redirectNavigator",get:function t(){return this.settings.redirectNavigator}},{key:"_popupNavigator",get:function t(){return this.settings.popupNavigator}},{key:"_iframeNavigator",get:function t(){return this.settings.iframeNavigator}},{key:"_userStore",get:function t(){return this.settings.userStore}},{key:"events",get:function t(){return this._events}},{key:"_userStoreKey",get:function t(){return "user:"+this.settings.authority+":"+this.settings.client_id}}]),e}(o.OidcClient);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UserManagerSettings=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=(r(0),r(5)),o=r(42),s=r(43),a=r(45),u=r(6),c=r(1),h=r(12);var l=60,f=2e3;e.UserManagerSettings=function(t){function e(){var r=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=r.popup_redirect_uri,i=r.popup_post_logout_redirect_uri,d=r.popupWindowFeatures,g=r.popupWindowTarget,p=r.silent_redirect_uri,v=r.silentRequestTimeout,y=r.automaticSilentRenew,m=void 0!==y&&y,_=r.validateSubOnSilentRenew,S=void 0!==_&&_,F=r.includeIdTokenInSilentRenew,b=void 0===F||F,w=r.monitorSession,E=void 0===w||w,x=r.monitorAnonymousSession,k=void 0!==x&&x,A=r.checkSessionInterval,P=void 0===A?f:A,C=r.stopCheckSessionOnError,T=void 0===C||C,R=r.query_status_response_type,I=r.revokeAccessTokenOnSignout,D=void 0!==I&&I,U=r.accessTokenExpiringNotificationTime,L=void 0===U?l:U,B=r.redirectNavigator,N=void 0===B?new o.RedirectNavigator:B,O=r.popupNavigator,j=void 0===O?new s.PopupNavigator:O,M=r.iframeNavigator,H=void 0===M?new a.IFrameNavigator:M,K=r.userStore,V=void 0===K?new u.WebStorageStateStore({store:c.Global.sessionStorage}):K;!function q(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var J=function W(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,arguments[0]));return J._popup_redirect_uri=n,J._popup_post_logout_redirect_uri=i,J._popupWindowFeatures=d,J._popupWindowTarget=g,J._silent_redirect_uri=p,J._silentRequestTimeout=v,J._automaticSilentRenew=m,J._validateSubOnSilentRenew=S,J._includeIdTokenInSilentRenew=b,J._accessTokenExpiringNotificationTime=L,J._monitorSession=E,J._monitorAnonymousSession=k,J._checkSessionInterval=P,J._stopCheckSessionOnError=T,R?J._query_status_response_type=R:arguments[0]&&arguments[0].response_type?J._query_status_response_type=h.SigninRequest.isOidc(arguments[0].response_type)?"id_token":"code":J._query_status_response_type="id_token",J._revokeAccessTokenOnSignout=D,J._redirectNavigator=N,J._popupNavigator=j,J._iframeNavigator=H,J._userStore=V,J}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),n(e,[{key:"popup_redirect_uri",get:function t(){return this._popup_redirect_uri}},{key:"popup_post_logout_redirect_uri",get:function t(){return this._popup_post_logout_redirect_uri}},{key:"popupWindowFeatures",get:function t(){return this._popupWindowFeatures}},{key:"popupWindowTarget",get:function t(){return this._popupWindowTarget}},{key:"silent_redirect_uri",get:function t(){return this._silent_redirect_uri}},{key:"silentRequestTimeout",get:function t(){return this._silentRequestTimeout}},{key:"automaticSilentRenew",get:function t(){return this._automaticSilentRenew}},{key:"validateSubOnSilentRenew",get:function t(){return this._validateSubOnSilentRenew}},{key:"includeIdTokenInSilentRenew",get:function t(){return this._includeIdTokenInSilentRenew}},{key:"accessTokenExpiringNotificationTime",get:function t(){return this._accessTokenExpiringNotificationTime}},{key:"monitorSession",get:function t(){return this._monitorSession}},{key:"monitorAnonymousSession",get:function t(){return this._monitorAnonymousSession}},{key:"checkSessionInterval",get:function t(){return this._checkSessionInterval}},{key:"stopCheckSessionOnError",get:function t(){return this._stopCheckSessionOnError}},{key:"query_status_response_type",get:function t(){return this._query_status_response_type}},{key:"revokeAccessTokenOnSignout",get:function t(){return this._revokeAccessTokenOnSignout}},{key:"redirectNavigator",get:function t(){return this._redirectNavigator}},{key:"popupNavigator",get:function t(){return this._popupNavigator}},{key:"iframeNavigator",get:function t(){return this._iframeNavigator}},{key:"userStore",get:function t(){return this._userStore}}]),e}(i.OidcClientSettings);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.RedirectNavigator=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);e.RedirectNavigator=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.prototype.prepare=function t(){return Promise.resolve(this)},t.prototype.navigate=function t(e){return e&&e.url?(e.useReplaceToNavigate?window.location.replace(e.url):window.location=e.url,Promise.resolve()):(i.Log.error("RedirectNavigator.navigate: No url provided"),Promise.reject(new Error("No url provided")))},n(t,[{key:"url",get:function t(){return window.location.href}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.PopupNavigator=void 0;var n=r(0),i=r(44);e.PopupNavigator=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.prototype.prepare=function t(e){var r=new i.PopupWindow(e);return Promise.resolve(r)},t.prototype.callback=function t(e,r,o){n.Log.debug("PopupNavigator.callback");try{return i.PopupWindow.notifyOpener(e,r,o),Promise.resolve()}catch(t){return Promise.reject(t)}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.PopupWindow=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(3);var s=500,a="location=no,toolbar=no,width=500,height=500,left=100,top=100;",u="_blank";e.PopupWindow=function(){function t(e){var r=this;!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._promise=new Promise(function(t,e){r._resolve=t,r._reject=e;});var o=e.popupWindowTarget||u,c=e.popupWindowFeatures||a;this._popup=window.open("",o,c),this._popup&&(i.Log.debug("PopupWindow.ctor: popup successfully created"),this._checkForPopupClosedTimer=window.setInterval(this._checkForPopupClosed.bind(this),s));}return t.prototype.navigate=function t(e){return this._popup?e&&e.url?(i.Log.debug("PopupWindow.navigate: Setting URL in popup"),this._id=e.id,this._id&&(window["popupCallback_"+e.id]=this._callback.bind(this)),this._popup.focus(),this._popup.window.location=e.url):(this._error("PopupWindow.navigate: no url provided"),this._error("No url provided")):this._error("PopupWindow.navigate: Error opening popup window"),this.promise},t.prototype._success=function t(e){i.Log.debug("PopupWindow.callback: Successful response from popup window"),this._cleanup(),this._resolve(e);},t.prototype._error=function t(e){i.Log.error("PopupWindow.error: ",e),this._cleanup(),this._reject(new Error(e));},t.prototype.close=function t(){this._cleanup(!1);},t.prototype._cleanup=function t(e){i.Log.debug("PopupWindow.cleanup"),window.clearInterval(this._checkForPopupClosedTimer),this._checkForPopupClosedTimer=null,delete window["popupCallback_"+this._id],this._popup&&!e&&this._popup.close(),this._popup=null;},t.prototype._checkForPopupClosed=function t(){this._popup&&!this._popup.closed||this._error("Popup window closed");},t.prototype._callback=function t(e,r){this._cleanup(r),e?(i.Log.debug("PopupWindow.callback success"),this._success({url:e})):(i.Log.debug("PopupWindow.callback: Invalid response from popup"),this._error("Invalid response from popup"));},t.notifyOpener=function t(e,r,n){if(window.opener){if(e=e||window.location.href){var s=o.UrlUtility.parseUrlFragment(e,n);if(s.state){var a="popupCallback_"+s.state,u=window.opener[a];u?(i.Log.debug("PopupWindow.notifyOpener: passing url message to opener"),u(e,r)):i.Log.warn("PopupWindow.notifyOpener: no matching callback found on opener");}else i.Log.warn("PopupWindow.notifyOpener: no state found in response url");}}else i.Log.warn("PopupWindow.notifyOpener: no window.opener. Can't complete notification.");},n(t,[{key:"promise",get:function t(){return this._promise}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.IFrameNavigator=void 0;var n=r(0),i=r(46);e.IFrameNavigator=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.prototype.prepare=function t(e){var r=new i.IFrameWindow(e);return Promise.resolve(r)},t.prototype.callback=function t(e){n.Log.debug("IFrameNavigator.callback");try{return i.IFrameWindow.notifyParent(e),Promise.resolve()}catch(t){return Promise.reject(t)}},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.IFrameWindow=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0);e.IFrameWindow=function(){function t(e){var r=this;!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._promise=new Promise(function(t,e){r._resolve=t,r._reject=e;}),this._boundMessageEvent=this._message.bind(this),window.addEventListener("message",this._boundMessageEvent,!1),this._frame=window.document.createElement("iframe"),this._frame.style.visibility="hidden",this._frame.style.position="absolute",this._frame.style.display="none",this._frame.style.width=0,this._frame.style.height=0,window.document.body.appendChild(this._frame);}return t.prototype.navigate=function t(e){if(e&&e.url){var r=e.silentRequestTimeout||1e4;i.Log.debug("IFrameWindow.navigate: Using timeout of:",r),this._timer=window.setTimeout(this._timeout.bind(this),r),this._frame.src=e.url;}else this._error("No url provided");return this.promise},t.prototype._success=function t(e){this._cleanup(),i.Log.debug("IFrameWindow: Successful response from frame window"),this._resolve(e);},t.prototype._error=function t(e){this._cleanup(),i.Log.error(e),this._reject(new Error(e));},t.prototype.close=function t(){this._cleanup();},t.prototype._cleanup=function t(){this._frame&&(i.Log.debug("IFrameWindow: cleanup"),window.removeEventListener("message",this._boundMessageEvent,!1),window.clearTimeout(this._timer),window.document.body.removeChild(this._frame),this._timer=null,this._frame=null,this._boundMessageEvent=null);},t.prototype._timeout=function t(){i.Log.debug("IFrameWindow.timeout"),this._error("Frame window timed out");},t.prototype._message=function t(e){if(i.Log.debug("IFrameWindow.message"),this._timer&&e.origin===this._origin&&e.source===this._frame.contentWindow){var r=e.data;r?this._success({url:r}):this._error("Invalid response from frame");}},t.notifyParent=function t(e){i.Log.debug("IFrameWindow.notifyParent"),window.frameElement&&(e=e||window.location.href)&&(i.Log.debug("IFrameWindow.notifyParent: posting url message to parent"),window.parent.postMessage(e,location.protocol+"//"+location.host));},n(t,[{key:"promise",get:function t(){return this._promise}},{key:"_origin",get:function t(){return location.protocol+"//"+location.host}}]),t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.UserManagerEvents=void 0;var n=r(0),i=r(16),o=r(17);e.UserManagerEvents=function(t){function e(r){!function n(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var i=function s(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,r));return i._userLoaded=new o.Event("User loaded"),i._userUnloaded=new o.Event("User unloaded"),i._silentRenewError=new o.Event("Silent renew error"),i._userSignedIn=new o.Event("User signed in"),i._userSignedOut=new o.Event("User signed out"),i._userSessionChanged=new o.Event("User session changed"),i}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e.prototype.load=function e(r){var i=!(arguments.length>1&&void 0!==arguments[1])||arguments[1];n.Log.debug("UserManagerEvents.load"),t.prototype.load.call(this,r),i&&this._userLoaded.raise(r);},e.prototype.unload=function e(){n.Log.debug("UserManagerEvents.unload"),t.prototype.unload.call(this),this._userUnloaded.raise();},e.prototype.addUserLoaded=function t(e){this._userLoaded.addHandler(e);},e.prototype.removeUserLoaded=function t(e){this._userLoaded.removeHandler(e);},e.prototype.addUserUnloaded=function t(e){this._userUnloaded.addHandler(e);},e.prototype.removeUserUnloaded=function t(e){this._userUnloaded.removeHandler(e);},e.prototype.addSilentRenewError=function t(e){this._silentRenewError.addHandler(e);},e.prototype.removeSilentRenewError=function t(e){this._silentRenewError.removeHandler(e);},e.prototype._raiseSilentRenewError=function t(e){n.Log.debug("UserManagerEvents._raiseSilentRenewError",e.message),this._silentRenewError.raise(e);},e.prototype.addUserSignedIn=function t(e){this._userSignedIn.addHandler(e);},e.prototype.removeUserSignedIn=function t(e){this._userSignedIn.removeHandler(e);},e.prototype._raiseUserSignedIn=function t(){n.Log.debug("UserManagerEvents._raiseUserSignedIn"),this._userSignedIn.raise();},e.prototype.addUserSignedOut=function t(e){this._userSignedOut.addHandler(e);},e.prototype.removeUserSignedOut=function t(e){this._userSignedOut.removeHandler(e);},e.prototype._raiseUserSignedOut=function t(){n.Log.debug("UserManagerEvents._raiseUserSignedOut"),this._userSignedOut.raise();},e.prototype.addUserSessionChanged=function t(e){this._userSessionChanged.addHandler(e);},e.prototype.removeUserSessionChanged=function t(e){this._userSessionChanged.removeHandler(e);},e.prototype._raiseUserSessionChanged=function t(){n.Log.debug("UserManagerEvents._raiseUserSessionChanged"),this._userSessionChanged.raise();},e}(i.AccessTokenEvents);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.Timer=void 0;var n=function(){function t(t,e){for(var r=0;r<e.length;r++){var n=e[r];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n);}}return function(e,r,n){return r&&t(e.prototype,r),n&&t(e,n),e}}(),i=r(0),o=r(1),s=r(17);e.Timer=function(t){function e(r){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:o.Global.timer,i=arguments.length>2&&void 0!==arguments[2]?arguments[2]:void 0;!function s(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,e);var a=function u(t,e){if(!t)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return !e||"object"!=typeof e&&"function"!=typeof e?t:e}(this,t.call(this,r));return a._timer=n,a._nowFunc=i||function(){return Date.now()/1e3},a}return function r(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function, not "+typeof e);t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,enumerable:!1,writable:!0,configurable:!0}}),e&&(Object.setPrototypeOf?Object.setPrototypeOf(t,e):t.__proto__=e);}(e,t),e.prototype.init=function t(e){e<=0&&(e=1),e=parseInt(e);var r=this.now+e;if(this.expiration===r&&this._timerHandle)i.Log.debug("Timer.init timer "+this._name+" skipping initialization since already initialized for expiration:",this.expiration);else{this.cancel(),i.Log.debug("Timer.init timer "+this._name+" for duration:",e),this._expiration=r;var n=5;e<n&&(n=e),this._timerHandle=this._timer.setInterval(this._callback.bind(this),1e3*n);}},e.prototype.cancel=function t(){this._timerHandle&&(i.Log.debug("Timer.cancel: ",this._name),this._timer.clearInterval(this._timerHandle),this._timerHandle=null);},e.prototype._callback=function e(){var r=this._expiration-this.now;i.Log.debug("Timer.callback; "+this._name+" timer expires in:",r),this._expiration<=this.now&&(this.cancel(),t.prototype.raise.call(this));},n(e,[{key:"now",get:function t(){return parseInt(this._nowFunc())}},{key:"expiration",get:function t(){return this._expiration}}]),e}(s.Event);},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.SilentRenewService=void 0;var n=r(0);e.SilentRenewService=function(){function t(e){!function r(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,t),this._userManager=e;}return t.prototype.start=function t(){this._callback||(this._callback=this._tokenExpiring.bind(this),this._userManager.events.addAccessTokenExpiring(this._callback),this._userManager.getUser().then(function(t){}).catch(function(t){n.Log.error("SilentRenewService.start: Error from getUser:",t.message);}));},t.prototype.stop=function t(){this._callback&&(this._userManager.events.removeAccessTokenExpiring(this._callback),delete this._callback);},t.prototype._tokenExpiring=function t(){var e=this;this._userManager.signinSilent().then(function(t){n.Log.debug("SilentRenewService._tokenExpiring: Silent token renewal successful");},function(t){n.Log.error("SilentRenewService._tokenExpiring: Error from signinSilent:",t.message),e._userManager.events._raiseSilentRenewError(t);});},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CordovaPopupNavigator=void 0;var n=r(21);e.CordovaPopupNavigator=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.prototype.prepare=function t(e){var r=new n.CordovaPopupWindow(e);return Promise.resolve(r)},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0}),e.CordovaIFrameNavigator=void 0;var n=r(21);e.CordovaIFrameNavigator=function(){function t(){!function e(t,r){if(!(t instanceof r))throw new TypeError("Cannot call a class as a function")}(this,t);}return t.prototype.prepare=function t(e){e.popupWindowFeatures="hidden=yes";var r=new n.CordovaPopupWindow(e);return Promise.resolve(r)},t}();},function(t,e,r){Object.defineProperty(e,"__esModule",{value:!0});e.Version="1.10.1";}])});
+    var jsonParse=(function(){var e="(?:-?\\b(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\\b)";var j='(?:[^\\0-\\x08\\x0a-\\x1f"\\\\]|\\\\(?:["/\\\\bfnrt]|u[0-9A-Fa-f]{4}))';var i='(?:"'+j+'*")';var d=new RegExp("(?:false|true|null|[\\{\\}\\[\\]]|"+e+"|"+i+")","g");var k=new RegExp("\\\\(?:([^u])|u(.{4}))","g");var g={'"':'"',"/":"/","\\":"\\",b:"\b",f:"\f",n:"\n",r:"\r",t:"\t"};function h(l,m,n){return m?g[m]:String.fromCharCode(parseInt(n,16))}var c=new String("");var a="\\";var b=Object.hasOwnProperty;return function(u,q){var p=u.match(d);var x;var v=p[0];var l=false;if("{"===v){x={};}else{if("["===v){x=[];}else{x=[];l=true;}}var t;var r=[x];for(var o=1-l,m=p.length;o<m;++o){v=p[o];var w;switch(v.charCodeAt(0)){default:w=r[0];w[t||w.length]=+(v);t=void 0;break;case 34:v=v.substring(1,v.length-1);if(v.indexOf(a)!==-1){v=v.replace(k,h);}w=r[0];if(!t){if(w instanceof Array){t=w.length;}else{t=v||c;break}}w[t]=v;t=void 0;break;case 91:w=r[0];r.unshift(w[t||w.length]=[]);t=void 0;break;case 93:r.shift();break;case 102:w=r[0];w[t||w.length]=false;t=void 0;break;case 110:w=r[0];w[t||w.length]=null;t=void 0;break;case 116:w=r[0];w[t||w.length]=true;t=void 0;break;case 123:w=r[0];r.unshift(w[t||w.length]={});t=void 0;break;case 125:r.shift();break}}if(l){if(r.length!==1){throw new Error()}x=x[0];}else{if(r.length){throw new Error()}}if(q){var s=function(C,B){var D=C[B];if(D&&typeof D==="object"){var n=null;for(var z in D){if(b.call(D,z)&&D!==C){var y=s(D,z);if(y!==void 0){D[z]=y;}else{if(!n){n=[];}n.push(z);}}}if(n){for(var A=n.length;--A>=0;){delete D[n[A]];}}}return q.call(C,B,D)};x=s({"":x},"");}return x}})();
+    if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.asn1=="undefined"||!KJUR.asn1){KJUR.asn1={};}KJUR.asn1.ASN1Util=new function(){this.integerToByteHex=function(a){var b=a.toString(16);if((b.length%2)==1){b="0"+b;}return b};this.bigIntToMinTwosComplementsHex=function(j){var f=j.toString(16);if(f.substr(0,1)!="-"){if(f.length%2==1){f="0"+f;}else{if(!f.match(/^[0-7]/)){f="00"+f;}}}else{var a=f.substr(1);var e=a.length;if(e%2==1){e+=1;}else{if(!f.match(/^[0-7]/)){e+=2;}}var g="";for(var d=0;d<e;d++){g+="f";}var c=new BigInteger(g,16);var b=c.xor(j).add(BigInteger.ONE);f=b.toString(16).replace(/^-/,"");}return f};this.getPEMStringFromHex=function(a,b){return hextopem(a,b)};this.newObject=function(k){var D=KJUR,n=D.asn1,z=n.DERBoolean,e=n.DERInteger,s=n.DERBitString,h=n.DEROctetString,v=n.DERNull,w=n.DERObjectIdentifier,l=n.DEREnumerated,g=n.DERUTF8String,f=n.DERNumericString,y=n.DERPrintableString,u=n.DERTeletexString,p=n.DERIA5String,C=n.DERUTCTime,j=n.DERGeneralizedTime,m=n.DERSequence,c=n.DERSet,r=n.DERTaggedObject,o=n.ASN1Util.newObject;var t=Object.keys(k);if(t.length!=1){throw "key of param shall be only one."}var F=t[0];if(":bool:int:bitstr:octstr:null:oid:enum:utf8str:numstr:prnstr:telstr:ia5str:utctime:gentime:seq:set:tag:".indexOf(":"+F+":")==-1){throw "undefined key: "+F}if(F=="bool"){return new z(k[F])}if(F=="int"){return new e(k[F])}if(F=="bitstr"){return new s(k[F])}if(F=="octstr"){return new h(k[F])}if(F=="null"){return new v(k[F])}if(F=="oid"){return new w(k[F])}if(F=="enum"){return new l(k[F])}if(F=="utf8str"){return new g(k[F])}if(F=="numstr"){return new f(k[F])}if(F=="prnstr"){return new y(k[F])}if(F=="telstr"){return new u(k[F])}if(F=="ia5str"){return new p(k[F])}if(F=="utctime"){return new C(k[F])}if(F=="gentime"){return new j(k[F])}if(F=="seq"){var d=k[F];var E=[];for(var x=0;x<d.length;x++){var B=o(d[x]);E.push(B);}return new m({array:E})}if(F=="set"){var d=k[F];var E=[];for(var x=0;x<d.length;x++){var B=o(d[x]);E.push(B);}return new c({array:E})}if(F=="tag"){var A=k[F];if(Object.prototype.toString.call(A)==="[object Array]"&&A.length==3){var q=o(A[2]);return new r({tag:A[0],explicit:A[1],obj:q})}else{var b={};if(A.explicit!==undefined){b.explicit=A.explicit;}if(A.tag!==undefined){b.tag=A.tag;}if(A.obj===undefined){throw "obj shall be specified for 'tag'."}b.obj=o(A.obj);return new r(b)}}};this.jsonToASN1HEX=function(b){var a=this.newObject(b);return a.getEncodedHex()};};KJUR.asn1.ASN1Util.oidHexToInt=function(a){var j="";var k=parseInt(a.substr(0,2),16);var d=Math.floor(k/40);var c=k%40;var j=d+"."+c;var e="";for(var f=2;f<a.length;f+=2){var g=parseInt(a.substr(f,2),16);var h=("00000000"+g.toString(2)).slice(-8);e=e+h.substr(1,7);if(h.substr(0,1)=="0"){var b=new BigInteger(e,2);j=j+"."+b.toString(10);e="";}}return j};KJUR.asn1.ASN1Util.oidIntToHex=function(f){var e=function(a){var k=a.toString(16);if(k.length==1){k="0"+k;}return k};var d=function(o){var n="";var k=new BigInteger(o,10);var a=k.toString(2);var l=7-a.length%7;if(l==7){l=0;}var q="";for(var m=0;m<l;m++){q+="0";}a=q+a;for(var m=0;m<a.length-1;m+=7){var p=a.substr(m,7);if(m!=a.length-7){p="1"+p;}n+=e(parseInt(p,2));}return n};if(!f.match(/^[0-9.]+$/)){throw "malformed oid string: "+f}var g="";var b=f.split(".");var j=parseInt(b[0])*40+parseInt(b[1]);g+=e(j);b.splice(0,2);for(var c=0;c<b.length;c++){g+=d(b[c]);}return g};KJUR.asn1.ASN1Object=function(){var a="";this.getLengthHexFromValue=function(){if(typeof this.hV=="undefined"||this.hV==null){throw "this.hV is null or undefined."}if(this.hV.length%2==1){throw "value hex must be even length: n="+a.length+",v="+this.hV}var i=this.hV.length/2;var h=i.toString(16);if(h.length%2==1){h="0"+h;}if(i<128){return h}else{var g=h.length/2;if(g>15){throw "ASN.1 length too long to represent by 8x: n = "+i.toString(16)}var f=128+g;return f.toString(16)+h}};this.getEncodedHex=function(){if(this.hTLV==null||this.isModified){this.hV=this.getFreshValueHex();this.hL=this.getLengthHexFromValue();this.hTLV=this.hT+this.hL+this.hV;this.isModified=false;}return this.hTLV};this.getValueHex=function(){this.getEncodedHex();return this.hV};this.getFreshValueHex=function(){return ""};};KJUR.asn1.DERAbstractString=function(c){KJUR.asn1.DERAbstractString.superclass.constructor.call(this);this.getString=function(){return this.s};this.setString=function(d){this.hTLV=null;this.isModified=true;this.s=d;this.hV=utf8tohex(this.s).toLowerCase();};this.setStringHex=function(d){this.hTLV=null;this.isModified=true;this.s=null;this.hV=d;};this.getFreshValueHex=function(){return this.hV};if(typeof c!="undefined"){if(typeof c=="string"){this.setString(c);}else{if(typeof c.str!="undefined"){this.setString(c.str);}else{if(typeof c.hex!="undefined"){this.setStringHex(c.hex);}}}}};YAHOO.lang.extend(KJUR.asn1.DERAbstractString,KJUR.asn1.ASN1Object);KJUR.asn1.DERAbstractTime=function(c){KJUR.asn1.DERAbstractTime.superclass.constructor.call(this);this.localDateToUTC=function(f){utc=f.getTime()+(f.getTimezoneOffset()*60000);var e=new Date(utc);return e};this.formatDate=function(m,o,e){var g=this.zeroPadding;var n=this.localDateToUTC(m);var p=String(n.getFullYear());if(o=="utc"){p=p.substr(2,2);}var l=g(String(n.getMonth()+1),2);var q=g(String(n.getDate()),2);var h=g(String(n.getHours()),2);var i=g(String(n.getMinutes()),2);var j=g(String(n.getSeconds()),2);var r=p+l+q+h+i+j;if(e===true){var f=n.getMilliseconds();if(f!=0){var k=g(String(f),3);k=k.replace(/[0]+$/,"");r=r+"."+k;}}return r+"Z"};this.zeroPadding=function(e,d){if(e.length>=d){return e}return new Array(d-e.length+1).join("0")+e};this.getString=function(){return this.s};this.setString=function(d){this.hTLV=null;this.isModified=true;this.s=d;this.hV=stohex(d);};this.setByDateValue=function(h,j,e,d,f,g){var i=new Date(Date.UTC(h,j-1,e,d,f,g,0));this.setByDate(i);};this.getFreshValueHex=function(){return this.hV};};YAHOO.lang.extend(KJUR.asn1.DERAbstractTime,KJUR.asn1.ASN1Object);KJUR.asn1.DERAbstractStructured=function(b){KJUR.asn1.DERAbstractString.superclass.constructor.call(this);this.setByASN1ObjectArray=function(c){this.hTLV=null;this.isModified=true;this.asn1Array=c;};this.appendASN1Object=function(c){this.hTLV=null;this.isModified=true;this.asn1Array.push(c);};this.asn1Array=new Array();if(typeof b!="undefined"){if(typeof b.array!="undefined"){this.asn1Array=b.array;}}};YAHOO.lang.extend(KJUR.asn1.DERAbstractStructured,KJUR.asn1.ASN1Object);KJUR.asn1.DERBoolean=function(){KJUR.asn1.DERBoolean.superclass.constructor.call(this);this.hT="01";this.hTLV="0101ff";};YAHOO.lang.extend(KJUR.asn1.DERBoolean,KJUR.asn1.ASN1Object);KJUR.asn1.DERInteger=function(a){KJUR.asn1.DERInteger.superclass.constructor.call(this);this.hT="02";this.setByBigInteger=function(b){this.hTLV=null;this.isModified=true;this.hV=KJUR.asn1.ASN1Util.bigIntToMinTwosComplementsHex(b);};this.setByInteger=function(c){var b=new BigInteger(String(c),10);this.setByBigInteger(b);};this.setValueHex=function(b){this.hV=b;};this.getFreshValueHex=function(){return this.hV};if(typeof a!="undefined"){if(typeof a.bigint!="undefined"){this.setByBigInteger(a.bigint);}else{if(typeof a["int"]!="undefined"){this.setByInteger(a["int"]);}else{if(typeof a=="number"){this.setByInteger(a);}else{if(typeof a.hex!="undefined"){this.setValueHex(a.hex);}}}}}};YAHOO.lang.extend(KJUR.asn1.DERInteger,KJUR.asn1.ASN1Object);KJUR.asn1.DERBitString=function(b){if(b!==undefined&&typeof b.obj!=="undefined"){var a=KJUR.asn1.ASN1Util.newObject(b.obj);b.hex="00"+a.getEncodedHex();}KJUR.asn1.DERBitString.superclass.constructor.call(this);this.hT="03";this.setHexValueIncludingUnusedBits=function(c){this.hTLV=null;this.isModified=true;this.hV=c;};this.setUnusedBitsAndHexValue=function(c,e){if(c<0||7<c){throw "unused bits shall be from 0 to 7: u = "+c}var d="0"+c;this.hTLV=null;this.isModified=true;this.hV=d+e;};this.setByBinaryString=function(e){e=e.replace(/0+$/,"");var f=8-e.length%8;if(f==8){f=0;}for(var g=0;g<=f;g++){e+="0";}var j="";for(var g=0;g<e.length-1;g+=8){var d=e.substr(g,8);var c=parseInt(d,2).toString(16);if(c.length==1){c="0"+c;}j+=c;}this.hTLV=null;this.isModified=true;this.hV="0"+f+j;};this.setByBooleanArray=function(e){var d="";for(var c=0;c<e.length;c++){if(e[c]==true){d+="1";}else{d+="0";}}this.setByBinaryString(d);};this.newFalseArray=function(e){var c=new Array(e);for(var d=0;d<e;d++){c[d]=false;}return c};this.getFreshValueHex=function(){return this.hV};if(typeof b!="undefined"){if(typeof b=="string"&&b.toLowerCase().match(/^[0-9a-f]+$/)){this.setHexValueIncludingUnusedBits(b);}else{if(typeof b.hex!="undefined"){this.setHexValueIncludingUnusedBits(b.hex);}else{if(typeof b.bin!="undefined"){this.setByBinaryString(b.bin);}else{if(typeof b.array!="undefined"){this.setByBooleanArray(b.array);}}}}}};YAHOO.lang.extend(KJUR.asn1.DERBitString,KJUR.asn1.ASN1Object);KJUR.asn1.DEROctetString=function(b){if(b!==undefined&&typeof b.obj!=="undefined"){var a=KJUR.asn1.ASN1Util.newObject(b.obj);b.hex=a.getEncodedHex();}KJUR.asn1.DEROctetString.superclass.constructor.call(this,b);this.hT="04";};YAHOO.lang.extend(KJUR.asn1.DEROctetString,KJUR.asn1.DERAbstractString);KJUR.asn1.DERNull=function(){KJUR.asn1.DERNull.superclass.constructor.call(this);this.hT="05";this.hTLV="0500";};YAHOO.lang.extend(KJUR.asn1.DERNull,KJUR.asn1.ASN1Object);KJUR.asn1.DERObjectIdentifier=function(c){var b=function(d){var e=d.toString(16);if(e.length==1){e="0"+e;}return e};var a=function(k){var j="";var e=new BigInteger(k,10);var d=e.toString(2);var f=7-d.length%7;if(f==7){f=0;}var m="";for(var g=0;g<f;g++){m+="0";}d=m+d;for(var g=0;g<d.length-1;g+=7){var l=d.substr(g,7);if(g!=d.length-7){l="1"+l;}j+=b(parseInt(l,2));}return j};KJUR.asn1.DERObjectIdentifier.superclass.constructor.call(this);this.hT="06";this.setValueHex=function(d){this.hTLV=null;this.isModified=true;this.s=null;this.hV=d;};this.setValueOidString=function(f){if(!f.match(/^[0-9.]+$/)){throw "malformed oid string: "+f}var g="";var d=f.split(".");var j=parseInt(d[0])*40+parseInt(d[1]);g+=b(j);d.splice(0,2);for(var e=0;e<d.length;e++){g+=a(d[e]);}this.hTLV=null;this.isModified=true;this.s=null;this.hV=g;};this.setValueName=function(e){var d=KJUR.asn1.x509.OID.name2oid(e);if(d!==""){this.setValueOidString(d);}else{throw "DERObjectIdentifier oidName undefined: "+e}};this.getFreshValueHex=function(){return this.hV};if(c!==undefined){if(typeof c==="string"){if(c.match(/^[0-2].[0-9.]+$/)){this.setValueOidString(c);}else{this.setValueName(c);}}else{if(c.oid!==undefined){this.setValueOidString(c.oid);}else{if(c.hex!==undefined){this.setValueHex(c.hex);}else{if(c.name!==undefined){this.setValueName(c.name);}}}}}};YAHOO.lang.extend(KJUR.asn1.DERObjectIdentifier,KJUR.asn1.ASN1Object);KJUR.asn1.DEREnumerated=function(a){KJUR.asn1.DEREnumerated.superclass.constructor.call(this);this.hT="0a";this.setByBigInteger=function(b){this.hTLV=null;this.isModified=true;this.hV=KJUR.asn1.ASN1Util.bigIntToMinTwosComplementsHex(b);};this.setByInteger=function(c){var b=new BigInteger(String(c),10);this.setByBigInteger(b);};this.setValueHex=function(b){this.hV=b;};this.getFreshValueHex=function(){return this.hV};if(typeof a!="undefined"){if(typeof a["int"]!="undefined"){this.setByInteger(a["int"]);}else{if(typeof a=="number"){this.setByInteger(a);}else{if(typeof a.hex!="undefined"){this.setValueHex(a.hex);}}}}};YAHOO.lang.extend(KJUR.asn1.DEREnumerated,KJUR.asn1.ASN1Object);KJUR.asn1.DERUTF8String=function(a){KJUR.asn1.DERUTF8String.superclass.constructor.call(this,a);this.hT="0c";};YAHOO.lang.extend(KJUR.asn1.DERUTF8String,KJUR.asn1.DERAbstractString);KJUR.asn1.DERNumericString=function(a){KJUR.asn1.DERNumericString.superclass.constructor.call(this,a);this.hT="12";};YAHOO.lang.extend(KJUR.asn1.DERNumericString,KJUR.asn1.DERAbstractString);KJUR.asn1.DERPrintableString=function(a){KJUR.asn1.DERPrintableString.superclass.constructor.call(this,a);this.hT="13";};YAHOO.lang.extend(KJUR.asn1.DERPrintableString,KJUR.asn1.DERAbstractString);KJUR.asn1.DERTeletexString=function(a){KJUR.asn1.DERTeletexString.superclass.constructor.call(this,a);this.hT="14";};YAHOO.lang.extend(KJUR.asn1.DERTeletexString,KJUR.asn1.DERAbstractString);KJUR.asn1.DERIA5String=function(a){KJUR.asn1.DERIA5String.superclass.constructor.call(this,a);this.hT="16";};YAHOO.lang.extend(KJUR.asn1.DERIA5String,KJUR.asn1.DERAbstractString);KJUR.asn1.DERUTCTime=function(a){KJUR.asn1.DERUTCTime.superclass.constructor.call(this,a);this.hT="17";this.setByDate=function(b){this.hTLV=null;this.isModified=true;this.date=b;this.s=this.formatDate(this.date,"utc");this.hV=stohex(this.s);};this.getFreshValueHex=function(){if(typeof this.date=="undefined"&&typeof this.s=="undefined"){this.date=new Date();this.s=this.formatDate(this.date,"utc");this.hV=stohex(this.s);}return this.hV};if(a!==undefined){if(a.str!==undefined){this.setString(a.str);}else{if(typeof a=="string"&&a.match(/^[0-9]{12}Z$/)){this.setString(a);}else{if(a.hex!==undefined){this.setStringHex(a.hex);}else{if(a.date!==undefined){this.setByDate(a.date);}}}}}};YAHOO.lang.extend(KJUR.asn1.DERUTCTime,KJUR.asn1.DERAbstractTime);KJUR.asn1.DERGeneralizedTime=function(a){KJUR.asn1.DERGeneralizedTime.superclass.constructor.call(this,a);this.hT="18";this.withMillis=false;this.setByDate=function(b){this.hTLV=null;this.isModified=true;this.date=b;this.s=this.formatDate(this.date,"gen",this.withMillis);this.hV=stohex(this.s);};this.getFreshValueHex=function(){if(this.date===undefined&&this.s===undefined){this.date=new Date();this.s=this.formatDate(this.date,"gen",this.withMillis);this.hV=stohex(this.s);}return this.hV};if(a!==undefined){if(a.str!==undefined){this.setString(a.str);}else{if(typeof a=="string"&&a.match(/^[0-9]{14}Z$/)){this.setString(a);}else{if(a.hex!==undefined){this.setStringHex(a.hex);}else{if(a.date!==undefined){this.setByDate(a.date);}}}}if(a.millis===true){this.withMillis=true;}}};YAHOO.lang.extend(KJUR.asn1.DERGeneralizedTime,KJUR.asn1.DERAbstractTime);KJUR.asn1.DERSequence=function(a){KJUR.asn1.DERSequence.superclass.constructor.call(this,a);this.hT="30";this.getFreshValueHex=function(){var c="";for(var b=0;b<this.asn1Array.length;b++){var d=this.asn1Array[b];c+=d.getEncodedHex();}this.hV=c;return this.hV};};YAHOO.lang.extend(KJUR.asn1.DERSequence,KJUR.asn1.DERAbstractStructured);KJUR.asn1.DERSet=function(a){KJUR.asn1.DERSet.superclass.constructor.call(this,a);this.hT="31";this.sortFlag=true;this.getFreshValueHex=function(){var b=new Array();for(var c=0;c<this.asn1Array.length;c++){var d=this.asn1Array[c];b.push(d.getEncodedHex());}if(this.sortFlag==true){b.sort();}this.hV=b.join("");return this.hV};if(typeof a!="undefined"){if(typeof a.sortflag!="undefined"&&a.sortflag==false){this.sortFlag=false;}}};YAHOO.lang.extend(KJUR.asn1.DERSet,KJUR.asn1.DERAbstractStructured);KJUR.asn1.DERTaggedObject=function(a){KJUR.asn1.DERTaggedObject.superclass.constructor.call(this);this.hT="a0";this.hV="";this.isExplicit=true;this.asn1Object=null;this.setASN1Object=function(b,c,d){this.hT=c;this.isExplicit=b;this.asn1Object=d;if(this.isExplicit){this.hV=this.asn1Object.getEncodedHex();this.hTLV=null;this.isModified=true;}else{this.hV=null;this.hTLV=d.getEncodedHex();this.hTLV=this.hTLV.replace(/^../,c);this.isModified=false;}};this.getFreshValueHex=function(){return this.hV};if(typeof a!="undefined"){if(typeof a.tag!="undefined"){this.hT=a.tag;}if(typeof a.explicit!="undefined"){this.isExplicit=a.explicit;}if(typeof a.obj!="undefined"){this.asn1Object=a.obj;this.setASN1Object(this.isExplicit,this.hT,this.asn1Object);}}};YAHOO.lang.extend(KJUR.asn1.DERTaggedObject,KJUR.asn1.ASN1Object);
+    var ASN1HEX=new function(){};ASN1HEX.getLblen=function(c,a){if(c.substr(a+2,1)!="8"){return 1}var b=parseInt(c.substr(a+3,1));if(b==0){return -1}if(0<b&&b<10){return b+1}return -2};ASN1HEX.getL=function(c,b){var a=ASN1HEX.getLblen(c,b);if(a<1){return ""}return c.substr(b+2,a*2)};ASN1HEX.getVblen=function(d,a){var c,b;c=ASN1HEX.getL(d,a);if(c==""){return -1}if(c.substr(0,1)==="8"){b=new BigInteger(c.substr(2),16);}else{b=new BigInteger(c,16);}return b.intValue()};ASN1HEX.getVidx=function(c,b){var a=ASN1HEX.getLblen(c,b);if(a<0){return a}return b+(a+1)*2};ASN1HEX.getV=function(d,a){var c=ASN1HEX.getVidx(d,a);var b=ASN1HEX.getVblen(d,a);return d.substr(c,b*2)};ASN1HEX.getTLV=function(b,a){return b.substr(a,2)+ASN1HEX.getL(b,a)+ASN1HEX.getV(b,a)};ASN1HEX.getNextSiblingIdx=function(d,a){var c=ASN1HEX.getVidx(d,a);var b=ASN1HEX.getVblen(d,a);return c+b*2};ASN1HEX.getChildIdx=function(e,f){var j=ASN1HEX;var g=new Array();var i=j.getVidx(e,f);if(e.substr(f,2)=="03"){g.push(i+2);}else{g.push(i);}var l=j.getVblen(e,f);var c=i;var d=0;while(1){var b=j.getNextSiblingIdx(e,c);if(b==null||(b-i>=(l*2))){break}if(d>=200){break}g.push(b);c=b;d++;}return g};ASN1HEX.getNthChildIdx=function(d,b,e){var c=ASN1HEX.getChildIdx(d,b);return c[e]};ASN1HEX.getIdxbyList=function(e,d,c,i){var g=ASN1HEX;var f,b;if(c.length==0){if(i!==undefined){if(e.substr(d,2)!==i){throw "checking tag doesn't match: "+e.substr(d,2)+"!="+i}}return d}f=c.shift();b=g.getChildIdx(e,d);return g.getIdxbyList(e,b[f],c,i)};ASN1HEX.getTLVbyList=function(d,c,b,f){var e=ASN1HEX;var a=e.getIdxbyList(d,c,b);if(a===undefined){throw "can't find nthList object"}if(f!==undefined){if(d.substr(a,2)!=f){throw "checking tag doesn't match: "+d.substr(a,2)+"!="+f}}return e.getTLV(d,a)};ASN1HEX.getVbyList=function(e,c,b,g,i){var f=ASN1HEX;var a,d;a=f.getIdxbyList(e,c,b,g);if(a===undefined){throw "can't find nthList object"}d=f.getV(e,a);if(i===true){d=d.substr(2);}return d};ASN1HEX.hextooidstr=function(e){var h=function(b,a){if(b.length>=a){return b}return new Array(a-b.length+1).join("0")+b};var l=[];var o=e.substr(0,2);var f=parseInt(o,16);l[0]=new String(Math.floor(f/40));l[1]=new String(f%40);var m=e.substr(2);var k=[];for(var g=0;g<m.length/2;g++){k.push(parseInt(m.substr(g*2,2),16));}var j=[];var d="";for(var g=0;g<k.length;g++){if(k[g]&128){d=d+h((k[g]&127).toString(2),7);}else{d=d+h((k[g]&127).toString(2),7);j.push(new String(parseInt(d,2)));d="";}}var n=l.join(".");if(j.length>0){n=n+"."+j.join(".");}return n};ASN1HEX.dump=function(t,c,l,g){var p=ASN1HEX;var j=p.getV;var y=p.dump;var w=p.getChildIdx;var e=t;if(t instanceof KJUR.asn1.ASN1Object){e=t.getEncodedHex();}var q=function(A,i){if(A.length<=i*2){return A}else{var v=A.substr(0,i)+"..(total "+A.length/2+"bytes).."+A.substr(A.length-i,i);return v}};if(c===undefined){c={ommit_long_octet:32};}if(l===undefined){l=0;}if(g===undefined){g="";}var x=c.ommit_long_octet;if(e.substr(l,2)=="01"){var h=j(e,l);if(h=="00"){return g+"BOOLEAN FALSE\n"}else{return g+"BOOLEAN TRUE\n"}}if(e.substr(l,2)=="02"){var h=j(e,l);return g+"INTEGER "+q(h,x)+"\n"}if(e.substr(l,2)=="03"){var h=j(e,l);return g+"BITSTRING "+q(h,x)+"\n"}if(e.substr(l,2)=="04"){var h=j(e,l);if(p.isASN1HEX(h)){var k=g+"OCTETSTRING, encapsulates\n";k=k+y(h,c,0,g+"  ");return k}else{return g+"OCTETSTRING "+q(h,x)+"\n"}}if(e.substr(l,2)=="05"){return g+"NULL\n"}if(e.substr(l,2)=="06"){var m=j(e,l);var a=KJUR.asn1.ASN1Util.oidHexToInt(m);var o=KJUR.asn1.x509.OID.oid2name(a);var b=a.replace(/\./g," ");if(o!=""){return g+"ObjectIdentifier "+o+" ("+b+")\n"}else{return g+"ObjectIdentifier ("+b+")\n"}}if(e.substr(l,2)=="0c"){return g+"UTF8String '"+hextoutf8(j(e,l))+"'\n"}if(e.substr(l,2)=="13"){return g+"PrintableString '"+hextoutf8(j(e,l))+"'\n"}if(e.substr(l,2)=="14"){return g+"TeletexString '"+hextoutf8(j(e,l))+"'\n"}if(e.substr(l,2)=="16"){return g+"IA5String '"+hextoutf8(j(e,l))+"'\n"}if(e.substr(l,2)=="17"){return g+"UTCTime "+hextoutf8(j(e,l))+"\n"}if(e.substr(l,2)=="18"){return g+"GeneralizedTime "+hextoutf8(j(e,l))+"\n"}if(e.substr(l,2)=="30"){if(e.substr(l,4)=="3000"){return g+"SEQUENCE {}\n"}var k=g+"SEQUENCE\n";var d=w(e,l);var f=c;if((d.length==2||d.length==3)&&e.substr(d[0],2)=="06"&&e.substr(d[d.length-1],2)=="04"){var o=p.oidname(j(e,d[0]));var r=JSON.parse(JSON.stringify(c));r.x509ExtName=o;f=r;}for(var u=0;u<d.length;u++){k=k+y(e,f,d[u],g+"  ");}return k}if(e.substr(l,2)=="31"){var k=g+"SET\n";var d=w(e,l);for(var u=0;u<d.length;u++){k=k+y(e,c,d[u],g+"  ");}return k}var z=parseInt(e.substr(l,2),16);if((z&128)!=0){var n=z&31;if((z&32)!=0){var k=g+"["+n+"]\n";var d=w(e,l);for(var u=0;u<d.length;u++){k=k+y(e,c,d[u],g+"  ");}return k}else{var h=j(e,l);if(h.substr(0,8)=="68747470"){h=hextoutf8(h);}if(c.x509ExtName==="subjectAltName"&&n==2){h=hextoutf8(h);}var k=g+"["+n+"] "+h+"\n";return k}}return g+"UNKNOWN("+e.substr(l,2)+") "+j(e,l)+"\n"};ASN1HEX.isASN1HEX=function(e){var d=ASN1HEX;if(e.length%2==1){return false}var c=d.getVblen(e,0);var b=e.substr(0,2);var f=d.getL(e,0);var a=e.length-b.length-f.length;if(a==c*2){return true}return false};ASN1HEX.oidname=function(a){var c=KJUR.asn1;if(KJUR.lang.String.isHex(a)){a=c.ASN1Util.oidHexToInt(a);}var b=c.x509.OID.oid2name(a);if(b===""){b=a;}return b};
+    var KJUR;if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.lang=="undefined"||!KJUR.lang){KJUR.lang={};}KJUR.lang.String=function(){};function stoBA(d){var b=new Array();for(var c=0;c<d.length;c++){b[c]=d.charCodeAt(c);}return b}function BAtohex(b){var e="";for(var d=0;d<b.length;d++){var c=b[d].toString(16);if(c.length==1){c="0"+c;}e=e+c;}return e}function stohex(a){return BAtohex(stoBA(a))}function b64tob64u(a){a=a.replace(/\=/g,"");a=a.replace(/\+/g,"-");a=a.replace(/\//g,"_");return a}function b64utob64(a){if(a.length%4==2){a=a+"==";}else{if(a.length%4==3){a=a+"=";}}a=a.replace(/-/g,"+");a=a.replace(/_/g,"/");return a}function hextob64u(a){if(a.length%2==1){a="0"+a;}return b64tob64u(hex2b64(a))}function b64utohex(a){return b64tohex(b64utob64(a))}var utf8tob64u,b64utoutf8;if(typeof Buffer==="function"){utf8tob64u=function(a){return b64tob64u(new Buffer(a,"utf8").toString("base64"))};b64utoutf8=function(a){return new Buffer(b64utob64(a),"base64").toString("utf8")};}else{utf8tob64u=function(a){return hextob64u(uricmptohex(encodeURIComponentAll(a)))};b64utoutf8=function(a){return decodeURIComponent(hextouricmp(b64utohex(a)))};}function utf8tohex(a){return uricmptohex(encodeURIComponentAll(a))}function hextoutf8(a){return decodeURIComponent(hextouricmp(a))}function hextorstr(c){var b="";for(var a=0;a<c.length-1;a+=2){b+=String.fromCharCode(parseInt(c.substr(a,2),16));}return b}function rstrtohex(c){var a="";for(var b=0;b<c.length;b++){a+=("0"+c.charCodeAt(b).toString(16)).slice(-2);}return a}function hextob64(a){return hex2b64(a)}function hextob64nl(b){var a=hextob64(b);var c=a.replace(/(.{64})/g,"$1\r\n");c=c.replace(/\r\n$/,"");return c}function b64nltohex(b){var a=b.replace(/[^0-9A-Za-z\/+=]*/g,"");var c=b64tohex(a);return c}function hextopem(a,b){var c=hextob64nl(a);return "-----BEGIN "+b+"-----\r\n"+c+"\r\n-----END "+b+"-----\r\n"}function pemtohex(a,b){if(a.indexOf("-----BEGIN ")==-1){throw "can't find PEM header: "+b}if(b!==undefined){a=a.replace("-----BEGIN "+b+"-----","");a=a.replace("-----END "+b+"-----","");}else{a=a.replace(/-----BEGIN [^-]+-----/,"");a=a.replace(/-----END [^-]+-----/,"");}return b64nltohex(a)}function zulutomsec(n){var l,j,m,e,f,i,b;var a,h,g,c;c=n.match(/^(\d{2}|\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(|\.\d+)Z$/);if(c){a=c[1];l=parseInt(a);if(a.length===2){if(50<=l&&l<100){l=1900+l;}else{if(0<=l&&l<50){l=2000+l;}}}j=parseInt(c[2])-1;m=parseInt(c[3]);e=parseInt(c[4]);f=parseInt(c[5]);i=parseInt(c[6]);b=0;h=c[7];if(h!==""){g=(h.substr(1)+"00").substr(0,3);b=parseInt(g);}return Date.UTC(l,j,m,e,f,i,b)}throw "unsupported zulu format: "+n}function zulutosec(a){var b=zulutomsec(a);return ~~(b/1000)}function uricmptohex(a){return a.replace(/%/g,"")}function hextouricmp(a){return a.replace(/(..)/g,"%$1")}function hextoipv6(e){if(!e.match(/^[0-9A-Fa-f]{32}$/)){throw "malformed IPv6 address octet"}e=e.toLowerCase();var b=e.match(/.{1,4}/g);for(var d=0;d<8;d++){b[d]=b[d].replace(/^0+/,"");if(b[d]==""){b[d]="0";}}e=":"+b.join(":")+":";var c=e.match(/:(0:){2,}/g);if(c===null){return e.slice(1,-1)}var f="";for(var d=0;d<c.length;d++){if(c[d].length>f.length){f=c[d];}}e=e.replace(f,"::");return e.slice(1,-1)}function hextoip(b){var d="malformed hex value";if(!b.match(/^([0-9A-Fa-f][0-9A-Fa-f]){1,}$/)){throw d}if(b.length==8){var c;try{c=parseInt(b.substr(0,2),16)+"."+parseInt(b.substr(2,2),16)+"."+parseInt(b.substr(4,2),16)+"."+parseInt(b.substr(6,2),16);return c}catch(a){throw d}}else{if(b.length==32){return hextoipv6(b)}else{return b}}}function encodeURIComponentAll(a){var d=encodeURIComponent(a);var b="";for(var c=0;c<d.length;c++){if(d[c]=="%"){b=b+d.substr(c,3);c=c+2;}else{b=b+"%"+stohex(d[c]);}}return b}KJUR.lang.String.isInteger=function(a){if(a.match(/^[0-9]+$/)){return true}else{if(a.match(/^-[0-9]+$/)){return true}else{return false}}};KJUR.lang.String.isHex=function(a){if(a.length%2==0&&(a.match(/^[0-9a-f]+$/)||a.match(/^[0-9A-F]+$/))){return true}else{return false}};KJUR.lang.String.isBase64=function(a){a=a.replace(/\s+/g,"");if(a.match(/^[0-9A-Za-z+\/]+={0,3}$/)&&a.length%4==0){return true}else{return false}};KJUR.lang.String.isBase64URL=function(a){if(a.match(/[+/=]/)){return false}a=b64utob64(a);return KJUR.lang.String.isBase64(a)};KJUR.lang.String.isIntegerArray=function(a){a=a.replace(/\s+/g,"");if(a.match(/^\[[0-9,]+\]$/)){return true}else{return false}};function hextoposhex(a){if(a.length%2==1){return "0"+a}if(a.substr(0,1)>"7"){return "00"+a}return a}if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.crypto=="undefined"||!KJUR.crypto){KJUR.crypto={};}KJUR.crypto.Util=new function(){this.DIGESTINFOHEAD={sha1:"3021300906052b0e03021a05000414",sha224:"302d300d06096086480165030402040500041c",sha256:"3031300d060960864801650304020105000420",sha384:"3041300d060960864801650304020205000430",sha512:"3051300d060960864801650304020305000440",md2:"3020300c06082a864886f70d020205000410",md5:"3020300c06082a864886f70d020505000410",ripemd160:"3021300906052b2403020105000414",};this.DEFAULTPROVIDER={md5:"cryptojs",sha1:"cryptojs",sha224:"cryptojs",sha256:"cryptojs",sha384:"cryptojs",sha512:"cryptojs",ripemd160:"cryptojs",hmacmd5:"cryptojs",hmacsha1:"cryptojs",hmacsha224:"cryptojs",hmacsha256:"cryptojs",hmacsha384:"cryptojs",hmacsha512:"cryptojs",hmacripemd160:"cryptojs",MD5withRSA:"cryptojs/jsrsa",SHA1withRSA:"cryptojs/jsrsa",SHA224withRSA:"cryptojs/jsrsa",SHA256withRSA:"cryptojs/jsrsa",SHA384withRSA:"cryptojs/jsrsa",SHA512withRSA:"cryptojs/jsrsa",RIPEMD160withRSA:"cryptojs/jsrsa",MD5withECDSA:"cryptojs/jsrsa",SHA1withECDSA:"cryptojs/jsrsa",SHA224withECDSA:"cryptojs/jsrsa",SHA256withECDSA:"cryptojs/jsrsa",SHA384withECDSA:"cryptojs/jsrsa",SHA512withECDSA:"cryptojs/jsrsa",RIPEMD160withECDSA:"cryptojs/jsrsa",SHA1withDSA:"cryptojs/jsrsa",SHA224withDSA:"cryptojs/jsrsa",SHA256withDSA:"cryptojs/jsrsa",MD5withRSAandMGF1:"cryptojs/jsrsa",SHA1withRSAandMGF1:"cryptojs/jsrsa",SHA224withRSAandMGF1:"cryptojs/jsrsa",SHA256withRSAandMGF1:"cryptojs/jsrsa",SHA384withRSAandMGF1:"cryptojs/jsrsa",SHA512withRSAandMGF1:"cryptojs/jsrsa",RIPEMD160withRSAandMGF1:"cryptojs/jsrsa",};this.CRYPTOJSMESSAGEDIGESTNAME={md5:CryptoJS.algo.MD5,sha1:CryptoJS.algo.SHA1,sha224:CryptoJS.algo.SHA224,sha256:CryptoJS.algo.SHA256,sha384:CryptoJS.algo.SHA384,sha512:CryptoJS.algo.SHA512,ripemd160:CryptoJS.algo.RIPEMD160};this.getDigestInfoHex=function(a,b){if(typeof this.DIGESTINFOHEAD[b]=="undefined"){throw "alg not supported in Util.DIGESTINFOHEAD: "+b}return this.DIGESTINFOHEAD[b]+a};this.getPaddedDigestInfoHex=function(h,a,j){var c=this.getDigestInfoHex(h,a);var d=j/4;if(c.length+22>d){throw "key is too short for SigAlg: keylen="+j+","+a}var b="0001";var k="00"+c;var g="";var l=d-b.length-k.length;for(var f=0;f<l;f+=2){g+="ff";}var e=b+g+k;return e};this.hashString=function(a,c){var b=new KJUR.crypto.MessageDigest({alg:c});return b.digestString(a)};this.hashHex=function(b,c){var a=new KJUR.crypto.MessageDigest({alg:c});return a.digestHex(b)};this.sha1=function(a){var b=new KJUR.crypto.MessageDigest({alg:"sha1",prov:"cryptojs"});return b.digestString(a)};this.sha256=function(a){var b=new KJUR.crypto.MessageDigest({alg:"sha256",prov:"cryptojs"});return b.digestString(a)};this.sha256Hex=function(a){var b=new KJUR.crypto.MessageDigest({alg:"sha256",prov:"cryptojs"});return b.digestHex(a)};this.sha512=function(a){var b=new KJUR.crypto.MessageDigest({alg:"sha512",prov:"cryptojs"});return b.digestString(a)};this.sha512Hex=function(a){var b=new KJUR.crypto.MessageDigest({alg:"sha512",prov:"cryptojs"});return b.digestHex(a)};};KJUR.crypto.Util.md5=function(a){var b=new KJUR.crypto.MessageDigest({alg:"md5",prov:"cryptojs"});return b.digestString(a)};KJUR.crypto.Util.ripemd160=function(a){var b=new KJUR.crypto.MessageDigest({alg:"ripemd160",prov:"cryptojs"});return b.digestString(a)};KJUR.crypto.Util.SECURERANDOMGEN=new SecureRandom();KJUR.crypto.Util.getRandomHexOfNbytes=function(b){var a=new Array(b);KJUR.crypto.Util.SECURERANDOMGEN.nextBytes(a);return BAtohex(a)};KJUR.crypto.Util.getRandomBigIntegerOfNbytes=function(a){return new BigInteger(KJUR.crypto.Util.getRandomHexOfNbytes(a),16)};KJUR.crypto.Util.getRandomHexOfNbits=function(d){var c=d%8;var a=(d-c)/8;var b=new Array(a+1);KJUR.crypto.Util.SECURERANDOMGEN.nextBytes(b);b[0]=(((255<<c)&255)^255)&b[0];return BAtohex(b)};KJUR.crypto.Util.getRandomBigIntegerOfNbits=function(a){return new BigInteger(KJUR.crypto.Util.getRandomHexOfNbits(a),16)};KJUR.crypto.Util.getRandomBigIntegerZeroToMax=function(b){var a=b.bitLength();while(1){var c=KJUR.crypto.Util.getRandomBigIntegerOfNbits(a);if(b.compareTo(c)!=-1){return c}}};KJUR.crypto.Util.getRandomBigIntegerMinToMax=function(e,b){var c=e.compareTo(b);if(c==1){throw "biMin is greater than biMax"}if(c==0){return e}var a=b.subtract(e);var d=KJUR.crypto.Util.getRandomBigIntegerZeroToMax(a);return d.add(e)};KJUR.crypto.MessageDigest=function(c){this.setAlgAndProvider=function(g,f){g=KJUR.crypto.MessageDigest.getCanonicalAlgName(g);if(g!==null&&f===undefined){f=KJUR.crypto.Util.DEFAULTPROVIDER[g];}if(":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(g)!=-1&&f=="cryptojs"){try{this.md=KJUR.crypto.Util.CRYPTOJSMESSAGEDIGESTNAME[g].create();}catch(e){throw "setAlgAndProvider hash alg set fail alg="+g+"/"+e}this.updateString=function(h){this.md.update(h);};this.updateHex=function(h){var i=CryptoJS.enc.Hex.parse(h);this.md.update(i);};this.digest=function(){var h=this.md.finalize();return h.toString(CryptoJS.enc.Hex)};this.digestString=function(h){this.updateString(h);return this.digest()};this.digestHex=function(h){this.updateHex(h);return this.digest()};}if(":sha256:".indexOf(g)!=-1&&f=="sjcl"){try{this.md=new sjcl.hash.sha256();}catch(e){throw "setAlgAndProvider hash alg set fail alg="+g+"/"+e}this.updateString=function(h){this.md.update(h);};this.updateHex=function(i){var h=sjcl.codec.hex.toBits(i);this.md.update(h);};this.digest=function(){var h=this.md.finalize();return sjcl.codec.hex.fromBits(h)};this.digestString=function(h){this.updateString(h);return this.digest()};this.digestHex=function(h){this.updateHex(h);return this.digest()};}};this.updateString=function(e){throw "updateString(str) not supported for this alg/prov: "+this.algName+"/"+this.provName};this.updateHex=function(e){throw "updateHex(hex) not supported for this alg/prov: "+this.algName+"/"+this.provName};this.digest=function(){throw "digest() not supported for this alg/prov: "+this.algName+"/"+this.provName};this.digestString=function(e){throw "digestString(str) not supported for this alg/prov: "+this.algName+"/"+this.provName};this.digestHex=function(e){throw "digestHex(hex) not supported for this alg/prov: "+this.algName+"/"+this.provName};if(c!==undefined){if(c.alg!==undefined){this.algName=c.alg;if(c.prov===undefined){this.provName=KJUR.crypto.Util.DEFAULTPROVIDER[this.algName];}this.setAlgAndProvider(this.algName,this.provName);}}};KJUR.crypto.MessageDigest.getCanonicalAlgName=function(a){if(typeof a==="string"){a=a.toLowerCase();a=a.replace(/-/,"");}return a};KJUR.crypto.MessageDigest.getHashLength=function(c){var b=KJUR.crypto.MessageDigest;var a=b.getCanonicalAlgName(c);if(b.HASHLENGTH[a]===undefined){throw "not supported algorithm: "+c}return b.HASHLENGTH[a]};KJUR.crypto.MessageDigest.HASHLENGTH={md5:16,sha1:20,sha224:28,sha256:32,sha384:48,sha512:64,ripemd160:20};KJUR.crypto.Mac=function(d){this.setAlgAndProvider=function(k,i){k=k.toLowerCase();if(k==null){k="hmacsha1";}k=k.toLowerCase();if(k.substr(0,4)!="hmac"){throw "setAlgAndProvider unsupported HMAC alg: "+k}if(i===undefined){i=KJUR.crypto.Util.DEFAULTPROVIDER[k];}this.algProv=k+"/"+i;var g=k.substr(4);if(":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(g)!=-1&&i=="cryptojs"){try{var j=KJUR.crypto.Util.CRYPTOJSMESSAGEDIGESTNAME[g];this.mac=CryptoJS.algo.HMAC.create(j,this.pass);}catch(h){throw "setAlgAndProvider hash alg set fail hashAlg="+g+"/"+h}this.updateString=function(l){this.mac.update(l);};this.updateHex=function(l){var m=CryptoJS.enc.Hex.parse(l);this.mac.update(m);};this.doFinal=function(){var l=this.mac.finalize();return l.toString(CryptoJS.enc.Hex)};this.doFinalString=function(l){this.updateString(l);return this.doFinal()};this.doFinalHex=function(l){this.updateHex(l);return this.doFinal()};}};this.updateString=function(g){throw "updateString(str) not supported for this alg/prov: "+this.algProv};this.updateHex=function(g){throw "updateHex(hex) not supported for this alg/prov: "+this.algProv};this.doFinal=function(){throw "digest() not supported for this alg/prov: "+this.algProv};this.doFinalString=function(g){throw "digestString(str) not supported for this alg/prov: "+this.algProv};this.doFinalHex=function(g){throw "digestHex(hex) not supported for this alg/prov: "+this.algProv};this.setPassword=function(h){if(typeof h=="string"){var g=h;if(h.length%2==1||!h.match(/^[0-9A-Fa-f]+$/)){g=rstrtohex(h);}this.pass=CryptoJS.enc.Hex.parse(g);return}if(typeof h!="object"){throw "KJUR.crypto.Mac unsupported password type: "+h}var g=null;if(h.hex!==undefined){if(h.hex.length%2!=0||!h.hex.match(/^[0-9A-Fa-f]+$/)){throw "Mac: wrong hex password: "+h.hex}g=h.hex;}if(h.utf8!==undefined){g=utf8tohex(h.utf8);}if(h.rstr!==undefined){g=rstrtohex(h.rstr);}if(h.b64!==undefined){g=b64tohex(h.b64);}if(h.b64u!==undefined){g=b64utohex(h.b64u);}if(g==null){throw "KJUR.crypto.Mac unsupported password type: "+h}this.pass=CryptoJS.enc.Hex.parse(g);};if(d!==undefined){if(d.pass!==undefined){this.setPassword(d.pass);}if(d.alg!==undefined){this.algName=d.alg;if(d.prov===undefined){this.provName=KJUR.crypto.Util.DEFAULTPROVIDER[this.algName];}this.setAlgAndProvider(this.algName,this.provName);}}};KJUR.crypto.Signature=function(o){var q=null;this._setAlgNames=function(){var s=this.algName.match(/^(.+)with(.+)$/);if(s){this.mdAlgName=s[1].toLowerCase();this.pubkeyAlgName=s[2].toLowerCase();}};this._zeroPaddingOfSignature=function(x,w){var v="";var t=w/4-x.length;for(var u=0;u<t;u++){v=v+"0";}return v+x};this.setAlgAndProvider=function(u,t){this._setAlgNames();if(t!="cryptojs/jsrsa"){throw "provider not supported: "+t}if(":md5:sha1:sha224:sha256:sha384:sha512:ripemd160:".indexOf(this.mdAlgName)!=-1){try{this.md=new KJUR.crypto.MessageDigest({alg:this.mdAlgName});}catch(s){throw "setAlgAndProvider hash alg set fail alg="+this.mdAlgName+"/"+s}this.init=function(w,x){var y=null;try{if(x===undefined){y=KEYUTIL.getKey(w);}else{y=KEYUTIL.getKey(w,x);}}catch(v){throw "init failed:"+v}if(y.isPrivate===true){this.prvKey=y;this.state="SIGN";}else{if(y.isPublic===true){this.pubKey=y;this.state="VERIFY";}else{throw "init failed.:"+y}}};this.updateString=function(v){this.md.updateString(v);};this.updateHex=function(v){this.md.updateHex(v);};this.sign=function(){this.sHashHex=this.md.digest();if(typeof this.ecprvhex!="undefined"&&typeof this.eccurvename!="undefined"){var v=new KJUR.crypto.ECDSA({curve:this.eccurvename});this.hSign=v.signHex(this.sHashHex,this.ecprvhex);}else{if(this.prvKey instanceof RSAKey&&this.pubkeyAlgName==="rsaandmgf1"){this.hSign=this.prvKey.signWithMessageHashPSS(this.sHashHex,this.mdAlgName,this.pssSaltLen);}else{if(this.prvKey instanceof RSAKey&&this.pubkeyAlgName==="rsa"){this.hSign=this.prvKey.signWithMessageHash(this.sHashHex,this.mdAlgName);}else{if(this.prvKey instanceof KJUR.crypto.ECDSA){this.hSign=this.prvKey.signWithMessageHash(this.sHashHex);}else{if(this.prvKey instanceof KJUR.crypto.DSA){this.hSign=this.prvKey.signWithMessageHash(this.sHashHex);}else{throw "Signature: unsupported private key alg: "+this.pubkeyAlgName}}}}}return this.hSign};this.signString=function(v){this.updateString(v);return this.sign()};this.signHex=function(v){this.updateHex(v);return this.sign()};this.verify=function(v){this.sHashHex=this.md.digest();if(typeof this.ecpubhex!="undefined"&&typeof this.eccurvename!="undefined"){var w=new KJUR.crypto.ECDSA({curve:this.eccurvename});return w.verifyHex(this.sHashHex,v,this.ecpubhex)}else{if(this.pubKey instanceof RSAKey&&this.pubkeyAlgName==="rsaandmgf1"){return this.pubKey.verifyWithMessageHashPSS(this.sHashHex,v,this.mdAlgName,this.pssSaltLen)}else{if(this.pubKey instanceof RSAKey&&this.pubkeyAlgName==="rsa"){return this.pubKey.verifyWithMessageHash(this.sHashHex,v)}else{if(KJUR.crypto.ECDSA!==undefined&&this.pubKey instanceof KJUR.crypto.ECDSA){return this.pubKey.verifyWithMessageHash(this.sHashHex,v)}else{if(KJUR.crypto.DSA!==undefined&&this.pubKey instanceof KJUR.crypto.DSA){return this.pubKey.verifyWithMessageHash(this.sHashHex,v)}else{throw "Signature: unsupported public key alg: "+this.pubkeyAlgName}}}}}};}};this.init=function(s,t){throw "init(key, pass) not supported for this alg:prov="+this.algProvName};this.updateString=function(s){throw "updateString(str) not supported for this alg:prov="+this.algProvName};this.updateHex=function(s){throw "updateHex(hex) not supported for this alg:prov="+this.algProvName};this.sign=function(){throw "sign() not supported for this alg:prov="+this.algProvName};this.signString=function(s){throw "digestString(str) not supported for this alg:prov="+this.algProvName};this.signHex=function(s){throw "digestHex(hex) not supported for this alg:prov="+this.algProvName};this.verify=function(s){throw "verify(hSigVal) not supported for this alg:prov="+this.algProvName};this.initParams=o;if(o!==undefined){if(o.alg!==undefined){this.algName=o.alg;if(o.prov===undefined){this.provName=KJUR.crypto.Util.DEFAULTPROVIDER[this.algName];}else{this.provName=o.prov;}this.algProvName=this.algName+":"+this.provName;this.setAlgAndProvider(this.algName,this.provName);this._setAlgNames();}if(o.psssaltlen!==undefined){this.pssSaltLen=o.psssaltlen;}if(o.prvkeypem!==undefined){if(o.prvkeypas!==undefined){throw "both prvkeypem and prvkeypas parameters not supported"}else{try{var q=KEYUTIL.getKey(o.prvkeypem);this.init(q);}catch(m){throw "fatal error to load pem private key: "+m}}}}};KJUR.crypto.Cipher=function(a){};KJUR.crypto.Cipher.encrypt=function(e,f,d){if(f instanceof RSAKey&&f.isPublic){var c=KJUR.crypto.Cipher.getAlgByKeyAndName(f,d);if(c==="RSA"){return f.encrypt(e)}if(c==="RSAOAEP"){return f.encryptOAEP(e,"sha1")}var b=c.match(/^RSAOAEP(\d+)$/);if(b!==null){return f.encryptOAEP(e,"sha"+b[1])}throw "Cipher.encrypt: unsupported algorithm for RSAKey: "+d}else{throw "Cipher.encrypt: unsupported key or algorithm"}};KJUR.crypto.Cipher.decrypt=function(e,f,d){if(f instanceof RSAKey&&f.isPrivate){var c=KJUR.crypto.Cipher.getAlgByKeyAndName(f,d);if(c==="RSA"){return f.decrypt(e)}if(c==="RSAOAEP"){return f.decryptOAEP(e,"sha1")}var b=c.match(/^RSAOAEP(\d+)$/);if(b!==null){return f.decryptOAEP(e,"sha"+b[1])}throw "Cipher.decrypt: unsupported algorithm for RSAKey: "+d}else{throw "Cipher.decrypt: unsupported key or algorithm"}};KJUR.crypto.Cipher.getAlgByKeyAndName=function(b,a){if(b instanceof RSAKey){if(":RSA:RSAOAEP:RSAOAEP224:RSAOAEP256:RSAOAEP384:RSAOAEP512:".indexOf(a)!=-1){return a}if(a===null||a===undefined){return "RSA"}throw "getAlgByKeyAndName: not supported algorithm name for RSAKey: "+a}throw "getAlgByKeyAndName: not supported algorithm name: "+a};KJUR.crypto.OID=new function(){this.oidhex2name={"2a864886f70d010101":"rsaEncryption","2a8648ce3d0201":"ecPublicKey","2a8648ce380401":"dsa","2a8648ce3d030107":"secp256r1","2b8104001f":"secp192k1","2b81040021":"secp224r1","2b8104000a":"secp256k1","2b81040023":"secp521r1","2b81040022":"secp384r1","2a8648ce380403":"SHA1withDSA","608648016503040301":"SHA224withDSA","608648016503040302":"SHA256withDSA",};};
+    if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.crypto=="undefined"||!KJUR.crypto){KJUR.crypto={};}KJUR.crypto.ECDSA=function(h){var e="secp256r1";var a=new SecureRandom();this.type="EC";this.isPrivate=false;this.isPublic=false;this.getBigRandom=function(i){return new BigInteger(i.bitLength(),a).mod(i.subtract(BigInteger.ONE)).add(BigInteger.ONE)};this.setNamedCurve=function(i){this.ecparams=KJUR.crypto.ECParameterDB.getByName(i);this.prvKeyHex=null;this.pubKeyHex=null;this.curveName=i;};this.setPrivateKeyHex=function(i){this.isPrivate=true;this.prvKeyHex=i;};this.setPublicKeyHex=function(i){this.isPublic=true;this.pubKeyHex=i;};this.getPublicKeyXYHex=function(){var k=this.pubKeyHex;if(k.substr(0,2)!=="04"){throw "this method supports uncompressed format(04) only"}var j=this.ecparams.keylen/4;if(k.length!==2+j*2){throw "malformed public key hex length"}var i={};i.x=k.substr(2,j);i.y=k.substr(2+j);return i};this.getShortNISTPCurveName=function(){var i=this.curveName;if(i==="secp256r1"||i==="NIST P-256"||i==="P-256"||i==="prime256v1"){return "P-256"}if(i==="secp384r1"||i==="NIST P-384"||i==="P-384"){return "P-384"}return null};this.generateKeyPairHex=function(){var k=this.ecparams.n;var n=this.getBigRandom(k);var l=this.ecparams.G.multiply(n);var q=l.getX().toBigInteger();var o=l.getY().toBigInteger();var i=this.ecparams.keylen/4;var m=("0000000000"+n.toString(16)).slice(-i);var r=("0000000000"+q.toString(16)).slice(-i);var p=("0000000000"+o.toString(16)).slice(-i);var j="04"+r+p;this.setPrivateKeyHex(m);this.setPublicKeyHex(j);return {ecprvhex:m,ecpubhex:j}};this.signWithMessageHash=function(i){return this.signHex(i,this.prvKeyHex)};this.signHex=function(o,j){var t=new BigInteger(j,16);var l=this.ecparams.n;var q=new BigInteger(o,16);do{var m=this.getBigRandom(l);var u=this.ecparams.G;var p=u.multiply(m);var i=p.getX().toBigInteger().mod(l);}while(i.compareTo(BigInteger.ZERO)<=0);var v=m.modInverse(l).multiply(q.add(t.multiply(i))).mod(l);return KJUR.crypto.ECDSA.biRSSigToASN1Sig(i,v)};this.sign=function(m,u){var q=u;var j=this.ecparams.n;var p=BigInteger.fromByteArrayUnsigned(m);do{var l=this.getBigRandom(j);var t=this.ecparams.G;var o=t.multiply(l);var i=o.getX().toBigInteger().mod(j);}while(i.compareTo(BigInteger.ZERO)<=0);var v=l.modInverse(j).multiply(p.add(q.multiply(i))).mod(j);return this.serializeSig(i,v)};this.verifyWithMessageHash=function(j,i){return this.verifyHex(j,i,this.pubKeyHex)};this.verifyHex=function(m,i,p){var l,j;var o=KJUR.crypto.ECDSA.parseSigHex(i);l=o.r;j=o.s;var k;k=ECPointFp.decodeFromHex(this.ecparams.curve,p);var n=new BigInteger(m,16);return this.verifyRaw(n,l,j,k)};this.verify=function(o,p,j){var l,i;if(Bitcoin.Util.isArray(p)){var n=this.parseSig(p);l=n.r;i=n.s;}else{if("object"===typeof p&&p.r&&p.s){l=p.r;i=p.s;}else{throw "Invalid value for signature"}}var k;if(j instanceof ECPointFp){k=j;}else{if(Bitcoin.Util.isArray(j)){k=ECPointFp.decodeFrom(this.ecparams.curve,j);}else{throw "Invalid format for pubkey value, must be byte array or ECPointFp"}}var m=BigInteger.fromByteArrayUnsigned(o);return this.verifyRaw(m,l,i,k)};this.verifyRaw=function(o,i,w,m){var l=this.ecparams.n;var u=this.ecparams.G;if(i.compareTo(BigInteger.ONE)<0||i.compareTo(l)>=0){return false}if(w.compareTo(BigInteger.ONE)<0||w.compareTo(l)>=0){return false}var p=w.modInverse(l);var k=o.multiply(p).mod(l);var j=i.multiply(p).mod(l);var q=u.multiply(k).add(m.multiply(j));var t=q.getX().toBigInteger().mod(l);return t.equals(i)};this.serializeSig=function(k,j){var l=k.toByteArraySigned();var i=j.toByteArraySigned();var m=[];m.push(2);m.push(l.length);m=m.concat(l);m.push(2);m.push(i.length);m=m.concat(i);m.unshift(m.length);m.unshift(48);return m};this.parseSig=function(n){var m;if(n[0]!=48){throw new Error("Signature not a valid DERSequence")}m=2;if(n[m]!=2){throw new Error("First element in signature must be a DERInteger")}var l=n.slice(m+2,m+2+n[m+1]);m+=2+n[m+1];if(n[m]!=2){throw new Error("Second element in signature must be a DERInteger")}var i=n.slice(m+2,m+2+n[m+1]);m+=2+n[m+1];var k=BigInteger.fromByteArrayUnsigned(l);var j=BigInteger.fromByteArrayUnsigned(i);return {r:k,s:j}};this.parseSigCompact=function(m){if(m.length!==65){throw "Signature has the wrong length"}var j=m[0]-27;if(j<0||j>7){throw "Invalid signature type"}var o=this.ecparams.n;var l=BigInteger.fromByteArrayUnsigned(m.slice(1,33)).mod(o);var k=BigInteger.fromByteArrayUnsigned(m.slice(33,65)).mod(o);return {r:l,s:k,i:j}};this.readPKCS5PrvKeyHex=function(l){var n=ASN1HEX;var m=KJUR.crypto.ECDSA.getName;var p=n.getVbyList;if(n.isASN1HEX(l)===false){throw "not ASN.1 hex string"}var i,k,o;try{i=p(l,0,[2,0],"06");k=p(l,0,[1],"04");try{o=p(l,0,[3,0],"03").substr(2);}catch(j){}}catch(j){throw "malformed PKCS#1/5 plain ECC private key"}this.curveName=m(i);if(this.curveName===undefined){throw "unsupported curve name"}this.setNamedCurve(this.curveName);this.setPublicKeyHex(o);this.setPrivateKeyHex(k);this.isPublic=false;};this.readPKCS8PrvKeyHex=function(l){var q=ASN1HEX;var i=KJUR.crypto.ECDSA.getName;var n=q.getVbyList;if(q.isASN1HEX(l)===false){throw "not ASN.1 hex string"}var j,p,m,k;try{j=n(l,0,[1,0],"06");p=n(l,0,[1,1],"06");m=n(l,0,[2,0,1],"04");try{k=n(l,0,[2,0,2,0],"03").substr(2);}catch(o){}}catch(o){throw "malformed PKCS#8 plain ECC private key"}this.curveName=i(p);if(this.curveName===undefined){throw "unsupported curve name"}this.setNamedCurve(this.curveName);this.setPublicKeyHex(k);this.setPrivateKeyHex(m);this.isPublic=false;};this.readPKCS8PubKeyHex=function(l){var n=ASN1HEX;var m=KJUR.crypto.ECDSA.getName;var p=n.getVbyList;if(n.isASN1HEX(l)===false){throw "not ASN.1 hex string"}var k,i,o;try{k=p(l,0,[0,0],"06");i=p(l,0,[0,1],"06");o=p(l,0,[1],"03").substr(2);}catch(j){throw "malformed PKCS#8 ECC public key"}this.curveName=m(i);if(this.curveName===null){throw "unsupported curve name"}this.setNamedCurve(this.curveName);this.setPublicKeyHex(o);};this.readCertPubKeyHex=function(k,p){if(p!==5){p=6;}var m=ASN1HEX;var l=KJUR.crypto.ECDSA.getName;var o=m.getVbyList;if(m.isASN1HEX(k)===false){throw "not ASN.1 hex string"}var i,n;try{i=o(k,0,[0,p,0,1],"06");n=o(k,0,[0,p,1],"03").substr(2);}catch(j){throw "malformed X.509 certificate ECC public key"}this.curveName=l(i);if(this.curveName===null){throw "unsupported curve name"}this.setNamedCurve(this.curveName);this.setPublicKeyHex(n);};if(h!==undefined){if(h.curve!==undefined){this.curveName=h.curve;}}if(this.curveName===undefined){this.curveName=e;}this.setNamedCurve(this.curveName);if(h!==undefined){if(h.prv!==undefined){this.setPrivateKeyHex(h.prv);}if(h.pub!==undefined){this.setPublicKeyHex(h.pub);}}};KJUR.crypto.ECDSA.parseSigHex=function(a){var b=KJUR.crypto.ECDSA.parseSigHexInHexRS(a);var d=new BigInteger(b.r,16);var c=new BigInteger(b.s,16);return {r:d,s:c}};KJUR.crypto.ECDSA.parseSigHexInHexRS=function(f){var j=ASN1HEX;var i=j.getChildIdx;var g=j.getV;if(f.substr(0,2)!="30"){throw "signature is not a ASN.1 sequence"}var h=i(f,0);if(h.length!=2){throw "number of signature ASN.1 sequence elements seem wrong"}var e=h[0];var d=h[1];if(f.substr(e,2)!="02"){throw "1st item of sequene of signature is not ASN.1 integer"}if(f.substr(d,2)!="02"){throw "2nd item of sequene of signature is not ASN.1 integer"}var c=g(f,e);var b=g(f,d);return {r:c,s:b}};KJUR.crypto.ECDSA.asn1SigToConcatSig=function(c){var d=KJUR.crypto.ECDSA.parseSigHexInHexRS(c);var b=d.r;var a=d.s;if(b.substr(0,2)=="00"&&(b.length%32)==2){b=b.substr(2);}if(a.substr(0,2)=="00"&&(a.length%32)==2){a=a.substr(2);}if((b.length%32)==30){b="00"+b;}if((a.length%32)==30){a="00"+a;}if(b.length%32!=0){throw "unknown ECDSA sig r length error"}if(a.length%32!=0){throw "unknown ECDSA sig s length error"}return b+a};KJUR.crypto.ECDSA.concatSigToASN1Sig=function(a){if((((a.length/2)*8)%(16*8))!=0){throw "unknown ECDSA concatinated r-s sig  length error"}var c=a.substr(0,a.length/2);var b=a.substr(a.length/2);return KJUR.crypto.ECDSA.hexRSSigToASN1Sig(c,b)};KJUR.crypto.ECDSA.hexRSSigToASN1Sig=function(b,a){var d=new BigInteger(b,16);var c=new BigInteger(a,16);return KJUR.crypto.ECDSA.biRSSigToASN1Sig(d,c)};KJUR.crypto.ECDSA.biRSSigToASN1Sig=function(f,d){var c=KJUR.asn1;var b=new c.DERInteger({bigint:f});var a=new c.DERInteger({bigint:d});var e=new c.DERSequence({array:[b,a]});return e.getEncodedHex()};KJUR.crypto.ECDSA.getName=function(a){if(a==="2a8648ce3d030107"){return "secp256r1"}if(a==="2b8104000a"){return "secp256k1"}if(a==="2b81040022"){return "secp384r1"}if("|secp256r1|NIST P-256|P-256|prime256v1|".indexOf(a)!==-1){return "secp256r1"}if("|secp256k1|".indexOf(a)!==-1){return "secp256k1"}if("|secp384r1|NIST P-384|P-384|".indexOf(a)!==-1){return "secp384r1"}return null};
+    if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.crypto=="undefined"||!KJUR.crypto){KJUR.crypto={};}KJUR.crypto.ECParameterDB=new function(){var b={};var c={};function a(d){return new BigInteger(d,16)}this.getByName=function(e){var d=e;if(typeof c[d]!="undefined"){d=c[e];}if(typeof b[d]!="undefined"){return b[d]}throw "unregistered EC curve name: "+d};this.regist=function(A,l,o,g,m,e,j,f,k,u,d,x){b[A]={};var s=a(o);var z=a(g);var y=a(m);var t=a(e);var w=a(j);var r=new ECCurveFp(s,z,y);var q=r.decodePointHex("04"+f+k);b[A]["name"]=A;b[A]["keylen"]=l;b[A]["curve"]=r;b[A]["G"]=q;b[A]["n"]=t;b[A]["h"]=w;b[A]["oid"]=d;b[A]["info"]=x;for(var v=0;v<u.length;v++){c[u[v]]=A;}};};KJUR.crypto.ECParameterDB.regist("secp128r1",128,"FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF","FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC","E87579C11079F43DD824993C2CEE5ED3","FFFFFFFE0000000075A30D1B9038A115","1","161FF7528B899B2D0C28607CA52C5B86","CF5AC8395BAFEB13C02DA292DDED7A83",[],"","secp128r1 : SECG curve over a 128 bit prime field");KJUR.crypto.ECParameterDB.regist("secp160k1",160,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFAC73","0","7","0100000000000000000001B8FA16DFAB9ACA16B6B3","1","3B4C382CE37AA192A4019E763036F4F5DD4D7EBB","938CF935318FDCED6BC28286531733C3F03C4FEE",[],"","secp160k1 : SECG curve over a 160 bit prime field");KJUR.crypto.ECParameterDB.regist("secp160r1",160,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC","1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45","0100000000000000000001F4C8F927AED3CA752257","1","4A96B5688EF573284664698968C38BB913CBFC82","23A628553168947D59DCC912042351377AC5FB32",[],"","secp160r1 : SECG curve over a 160 bit prime field");KJUR.crypto.ECParameterDB.regist("secp192k1",192,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFEE37","0","3","FFFFFFFFFFFFFFFFFFFFFFFE26F2FC170F69466A74DEFD8D","1","DB4FF10EC057E9AE26B07D0280B7F4341DA5D1B1EAE06C7D","9B2F2F6D9C5628A7844163D015BE86344082AA88D95E2F9D",[]);KJUR.crypto.ECParameterDB.regist("secp192r1",192,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFC","64210519E59C80E70FA7E9AB72243049FEB8DEECC146B9B1","FFFFFFFFFFFFFFFFFFFFFFFF99DEF836146BC9B1B4D22831","1","188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012","07192B95FFC8DA78631011ED6B24CDD573F977A11E794811",[]);KJUR.crypto.ECParameterDB.regist("secp224r1",224,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFE","B4050A850C04B3ABF54132565044B0B7D7BFD8BA270B39432355FFB4","FFFFFFFFFFFFFFFFFFFFFFFFFFFF16A2E0B8F03E13DD29455C5C2A3D","1","B70E0CBD6BB4BF7F321390B94A03C1D356C21122343280D6115C1D21","BD376388B5F723FB4C22DFE6CD4375A05A07476444D5819985007E34",[]);KJUR.crypto.ECParameterDB.regist("secp256k1",256,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F","0","7","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141","1","79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798","483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8",[]);KJUR.crypto.ECParameterDB.regist("secp256r1",256,"FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF","FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC","5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B","FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551","1","6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296","4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",["NIST P-256","P-256","prime256v1"]);KJUR.crypto.ECParameterDB.regist("secp384r1",384,"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFC","B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF","FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973","1","AA87CA22BE8B05378EB1C71EF320AD746E1D3B628BA79B9859F741E082542A385502F25DBF55296C3A545E3872760AB7","3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f",["NIST P-384","P-384"]);KJUR.crypto.ECParameterDB.regist("secp521r1",521,"1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF","1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC","051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00","1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409","1","C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66","011839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650",["NIST P-521","P-521"]);
+    var KEYUTIL=function(){var d=function(p,r,q){return k(CryptoJS.AES,p,r,q)};var e=function(p,r,q){return k(CryptoJS.TripleDES,p,r,q)};var a=function(p,r,q){return k(CryptoJS.DES,p,r,q)};var k=function(s,x,u,q){var r=CryptoJS.enc.Hex.parse(x);var w=CryptoJS.enc.Hex.parse(u);var p=CryptoJS.enc.Hex.parse(q);var t={};t.key=w;t.iv=p;t.ciphertext=r;var v=s.decrypt(t,w,{iv:p});return CryptoJS.enc.Hex.stringify(v)};var l=function(p,r,q){return g(CryptoJS.AES,p,r,q)};var o=function(p,r,q){return g(CryptoJS.TripleDES,p,r,q)};var f=function(p,r,q){return g(CryptoJS.DES,p,r,q)};var g=function(t,y,v,q){var s=CryptoJS.enc.Hex.parse(y);var x=CryptoJS.enc.Hex.parse(v);var p=CryptoJS.enc.Hex.parse(q);var w=t.encrypt(s,x,{iv:p});var r=CryptoJS.enc.Hex.parse(w.toString());var u=CryptoJS.enc.Base64.stringify(r);return u};var i={"AES-256-CBC":{proc:d,eproc:l,keylen:32,ivlen:16},"AES-192-CBC":{proc:d,eproc:l,keylen:24,ivlen:16},"AES-128-CBC":{proc:d,eproc:l,keylen:16,ivlen:16},"DES-EDE3-CBC":{proc:e,eproc:o,keylen:24,ivlen:8},"DES-CBC":{proc:a,eproc:f,keylen:8,ivlen:8}};var m=function(p){var r=CryptoJS.lib.WordArray.random(p);var q=CryptoJS.enc.Hex.stringify(r);return q};var n=function(v){var w={};var q=v.match(new RegExp("DEK-Info: ([^,]+),([0-9A-Fa-f]+)","m"));if(q){w.cipher=q[1];w.ivsalt=q[2];}var p=v.match(new RegExp("-----BEGIN ([A-Z]+) PRIVATE KEY-----"));if(p){w.type=p[1];}var u=-1;var x=0;if(v.indexOf("\r\n\r\n")!=-1){u=v.indexOf("\r\n\r\n");x=2;}if(v.indexOf("\n\n")!=-1){u=v.indexOf("\n\n");x=1;}var t=v.indexOf("-----END");if(u!=-1&&t!=-1){var r=v.substring(u+x*2,t-x);r=r.replace(/\s+/g,"");w.data=r;}return w};var j=function(q,y,p){var v=p.substring(0,16);var t=CryptoJS.enc.Hex.parse(v);var r=CryptoJS.enc.Utf8.parse(y);var u=i[q]["keylen"]+i[q]["ivlen"];var x="";var w=null;for(;;){var s=CryptoJS.algo.MD5.create();if(w!=null){s.update(w);}s.update(r);s.update(t);w=s.finalize();x=x+CryptoJS.enc.Hex.stringify(w);if(x.length>=u*2){break}}var z={};z.keyhex=x.substr(0,i[q]["keylen"]*2);z.ivhex=x.substr(i[q]["keylen"]*2,i[q]["ivlen"]*2);return z};var b=function(p,v,r,w){var s=CryptoJS.enc.Base64.parse(p);var q=CryptoJS.enc.Hex.stringify(s);var u=i[v]["proc"];var t=u(q,r,w);return t};var h=function(p,s,q,u){var r=i[s]["eproc"];var t=r(p,q,u);return t};return {version:"1.0.0",parsePKCS5PEM:function(p){return n(p)},getKeyAndUnusedIvByPasscodeAndIvsalt:function(q,p,r){return j(q,p,r)},decryptKeyB64:function(p,r,q,s){return b(p,r,q,s)},getDecryptedKeyHex:function(y,x){var q=n(y);var r=q.cipher;var p=q.ivsalt;var s=q.data;var w=j(r,x,p);var v=w.keyhex;var u=b(s,r,v,p);return u},getEncryptedPKCS5PEMFromPrvKeyHex:function(x,s,A,t,r){var p="";if(typeof t=="undefined"||t==null){t="AES-256-CBC";}if(typeof i[t]=="undefined"){throw "KEYUTIL unsupported algorithm: "+t}if(typeof r=="undefined"||r==null){var v=i[t]["ivlen"];var u=m(v);r=u.toUpperCase();}var z=j(t,A,r);var y=z.keyhex;var w=h(s,t,y,r);var q=w.replace(/(.{64})/g,"$1\r\n");var p="-----BEGIN "+x+" PRIVATE KEY-----\r\n";p+="Proc-Type: 4,ENCRYPTED\r\n";p+="DEK-Info: "+t+","+r+"\r\n";p+="\r\n";p+=q;p+="\r\n-----END "+x+" PRIVATE KEY-----\r\n";return p},parseHexOfEncryptedPKCS8:function(y){var B=ASN1HEX;var z=B.getChildIdx;var w=B.getV;var t={};var r=z(y,0);if(r.length!=2){throw "malformed format: SEQUENCE(0).items != 2: "+r.length}t.ciphertext=w(y,r[1]);var A=z(y,r[0]);if(A.length!=2){throw "malformed format: SEQUENCE(0.0).items != 2: "+A.length}if(w(y,A[0])!="2a864886f70d01050d"){throw "this only supports pkcs5PBES2"}var p=z(y,A[1]);if(A.length!=2){throw "malformed format: SEQUENCE(0.0.1).items != 2: "+p.length}var q=z(y,p[1]);if(q.length!=2){throw "malformed format: SEQUENCE(0.0.1.1).items != 2: "+q.length}if(w(y,q[0])!="2a864886f70d0307"){throw "this only supports TripleDES"}t.encryptionSchemeAlg="TripleDES";t.encryptionSchemeIV=w(y,q[1]);var s=z(y,p[0]);if(s.length!=2){throw "malformed format: SEQUENCE(0.0.1.0).items != 2: "+s.length}if(w(y,s[0])!="2a864886f70d01050c"){throw "this only supports pkcs5PBKDF2"}var x=z(y,s[1]);if(x.length<2){throw "malformed format: SEQUENCE(0.0.1.0.1).items < 2: "+x.length}t.pbkdf2Salt=w(y,x[0]);var u=w(y,x[1]);try{t.pbkdf2Iter=parseInt(u,16);}catch(v){throw "malformed format pbkdf2Iter: "+u}return t},getPBKDF2KeyHexFromParam:function(u,p){var t=CryptoJS.enc.Hex.parse(u.pbkdf2Salt);var q=u.pbkdf2Iter;var s=CryptoJS.PBKDF2(p,t,{keySize:192/32,iterations:q});var r=CryptoJS.enc.Hex.stringify(s);return r},_getPlainPKCS8HexFromEncryptedPKCS8PEM:function(x,y){var r=pemtohex(x,"ENCRYPTED PRIVATE KEY");var p=this.parseHexOfEncryptedPKCS8(r);var u=KEYUTIL.getPBKDF2KeyHexFromParam(p,y);var v={};v.ciphertext=CryptoJS.enc.Hex.parse(p.ciphertext);var t=CryptoJS.enc.Hex.parse(u);var s=CryptoJS.enc.Hex.parse(p.encryptionSchemeIV);var w=CryptoJS.TripleDES.decrypt(v,t,{iv:s});var q=CryptoJS.enc.Hex.stringify(w);return q},getKeyFromEncryptedPKCS8PEM:function(s,q){var p=this._getPlainPKCS8HexFromEncryptedPKCS8PEM(s,q);var r=this.getKeyFromPlainPrivatePKCS8Hex(p);return r},parsePlainPrivatePKCS8Hex:function(s){var v=ASN1HEX;var u=v.getChildIdx;var t=v.getV;var q={};q.algparam=null;if(s.substr(0,2)!="30"){throw "malformed plain PKCS8 private key(code:001)"}var r=u(s,0);if(r.length!=3){throw "malformed plain PKCS8 private key(code:002)"}if(s.substr(r[1],2)!="30"){throw "malformed PKCS8 private key(code:003)"}var p=u(s,r[1]);if(p.length!=2){throw "malformed PKCS8 private key(code:004)"}if(s.substr(p[0],2)!="06"){throw "malformed PKCS8 private key(code:005)"}q.algoid=t(s,p[0]);if(s.substr(p[1],2)=="06"){q.algparam=t(s,p[1]);}if(s.substr(r[2],2)!="04"){throw "malformed PKCS8 private key(code:006)"}q.keyidx=v.getVidx(s,r[2]);return q},getKeyFromPlainPrivatePKCS8PEM:function(q){var p=pemtohex(q,"PRIVATE KEY");var r=this.getKeyFromPlainPrivatePKCS8Hex(p);return r},getKeyFromPlainPrivatePKCS8Hex:function(p){var q=this.parsePlainPrivatePKCS8Hex(p);var r;if(q.algoid=="2a864886f70d010101"){r=new RSAKey();}else{if(q.algoid=="2a8648ce380401"){r=new KJUR.crypto.DSA();}else{if(q.algoid=="2a8648ce3d0201"){r=new KJUR.crypto.ECDSA();}else{throw "unsupported private key algorithm"}}}r.readPKCS8PrvKeyHex(p);return r},_getKeyFromPublicPKCS8Hex:function(q){var p;var r=ASN1HEX.getVbyList(q,0,[0,0],"06");if(r==="2a864886f70d010101"){p=new RSAKey();}else{if(r==="2a8648ce380401"){p=new KJUR.crypto.DSA();}else{if(r==="2a8648ce3d0201"){p=new KJUR.crypto.ECDSA();}else{throw "unsupported PKCS#8 public key hex"}}}p.readPKCS8PubKeyHex(q);return p},parsePublicRawRSAKeyHex:function(r){var u=ASN1HEX;var t=u.getChildIdx;var s=u.getV;var p={};if(r.substr(0,2)!="30"){throw "malformed RSA key(code:001)"}var q=t(r,0);if(q.length!=2){throw "malformed RSA key(code:002)"}if(r.substr(q[0],2)!="02"){throw "malformed RSA key(code:003)"}p.n=s(r,q[0]);if(r.substr(q[1],2)!="02"){throw "malformed RSA key(code:004)"}p.e=s(r,q[1]);return p},parsePublicPKCS8Hex:function(t){var v=ASN1HEX;var u=v.getChildIdx;var s=v.getV;var q={};q.algparam=null;var r=u(t,0);if(r.length!=2){throw "outer DERSequence shall have 2 elements: "+r.length}var w=r[0];if(t.substr(w,2)!="30"){throw "malformed PKCS8 public key(code:001)"}var p=u(t,w);if(p.length!=2){throw "malformed PKCS8 public key(code:002)"}if(t.substr(p[0],2)!="06"){throw "malformed PKCS8 public key(code:003)"}q.algoid=s(t,p[0]);if(t.substr(p[1],2)=="06"){q.algparam=s(t,p[1]);}else{if(t.substr(p[1],2)=="30"){q.algparam={};q.algparam.p=v.getVbyList(t,p[1],[0],"02");q.algparam.q=v.getVbyList(t,p[1],[1],"02");q.algparam.g=v.getVbyList(t,p[1],[2],"02");}}if(t.substr(r[1],2)!="03"){throw "malformed PKCS8 public key(code:004)"}q.key=s(t,r[1]).substr(2);return q},}}();KEYUTIL.getKey=function(l,k,n){var G=ASN1HEX,L=G.getChildIdx,v=G.getV,d=G.getVbyList,c=KJUR.crypto,i=c.ECDSA,C=c.DSA,w=RSAKey,M=pemtohex,F=KEYUTIL;if(typeof w!="undefined"&&l instanceof w){return l}if(typeof i!="undefined"&&l instanceof i){return l}if(typeof C!="undefined"&&l instanceof C){return l}if(l.curve!==undefined&&l.xy!==undefined&&l.d===undefined){return new i({pub:l.xy,curve:l.curve})}if(l.curve!==undefined&&l.d!==undefined){return new i({prv:l.d,curve:l.curve})}if(l.kty===undefined&&l.n!==undefined&&l.e!==undefined&&l.d===undefined){var P=new w();P.setPublic(l.n,l.e);return P}if(l.kty===undefined&&l.n!==undefined&&l.e!==undefined&&l.d!==undefined&&l.p!==undefined&&l.q!==undefined&&l.dp!==undefined&&l.dq!==undefined&&l.co!==undefined&&l.qi===undefined){var P=new w();P.setPrivateEx(l.n,l.e,l.d,l.p,l.q,l.dp,l.dq,l.co);return P}if(l.kty===undefined&&l.n!==undefined&&l.e!==undefined&&l.d!==undefined&&l.p===undefined){var P=new w();P.setPrivate(l.n,l.e,l.d);return P}if(l.p!==undefined&&l.q!==undefined&&l.g!==undefined&&l.y!==undefined&&l.x===undefined){var P=new C();P.setPublic(l.p,l.q,l.g,l.y);return P}if(l.p!==undefined&&l.q!==undefined&&l.g!==undefined&&l.y!==undefined&&l.x!==undefined){var P=new C();P.setPrivate(l.p,l.q,l.g,l.y,l.x);return P}if(l.kty==="RSA"&&l.n!==undefined&&l.e!==undefined&&l.d===undefined){var P=new w();P.setPublic(b64utohex(l.n),b64utohex(l.e));return P}if(l.kty==="RSA"&&l.n!==undefined&&l.e!==undefined&&l.d!==undefined&&l.p!==undefined&&l.q!==undefined&&l.dp!==undefined&&l.dq!==undefined&&l.qi!==undefined){var P=new w();P.setPrivateEx(b64utohex(l.n),b64utohex(l.e),b64utohex(l.d),b64utohex(l.p),b64utohex(l.q),b64utohex(l.dp),b64utohex(l.dq),b64utohex(l.qi));return P}if(l.kty==="RSA"&&l.n!==undefined&&l.e!==undefined&&l.d!==undefined){var P=new w();P.setPrivate(b64utohex(l.n),b64utohex(l.e),b64utohex(l.d));return P}if(l.kty==="EC"&&l.crv!==undefined&&l.x!==undefined&&l.y!==undefined&&l.d===undefined){var j=new i({curve:l.crv});var t=j.ecparams.keylen/4;var B=("0000000000"+b64utohex(l.x)).slice(-t);var z=("0000000000"+b64utohex(l.y)).slice(-t);var u="04"+B+z;j.setPublicKeyHex(u);return j}if(l.kty==="EC"&&l.crv!==undefined&&l.x!==undefined&&l.y!==undefined&&l.d!==undefined){var j=new i({curve:l.crv});var t=j.ecparams.keylen/4;var B=("0000000000"+b64utohex(l.x)).slice(-t);var z=("0000000000"+b64utohex(l.y)).slice(-t);var u="04"+B+z;var b=("0000000000"+b64utohex(l.d)).slice(-t);j.setPublicKeyHex(u);j.setPrivateKeyHex(b);return j}if(n==="pkcs5prv"){var J=l,G=ASN1HEX,N,P;N=L(J,0);if(N.length===9){P=new w();P.readPKCS5PrvKeyHex(J);}else{if(N.length===6){P=new C();P.readPKCS5PrvKeyHex(J);}else{if(N.length>2&&J.substr(N[1],2)==="04"){P=new i();P.readPKCS5PrvKeyHex(J);}else{throw "unsupported PKCS#1/5 hexadecimal key"}}}return P}if(n==="pkcs8prv"){var P=F.getKeyFromPlainPrivatePKCS8Hex(l);return P}if(n==="pkcs8pub"){return F._getKeyFromPublicPKCS8Hex(l)}if(n==="x509pub"){return X509.getPublicKeyFromCertHex(l)}if(l.indexOf("-END CERTIFICATE-",0)!=-1||l.indexOf("-END X509 CERTIFICATE-",0)!=-1||l.indexOf("-END TRUSTED CERTIFICATE-",0)!=-1){return X509.getPublicKeyFromCertPEM(l)}if(l.indexOf("-END PUBLIC KEY-")!=-1){var O=pemtohex(l,"PUBLIC KEY");return F._getKeyFromPublicPKCS8Hex(O)}if(l.indexOf("-END RSA PRIVATE KEY-")!=-1&&l.indexOf("4,ENCRYPTED")==-1){var m=M(l,"RSA PRIVATE KEY");return F.getKey(m,null,"pkcs5prv")}if(l.indexOf("-END DSA PRIVATE KEY-")!=-1&&l.indexOf("4,ENCRYPTED")==-1){var I=M(l,"DSA PRIVATE KEY");var E=d(I,0,[1],"02");var D=d(I,0,[2],"02");var K=d(I,0,[3],"02");var r=d(I,0,[4],"02");var s=d(I,0,[5],"02");var P=new C();P.setPrivate(new BigInteger(E,16),new BigInteger(D,16),new BigInteger(K,16),new BigInteger(r,16),new BigInteger(s,16));return P}if(l.indexOf("-END PRIVATE KEY-")!=-1){return F.getKeyFromPlainPrivatePKCS8PEM(l)}if(l.indexOf("-END RSA PRIVATE KEY-")!=-1&&l.indexOf("4,ENCRYPTED")!=-1){var o=F.getDecryptedKeyHex(l,k);var H=new RSAKey();H.readPKCS5PrvKeyHex(o);return H}if(l.indexOf("-END EC PRIVATE KEY-")!=-1&&l.indexOf("4,ENCRYPTED")!=-1){var I=F.getDecryptedKeyHex(l,k);var P=d(I,0,[1],"04");var f=d(I,0,[2,0],"06");var A=d(I,0,[3,0],"03").substr(2);var e="";if(KJUR.crypto.OID.oidhex2name[f]!==undefined){e=KJUR.crypto.OID.oidhex2name[f];}else{throw "undefined OID(hex) in KJUR.crypto.OID: "+f}var j=new i({curve:e});j.setPublicKeyHex(A);j.setPrivateKeyHex(P);j.isPublic=false;return j}if(l.indexOf("-END DSA PRIVATE KEY-")!=-1&&l.indexOf("4,ENCRYPTED")!=-1){var I=F.getDecryptedKeyHex(l,k);var E=d(I,0,[1],"02");var D=d(I,0,[2],"02");var K=d(I,0,[3],"02");var r=d(I,0,[4],"02");var s=d(I,0,[5],"02");var P=new C();P.setPrivate(new BigInteger(E,16),new BigInteger(D,16),new BigInteger(K,16),new BigInteger(r,16),new BigInteger(s,16));return P}if(l.indexOf("-END ENCRYPTED PRIVATE KEY-")!=-1){return F.getKeyFromEncryptedPKCS8PEM(l,k)}throw "not supported argument"};KEYUTIL.generateKeypair=function(a,c){if(a=="RSA"){var b=c;var h=new RSAKey();h.generate(b,"10001");h.isPrivate=true;h.isPublic=true;var f=new RSAKey();var e=h.n.toString(16);var i=h.e.toString(16);f.setPublic(e,i);f.isPrivate=false;f.isPublic=true;var k={};k.prvKeyObj=h;k.pubKeyObj=f;return k}else{if(a=="EC"){var d=c;var g=new KJUR.crypto.ECDSA({curve:d});var j=g.generateKeyPairHex();var h=new KJUR.crypto.ECDSA({curve:d});h.setPublicKeyHex(j.ecpubhex);h.setPrivateKeyHex(j.ecprvhex);h.isPrivate=true;h.isPublic=false;var f=new KJUR.crypto.ECDSA({curve:d});f.setPublicKeyHex(j.ecpubhex);f.isPrivate=false;f.isPublic=true;var k={};k.prvKeyObj=h;k.pubKeyObj=f;return k}else{throw "unknown algorithm: "+a}}};KEYUTIL.getPEM=function(b,D,y,m,q,j){var F=KJUR,k=F.asn1,z=k.DERObjectIdentifier,f=k.DERInteger,l=k.ASN1Util.newObject,a=k.x509,C=a.SubjectPublicKeyInfo,e=F.crypto,u=e.DSA,r=e.ECDSA,n=RSAKey;function A(s){var G=l({seq:[{"int":0},{"int":{bigint:s.n}},{"int":s.e},{"int":{bigint:s.d}},{"int":{bigint:s.p}},{"int":{bigint:s.q}},{"int":{bigint:s.dmp1}},{"int":{bigint:s.dmq1}},{"int":{bigint:s.coeff}}]});return G}function B(G){var s=l({seq:[{"int":1},{octstr:{hex:G.prvKeyHex}},{tag:["a0",true,{oid:{name:G.curveName}}]},{tag:["a1",true,{bitstr:{hex:"00"+G.pubKeyHex}}]}]});return s}function x(s){var G=l({seq:[{"int":0},{"int":{bigint:s.p}},{"int":{bigint:s.q}},{"int":{bigint:s.g}},{"int":{bigint:s.y}},{"int":{bigint:s.x}}]});return G}if(((n!==undefined&&b instanceof n)||(u!==undefined&&b instanceof u)||(r!==undefined&&b instanceof r))&&b.isPublic==true&&(D===undefined||D=="PKCS8PUB")){var E=new C(b);var w=E.getEncodedHex();return hextopem(w,"PUBLIC KEY")}if(D=="PKCS1PRV"&&n!==undefined&&b instanceof n&&(y===undefined||y==null)&&b.isPrivate==true){var E=A(b);var w=E.getEncodedHex();return hextopem(w,"RSA PRIVATE KEY")}if(D=="PKCS1PRV"&&r!==undefined&&b instanceof r&&(y===undefined||y==null)&&b.isPrivate==true){var i=new z({name:b.curveName});var v=i.getEncodedHex();var h=B(b);var t=h.getEncodedHex();var p="";p+=hextopem(v,"EC PARAMETERS");p+=hextopem(t,"EC PRIVATE KEY");return p}if(D=="PKCS1PRV"&&u!==undefined&&b instanceof u&&(y===undefined||y==null)&&b.isPrivate==true){var E=x(b);var w=E.getEncodedHex();return hextopem(w,"DSA PRIVATE KEY")}if(D=="PKCS5PRV"&&n!==undefined&&b instanceof n&&(y!==undefined&&y!=null)&&b.isPrivate==true){var E=A(b);var w=E.getEncodedHex();if(m===undefined){m="DES-EDE3-CBC";}return this.getEncryptedPKCS5PEMFromPrvKeyHex("RSA",w,y,m,j)}if(D=="PKCS5PRV"&&r!==undefined&&b instanceof r&&(y!==undefined&&y!=null)&&b.isPrivate==true){var E=B(b);var w=E.getEncodedHex();if(m===undefined){m="DES-EDE3-CBC";}return this.getEncryptedPKCS5PEMFromPrvKeyHex("EC",w,y,m,j)}if(D=="PKCS5PRV"&&u!==undefined&&b instanceof u&&(y!==undefined&&y!=null)&&b.isPrivate==true){var E=x(b);var w=E.getEncodedHex();if(m===undefined){m="DES-EDE3-CBC";}return this.getEncryptedPKCS5PEMFromPrvKeyHex("DSA",w,y,m,j)}var o=function(G,s){var I=c(G,s);var H=new l({seq:[{seq:[{oid:{name:"pkcs5PBES2"}},{seq:[{seq:[{oid:{name:"pkcs5PBKDF2"}},{seq:[{octstr:{hex:I.pbkdf2Salt}},{"int":I.pbkdf2Iter}]}]},{seq:[{oid:{name:"des-EDE3-CBC"}},{octstr:{hex:I.encryptionSchemeIV}}]}]}]},{octstr:{hex:I.ciphertext}}]});return H.getEncodedHex()};var c=function(N,O){var H=100;var M=CryptoJS.lib.WordArray.random(8);var L="DES-EDE3-CBC";var s=CryptoJS.lib.WordArray.random(8);var I=CryptoJS.PBKDF2(O,M,{keySize:192/32,iterations:H});var J=CryptoJS.enc.Hex.parse(N);var K=CryptoJS.TripleDES.encrypt(J,I,{iv:s})+"";var G={};G.ciphertext=K;G.pbkdf2Salt=CryptoJS.enc.Hex.stringify(M);G.pbkdf2Iter=H;G.encryptionSchemeAlg=L;G.encryptionSchemeIV=CryptoJS.enc.Hex.stringify(s);return G};if(D=="PKCS8PRV"&&n!=undefined&&b instanceof n&&b.isPrivate==true){var g=A(b);var d=g.getEncodedHex();var E=l({seq:[{"int":0},{seq:[{oid:{name:"rsaEncryption"}},{"null":true}]},{octstr:{hex:d}}]});var w=E.getEncodedHex();if(y===undefined||y==null){return hextopem(w,"PRIVATE KEY")}else{var t=o(w,y);return hextopem(t,"ENCRYPTED PRIVATE KEY")}}if(D=="PKCS8PRV"&&r!==undefined&&b instanceof r&&b.isPrivate==true){var g=new l({seq:[{"int":1},{octstr:{hex:b.prvKeyHex}},{tag:["a1",true,{bitstr:{hex:"00"+b.pubKeyHex}}]}]});var d=g.getEncodedHex();var E=l({seq:[{"int":0},{seq:[{oid:{name:"ecPublicKey"}},{oid:{name:b.curveName}}]},{octstr:{hex:d}}]});var w=E.getEncodedHex();if(y===undefined||y==null){return hextopem(w,"PRIVATE KEY")}else{var t=o(w,y);return hextopem(t,"ENCRYPTED PRIVATE KEY")}}if(D=="PKCS8PRV"&&u!==undefined&&b instanceof u&&b.isPrivate==true){var g=new f({bigint:b.x});var d=g.getEncodedHex();var E=l({seq:[{"int":0},{seq:[{oid:{name:"dsa"}},{seq:[{"int":{bigint:b.p}},{"int":{bigint:b.q}},{"int":{bigint:b.g}}]}]},{octstr:{hex:d}}]});var w=E.getEncodedHex();if(y===undefined||y==null){return hextopem(w,"PRIVATE KEY")}else{var t=o(w,y);return hextopem(t,"ENCRYPTED PRIVATE KEY")}}throw "unsupported object nor format"};KEYUTIL.getKeyFromCSRPEM=function(b){var a=pemtohex(b,"CERTIFICATE REQUEST");var c=KEYUTIL.getKeyFromCSRHex(a);return c};KEYUTIL.getKeyFromCSRHex=function(a){var c=KEYUTIL.parseCSRHex(a);var b=KEYUTIL.getKey(c.p8pubkeyhex,null,"pkcs8pub");return b};KEYUTIL.parseCSRHex=function(d){var i=ASN1HEX;var f=i.getChildIdx;var c=i.getTLV;var b={};var g=d;if(g.substr(0,2)!="30"){throw "malformed CSR(code:001)"}var e=f(g,0);if(e.length<1){throw "malformed CSR(code:002)"}if(g.substr(e[0],2)!="30"){throw "malformed CSR(code:003)"}var a=f(g,e[0]);if(a.length<3){throw "malformed CSR(code:004)"}b.p8pubkeyhex=c(g,a[2]);return b};KEYUTIL.getJWKFromKey=function(d){var b={};if(d instanceof RSAKey&&d.isPrivate){b.kty="RSA";b.n=hextob64u(d.n.toString(16));b.e=hextob64u(d.e.toString(16));b.d=hextob64u(d.d.toString(16));b.p=hextob64u(d.p.toString(16));b.q=hextob64u(d.q.toString(16));b.dp=hextob64u(d.dmp1.toString(16));b.dq=hextob64u(d.dmq1.toString(16));b.qi=hextob64u(d.coeff.toString(16));return b}else{if(d instanceof RSAKey&&d.isPublic){b.kty="RSA";b.n=hextob64u(d.n.toString(16));b.e=hextob64u(d.e.toString(16));return b}else{if(d instanceof KJUR.crypto.ECDSA&&d.isPrivate){var a=d.getShortNISTPCurveName();if(a!=="P-256"&&a!=="P-384"){throw "unsupported curve name for JWT: "+a}var c=d.getPublicKeyXYHex();b.kty="EC";b.crv=a;b.x=hextob64u(c.x);b.y=hextob64u(c.y);b.d=hextob64u(d.prvKeyHex);return b}else{if(d instanceof KJUR.crypto.ECDSA&&d.isPublic){var a=d.getShortNISTPCurveName();if(a!=="P-256"&&a!=="P-384"){throw "unsupported curve name for JWT: "+a}var c=d.getPublicKeyXYHex();b.kty="EC";b.crv=a;b.x=hextob64u(c.x);b.y=hextob64u(c.y);return b}}}}throw "not supported key object"};
+    RSAKey.getPosArrayOfChildrenFromHex=function(a){return ASN1HEX.getChildIdx(a,0)};RSAKey.getHexValueArrayOfChildrenFromHex=function(f){var n=ASN1HEX;var i=n.getV;var k=RSAKey.getPosArrayOfChildrenFromHex(f);var e=i(f,k[0]);var j=i(f,k[1]);var b=i(f,k[2]);var c=i(f,k[3]);var h=i(f,k[4]);var g=i(f,k[5]);var m=i(f,k[6]);var l=i(f,k[7]);var d=i(f,k[8]);var k=new Array();k.push(e,j,b,c,h,g,m,l,d);return k};RSAKey.prototype.readPrivateKeyFromPEMString=function(d){var c=pemtohex(d);var b=RSAKey.getHexValueArrayOfChildrenFromHex(c);this.setPrivateEx(b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8]);};RSAKey.prototype.readPKCS5PrvKeyHex=function(c){var b=RSAKey.getHexValueArrayOfChildrenFromHex(c);this.setPrivateEx(b[1],b[2],b[3],b[4],b[5],b[6],b[7],b[8]);};RSAKey.prototype.readPKCS8PrvKeyHex=function(e){var c,j,l,b,a,f,d,k;var m=ASN1HEX;var g=m.getVbyList;if(m.isASN1HEX(e)===false){throw "not ASN.1 hex string"}try{c=g(e,0,[2,0,1],"02");j=g(e,0,[2,0,2],"02");l=g(e,0,[2,0,3],"02");b=g(e,0,[2,0,4],"02");a=g(e,0,[2,0,5],"02");f=g(e,0,[2,0,6],"02");d=g(e,0,[2,0,7],"02");k=g(e,0,[2,0,8],"02");}catch(i){throw "malformed PKCS#8 plain RSA private key"}this.setPrivateEx(c,j,l,b,a,f,d,k);};RSAKey.prototype.readPKCS5PubKeyHex=function(c){var e=ASN1HEX;var b=e.getV;if(e.isASN1HEX(c)===false){throw "keyHex is not ASN.1 hex string"}var a=e.getChildIdx(c,0);if(a.length!==2||c.substr(a[0],2)!=="02"||c.substr(a[1],2)!=="02"){throw "wrong hex for PKCS#5 public key"}var f=b(c,a[0]);var d=b(c,a[1]);this.setPublic(f,d);};RSAKey.prototype.readPKCS8PubKeyHex=function(b){var c=ASN1HEX;if(c.isASN1HEX(b)===false){throw "not ASN.1 hex string"}if(c.getTLVbyList(b,0,[0,0])!=="06092a864886f70d010101"){throw "not PKCS8 RSA public key"}var a=c.getTLVbyList(b,0,[1,0]);this.readPKCS5PubKeyHex(a);};RSAKey.prototype.readCertPubKeyHex=function(b,d){var a,c;a=new X509();a.readCertHex(b);c=a.getPublicKeyHex();this.readPKCS8PubKeyHex(c);};
+    var _RE_HEXDECONLY=new RegExp("");_RE_HEXDECONLY.compile("[^0-9a-f]","gi");function _zeroPaddingOfSignature(e,d){var c="";var a=d/4-e.length;for(var b=0;b<a;b++){c=c+"0";}return c+e}RSAKey.prototype.sign=function(d,a){var b=function(e){return KJUR.crypto.Util.hashString(e,a)};var c=b(d);return this.signWithMessageHash(c,a)};RSAKey.prototype.signWithMessageHash=function(e,c){var f=KJUR.crypto.Util.getPaddedDigestInfoHex(e,c,this.n.bitLength());var b=parseBigInt(f,16);var d=this.doPrivate(b);var a=d.toString(16);return _zeroPaddingOfSignature(a,this.n.bitLength())};function pss_mgf1_str(c,a,e){var b="",d=0;while(b.length<a){b+=hextorstr(e(rstrtohex(c+String.fromCharCode.apply(String,[(d&4278190080)>>24,(d&16711680)>>16,(d&65280)>>8,d&255]))));d+=1;}return b}RSAKey.prototype.signPSS=function(e,a,d){var c=function(f){return KJUR.crypto.Util.hashHex(f,a)};var b=c(rstrtohex(e));if(d===undefined){d=-1;}return this.signWithMessageHashPSS(b,a,d)};RSAKey.prototype.signWithMessageHashPSS=function(l,a,k){var b=hextorstr(l);var g=b.length;var m=this.n.bitLength()-1;var c=Math.ceil(m/8);var d;var o=function(i){return KJUR.crypto.Util.hashHex(i,a)};if(k===-1||k===undefined){k=g;}else{if(k===-2){k=c-g-2;}else{if(k<-2){throw "invalid salt length"}}}if(c<(g+k+2)){throw "data too long"}var f="";if(k>0){f=new Array(k);new SecureRandom().nextBytes(f);f=String.fromCharCode.apply(String,f);}var n=hextorstr(o(rstrtohex("\x00\x00\x00\x00\x00\x00\x00\x00"+b+f)));var j=[];for(d=0;d<c-k-g-2;d+=1){j[d]=0;}var e=String.fromCharCode.apply(String,j)+"\x01"+f;var h=pss_mgf1_str(n,e.length,o);var q=[];for(d=0;d<e.length;d+=1){q[d]=e.charCodeAt(d)^h.charCodeAt(d);}var p=(65280>>(8*c-m))&255;q[0]&=~p;for(d=0;d<g;d++){q.push(n.charCodeAt(d));}q.push(188);return _zeroPaddingOfSignature(this.doPrivate(new BigInteger(q)).toString(16),this.n.bitLength())};function _rsasign_getAlgNameAndHashFromHexDisgestInfo(f){for(var e in KJUR.crypto.Util.DIGESTINFOHEAD){var d=KJUR.crypto.Util.DIGESTINFOHEAD[e];var b=d.length;if(f.substring(0,b)==d){var c=[e,f.substring(b)];return c}}return []}RSAKey.prototype.verify=function(f,j){j=j.replace(_RE_HEXDECONLY,"");j=j.replace(/[ \n]+/g,"");var b=parseBigInt(j,16);if(b.bitLength()>this.n.bitLength()){return 0}var i=this.doPublic(b);var e=i.toString(16).replace(/^1f+00/,"");var g=_rsasign_getAlgNameAndHashFromHexDisgestInfo(e);if(g.length==0){return false}var d=g[0];var h=g[1];var a=function(k){return KJUR.crypto.Util.hashString(k,d)};var c=a(f);return(h==c)};RSAKey.prototype.verifyWithMessageHash=function(e,a){a=a.replace(_RE_HEXDECONLY,"");a=a.replace(/[ \n]+/g,"");var b=parseBigInt(a,16);if(b.bitLength()>this.n.bitLength()){return 0}var h=this.doPublic(b);var g=h.toString(16).replace(/^1f+00/,"");var c=_rsasign_getAlgNameAndHashFromHexDisgestInfo(g);if(c.length==0){return false}var d=c[0];var f=c[1];return(f==e)};RSAKey.prototype.verifyPSS=function(c,b,a,f){var e=function(g){return KJUR.crypto.Util.hashHex(g,a)};var d=e(rstrtohex(c));if(f===undefined){f=-1;}return this.verifyWithMessageHashPSS(d,b,a,f)};RSAKey.prototype.verifyWithMessageHashPSS=function(f,s,l,c){var k=new BigInteger(s,16);if(k.bitLength()>this.n.bitLength()){return false}var r=function(i){return KJUR.crypto.Util.hashHex(i,l)};var j=hextorstr(f);var h=j.length;var g=this.n.bitLength()-1;var m=Math.ceil(g/8);var q;if(c===-1||c===undefined){c=h;}else{if(c===-2){c=m-h-2;}else{if(c<-2){throw "invalid salt length"}}}if(m<(h+c+2)){throw "data too long"}var a=this.doPublic(k).toByteArray();for(q=0;q<a.length;q+=1){a[q]&=255;}while(a.length<m){a.unshift(0);}if(a[m-1]!==188){throw "encoded message does not end in 0xbc"}a=String.fromCharCode.apply(String,a);var d=a.substr(0,m-h-1);var e=a.substr(d.length,h);var p=(65280>>(8*m-g))&255;if((d.charCodeAt(0)&p)!==0){throw "bits beyond keysize not zero"}var n=pss_mgf1_str(e,d.length,r);var o=[];for(q=0;q<d.length;q+=1){o[q]=d.charCodeAt(q)^n.charCodeAt(q);}o[0]&=~p;var b=m-h-c-2;for(q=0;q<b;q+=1){if(o[q]!==0){throw "leftmost octets not zero"}}if(o[b]!==1){throw "0x01 marker not found"}return e===hextorstr(r(rstrtohex("\x00\x00\x00\x00\x00\x00\x00\x00"+j+String.fromCharCode.apply(String,o.slice(-c)))))};RSAKey.SALT_LEN_HLEN=-1;RSAKey.SALT_LEN_MAX=-2;RSAKey.SALT_LEN_RECOVER=-2;
+    function X509(){var k=ASN1HEX,j=k.getChildIdx,h=k.getV,b=k.getTLV,f=k.getVbyList,c=k.getTLVbyList,g=k.getIdxbyList,d=k.getVidx,i=k.oidname,a=X509,e=pemtohex;this.hex=null;this.version=0;this.foffset=0;this.aExtInfo=null;this.getVersion=function(){if(this.hex===null||this.version!==0){return this.version}if(c(this.hex,0,[0,0])!=="a003020102"){this.version=1;this.foffset=-1;return 1}this.version=3;return 3};this.getSerialNumberHex=function(){return f(this.hex,0,[0,1+this.foffset],"02")};this.getSignatureAlgorithmField=function(){return i(f(this.hex,0,[0,2+this.foffset,0],"06"))};this.getIssuerHex=function(){return c(this.hex,0,[0,3+this.foffset],"30")};this.getIssuerString=function(){return a.hex2dn(this.getIssuerHex())};this.getSubjectHex=function(){return c(this.hex,0,[0,5+this.foffset],"30")};this.getSubjectString=function(){return a.hex2dn(this.getSubjectHex())};this.getNotBefore=function(){var l=f(this.hex,0,[0,4+this.foffset,0]);l=l.replace(/(..)/g,"%$1");l=decodeURIComponent(l);return l};this.getNotAfter=function(){var l=f(this.hex,0,[0,4+this.foffset,1]);l=l.replace(/(..)/g,"%$1");l=decodeURIComponent(l);return l};this.getPublicKeyHex=function(){return k.getTLVbyList(this.hex,0,[0,6+this.foffset],"30")};this.getPublicKeyIdx=function(){return g(this.hex,0,[0,6+this.foffset],"30")};this.getPublicKeyContentIdx=function(){var l=this.getPublicKeyIdx();return g(this.hex,l,[1,0],"30")};this.getPublicKey=function(){return KEYUTIL.getKey(this.getPublicKeyHex(),null,"pkcs8pub")};this.getSignatureAlgorithmName=function(){return i(f(this.hex,0,[1,0],"06"))};this.getSignatureValueHex=function(){return f(this.hex,0,[2],"03",true)};this.verifySignature=function(n){var o=this.getSignatureAlgorithmName();var l=this.getSignatureValueHex();var m=c(this.hex,0,[0],"30");var p=new KJUR.crypto.Signature({alg:o});p.init(n);p.updateHex(m);return p.verify(l)};this.parseExt=function(){if(this.version!==3){return -1}var p=g(this.hex,0,[0,7,0],"30");var m=j(this.hex,p);this.aExtInfo=new Array();for(var n=0;n<m.length;n++){var q={};q.critical=false;var l=j(this.hex,m[n]);var r=0;if(l.length===3){q.critical=true;r=1;}q.oid=k.hextooidstr(f(this.hex,m[n],[0],"06"));var o=g(this.hex,m[n],[1+r]);q.vidx=d(this.hex,o);this.aExtInfo.push(q);}};this.getExtInfo=function(n){var l=this.aExtInfo;var o=n;if(!n.match(/^[0-9.]+$/)){o=KJUR.asn1.x509.OID.name2oid(n);}if(o===""){return undefined}for(var m=0;m<l.length;m++){if(l[m].oid===o){return l[m]}}return undefined};this.getExtBasicConstraints=function(){var n=this.getExtInfo("basicConstraints");if(n===undefined){return n}var l=h(this.hex,n.vidx);if(l===""){return {}}if(l==="0101ff"){return {cA:true}}if(l.substr(0,8)==="0101ff02"){var o=h(l,6);var m=parseInt(o,16);return {cA:true,pathLen:m}}throw "basicConstraints parse error"};this.getExtKeyUsageBin=function(){var o=this.getExtInfo("keyUsage");if(o===undefined){return ""}var m=h(this.hex,o.vidx);if(m.length%2!=0||m.length<=2){throw "malformed key usage value"}var l=parseInt(m.substr(0,2));var n=parseInt(m.substr(2),16).toString(2);return n.substr(0,n.length-l)};this.getExtKeyUsageString=function(){var n=this.getExtKeyUsageBin();var l=new Array();for(var m=0;m<n.length;m++){if(n.substr(m,1)=="1"){l.push(X509.KEYUSAGE_NAME[m]);}}return l.join(",")};this.getExtSubjectKeyIdentifier=function(){var l=this.getExtInfo("subjectKeyIdentifier");if(l===undefined){return l}return h(this.hex,l.vidx)};this.getExtAuthorityKeyIdentifier=function(){var p=this.getExtInfo("authorityKeyIdentifier");if(p===undefined){return p}var l={};var o=b(this.hex,p.vidx);var m=j(o,0);for(var n=0;n<m.length;n++){if(o.substr(m[n],2)==="80"){l.kid=h(o,m[n]);}}return l};this.getExtExtKeyUsageName=function(){var p=this.getExtInfo("extKeyUsage");if(p===undefined){return p}var l=new Array();var o=b(this.hex,p.vidx);if(o===""){return l}var m=j(o,0);for(var n=0;n<m.length;n++){l.push(i(h(o,m[n])));}return l};this.getExtSubjectAltName=function(){var m=this.getExtSubjectAltName2();var l=new Array();for(var n=0;n<m.length;n++){if(m[n][0]==="DNS"){l.push(m[n][1]);}}return l};this.getExtSubjectAltName2=function(){var p,s,r;var q=this.getExtInfo("subjectAltName");if(q===undefined){return q}var l=new Array();var o=b(this.hex,q.vidx);var m=j(o,0);for(var n=0;n<m.length;n++){r=o.substr(m[n],2);p=h(o,m[n]);if(r==="81"){s=hextoutf8(p);l.push(["MAIL",s]);}if(r==="82"){s=hextoutf8(p);l.push(["DNS",s]);}if(r==="84"){s=X509.hex2dn(p,0);l.push(["DN",s]);}if(r==="86"){s=hextoutf8(p);l.push(["URI",s]);}if(r==="87"){s=hextoip(p);l.push(["IP",s]);}}return l};this.getExtCRLDistributionPointsURI=function(){var q=this.getExtInfo("cRLDistributionPoints");if(q===undefined){return q}var l=new Array();var m=j(this.hex,q.vidx);for(var o=0;o<m.length;o++){try{var r=f(this.hex,m[o],[0,0,0],"86");var p=hextoutf8(r);l.push(p);}catch(n){}}return l};this.getExtAIAInfo=function(){var p=this.getExtInfo("authorityInfoAccess");if(p===undefined){return p}var l={ocsp:[],caissuer:[]};var m=j(this.hex,p.vidx);for(var n=0;n<m.length;n++){var q=f(this.hex,m[n],[0],"06");var o=f(this.hex,m[n],[1],"86");if(q==="2b06010505073001"){l.ocsp.push(hextoutf8(o));}if(q==="2b06010505073002"){l.caissuer.push(hextoutf8(o));}}return l};this.getExtCertificatePolicies=function(){var o=this.getExtInfo("certificatePolicies");if(o===undefined){return o}var l=b(this.hex,o.vidx);var u=[];var s=j(l,0);for(var r=0;r<s.length;r++){var t={};var n=j(l,s[r]);t.id=i(h(l,n[0]));if(n.length===2){var m=j(l,n[1]);for(var q=0;q<m.length;q++){var p=f(l,m[q],[0],"06");if(p==="2b06010505070201"){t.cps=hextoutf8(f(l,m[q],[1]));}else{if(p==="2b06010505070202"){t.unotice=hextoutf8(f(l,m[q],[1,0]));}}}}u.push(t);}return u};this.readCertPEM=function(l){this.readCertHex(e(l));};this.readCertHex=function(l){this.hex=l;this.getVersion();try{g(this.hex,0,[0,7],"a3");this.parseExt();}catch(m){}};this.getInfo=function(){var B,u,z;B="Basic Fields\n";B+="  serial number: "+this.getSerialNumberHex()+"\n";B+="  signature algorithm: "+this.getSignatureAlgorithmField()+"\n";B+="  issuer: "+this.getIssuerString()+"\n";B+="  notBefore: "+this.getNotBefore()+"\n";B+="  notAfter: "+this.getNotAfter()+"\n";B+="  subject: "+this.getSubjectString()+"\n";B+="  subject public key info: \n";u=this.getPublicKey();B+="    key algorithm: "+u.type+"\n";if(u.type==="RSA"){B+="    n="+hextoposhex(u.n.toString(16)).substr(0,16)+"...\n";B+="    e="+hextoposhex(u.e.toString(16))+"\n";}z=this.aExtInfo;if(z!==undefined&&z!==null){B+="X509v3 Extensions:\n";for(var r=0;r<z.length;r++){var n=z[r];var A=KJUR.asn1.x509.OID.oid2name(n.oid);if(A===""){A=n.oid;}var x="";if(n.critical===true){x="CRITICAL";}B+="  "+A+" "+x+":\n";if(A==="basicConstraints"){var v=this.getExtBasicConstraints();if(v.cA===undefined){B+="    {}\n";}else{B+="    cA=true";if(v.pathLen!==undefined){B+=", pathLen="+v.pathLen;}B+="\n";}}else{if(A==="keyUsage"){B+="    "+this.getExtKeyUsageString()+"\n";}else{if(A==="subjectKeyIdentifier"){B+="    "+this.getExtSubjectKeyIdentifier()+"\n";}else{if(A==="authorityKeyIdentifier"){var l=this.getExtAuthorityKeyIdentifier();if(l.kid!==undefined){B+="    kid="+l.kid+"\n";}}else{if(A==="extKeyUsage"){var w=this.getExtExtKeyUsageName();B+="    "+w.join(", ")+"\n";}else{if(A==="subjectAltName"){var t=this.getExtSubjectAltName2();B+="    "+t+"\n";}else{if(A==="cRLDistributionPoints"){var y=this.getExtCRLDistributionPointsURI();B+="    "+y+"\n";}else{if(A==="authorityInfoAccess"){var p=this.getExtAIAInfo();if(p.ocsp!==undefined){B+="    ocsp: "+p.ocsp.join(",")+"\n";}if(p.caissuer!==undefined){B+="    caissuer: "+p.caissuer.join(",")+"\n";}}else{if(A==="certificatePolicies"){var o=this.getExtCertificatePolicies();for(var q=0;q<o.length;q++){if(o[q].id!==undefined){B+="    policy oid: "+o[q].id+"\n";}if(o[q].cps!==undefined){B+="    cps: "+o[q].cps+"\n";}}}}}}}}}}}}}B+="signature algorithm: "+this.getSignatureAlgorithmName()+"\n";B+="signature: "+this.getSignatureValueHex().substr(0,16)+"...\n";return B};}X509.hex2dn=function(f,b){if(b===undefined){b=0;}if(f.substr(b,2)!=="30"){throw "malformed DN"}var c=new Array();var d=ASN1HEX.getChildIdx(f,b);for(var e=0;e<d.length;e++){c.push(X509.hex2rdn(f,d[e]));}c=c.map(function(a){return a.replace("/","\\/")});return "/"+c.join("/")};X509.hex2rdn=function(f,b){if(b===undefined){b=0;}if(f.substr(b,2)!=="31"){throw "malformed RDN"}var c=new Array();var d=ASN1HEX.getChildIdx(f,b);for(var e=0;e<d.length;e++){c.push(X509.hex2attrTypeValue(f,d[e]));}c=c.map(function(a){return a.replace("+","\\+")});return c.join("+")};X509.hex2attrTypeValue=function(d,i){var j=ASN1HEX;var h=j.getV;if(i===undefined){i=0;}if(d.substr(i,2)!=="30"){throw "malformed attribute type and value"}var g=j.getChildIdx(d,i);if(g.length!==2||d.substr(g[0],2)!=="06");var b=h(d,g[0]);var f=KJUR.asn1.ASN1Util.oidHexToInt(b);var e=KJUR.asn1.x509.OID.oid2atype(f);var a=h(d,g[1]);var c=hextorstr(a);return e+"="+c};X509.getPublicKeyFromCertHex=function(b){var a=new X509();a.readCertHex(b);return a.getPublicKey()};X509.getPublicKeyFromCertPEM=function(b){var a=new X509();a.readCertPEM(b);return a.getPublicKey()};X509.getPublicKeyInfoPropOfCertPEM=function(c){var e=ASN1HEX;var g=e.getVbyList;var b={};var a,f;b.algparam=null;a=new X509();a.readCertPEM(c);f=a.getPublicKeyHex();b.keyhex=g(f,0,[1],"03").substr(2);b.algoid=g(f,0,[0,0],"06");if(b.algoid==="2a8648ce3d0201"){b.algparam=g(f,0,[0,1],"06");}return b};X509.KEYUSAGE_NAME=["digitalSignature","nonRepudiation","keyEncipherment","dataEncipherment","keyAgreement","keyCertSign","cRLSign","encipherOnly","decipherOnly"];
+    if(typeof KJUR=="undefined"||!KJUR){KJUR={};}if(typeof KJUR.jws=="undefined"||!KJUR.jws){KJUR.jws={};}KJUR.jws.JWS=function(){var b=KJUR,a=b.jws.JWS,c=a.isSafeJSONString;this.parseJWS=function(g,j){if((this.parsedJWS!==undefined)&&(j||(this.parsedJWS.sigvalH!==undefined))){return}var i=g.match(/^([^.]+)\.([^.]+)\.([^.]+)$/);if(i==null){throw "JWS signature is not a form of 'Head.Payload.SigValue'."}var k=i[1];var e=i[2];var l=i[3];var n=k+"."+e;this.parsedJWS={};this.parsedJWS.headB64U=k;this.parsedJWS.payloadB64U=e;this.parsedJWS.sigvalB64U=l;this.parsedJWS.si=n;if(!j){var h=b64utohex(l);var f=parseBigInt(h,16);this.parsedJWS.sigvalH=h;this.parsedJWS.sigvalBI=f;}var d=b64utoutf8(k);var m=b64utoutf8(e);this.parsedJWS.headS=d;this.parsedJWS.payloadS=m;if(!c(d,this.parsedJWS,"headP")){throw "malformed JSON string for JWS Head: "+d}};};KJUR.jws.JWS.sign=function(i,v,y,z,a){var w=KJUR,m=w.jws,q=m.JWS,g=q.readSafeJSONString,p=q.isSafeJSONString,d=w.crypto,k=d.ECDSA,o=d.Mac,c=d.Signature,t=JSON;var s,j,n;if(typeof v!="string"&&typeof v!="object"){throw "spHeader must be JSON string or object: "+v}if(typeof v=="object"){j=v;s=t.stringify(j);}if(typeof v=="string"){s=v;if(!p(s)){throw "JWS Head is not safe JSON string: "+s}j=g(s);}n=y;if(typeof y=="object"){n=t.stringify(y);}if((i==""||i==null)&&j.alg!==undefined){i=j.alg;}if((i!=""&&i!=null)&&j.alg===undefined){j.alg=i;s=t.stringify(j);}if(i!==j.alg){throw "alg and sHeader.alg doesn't match: "+i+"!="+j.alg}var r=null;if(q.jwsalg2sigalg[i]===undefined){throw "unsupported alg name: "+i}else{r=q.jwsalg2sigalg[i];}var e=utf8tob64u(s);var l=utf8tob64u(n);var b=e+"."+l;var x="";if(r.substr(0,4)=="Hmac"){if(z===undefined){throw "mac key shall be specified for HS* alg"}var h=new o({alg:r,prov:"cryptojs",pass:z});h.updateString(b);x=h.doFinal();}else{if(r.indexOf("withECDSA")!=-1){var f=new c({alg:r});f.init(z,a);f.updateString(b);hASN1Sig=f.sign();x=KJUR.crypto.ECDSA.asn1SigToConcatSig(hASN1Sig);}else{if(r!="none"){var f=new c({alg:r});f.init(z,a);f.updateString(b);x=f.sign();}}}var u=hextob64u(x);return b+"."+u};KJUR.jws.JWS.verify=function(w,B,n){var x=KJUR,q=x.jws,t=q.JWS,i=t.readSafeJSONString,e=x.crypto,p=e.ECDSA,s=e.Mac,d=e.Signature,m;if(typeof RSAKey!==undefined){m=RSAKey;}var y=w.split(".");if(y.length!==3){return false}var f=y[0];var r=y[1];var c=f+"."+r;var A=b64utohex(y[2]);var l=i(b64utoutf8(y[0]));var k=null;var z=null;if(l.alg===undefined){throw "algorithm not specified in header"}else{k=l.alg;z=k.substr(0,2);}if(n!=null&&Object.prototype.toString.call(n)==="[object Array]"&&n.length>0){var b=":"+n.join(":")+":";if(b.indexOf(":"+k+":")==-1){throw "algorithm '"+k+"' not accepted in the list"}}if(k!="none"&&B===null){throw "key shall be specified to verify."}if(typeof B=="string"&&B.indexOf("-----BEGIN ")!=-1){B=KEYUTIL.getKey(B);}if(z=="RS"||z=="PS"){if(!(B instanceof m)){throw "key shall be a RSAKey obj for RS* and PS* algs"}}if(z=="ES"){if(!(B instanceof p)){throw "key shall be a ECDSA obj for ES* algs"}}var u=null;if(t.jwsalg2sigalg[l.alg]===undefined){throw "unsupported alg name: "+k}else{u=t.jwsalg2sigalg[k];}if(u=="none"){throw "not supported"}else{if(u.substr(0,4)=="Hmac"){var o=null;if(B===undefined){throw "hexadecimal key shall be specified for HMAC"}var j=new s({alg:u,pass:B});j.updateString(c);o=j.doFinal();return A==o}else{if(u.indexOf("withECDSA")!=-1){var h=null;try{h=p.concatSigToASN1Sig(A);}catch(v){return false}var g=new d({alg:u});g.init(B);g.updateString(c);return g.verify(h)}else{var g=new d({alg:u});g.init(B);g.updateString(c);return g.verify(A)}}}};KJUR.jws.JWS.parse=function(g){var c=g.split(".");var b={};var f,e,d;if(c.length!=2&&c.length!=3){throw "malformed sJWS: wrong number of '.' splitted elements"}f=c[0];e=c[1];if(c.length==3){d=c[2];}b.headerObj=KJUR.jws.JWS.readSafeJSONString(b64utoutf8(f));b.payloadObj=KJUR.jws.JWS.readSafeJSONString(b64utoutf8(e));b.headerPP=JSON.stringify(b.headerObj,null,"  ");if(b.payloadObj==null){b.payloadPP=b64utoutf8(e);}else{b.payloadPP=JSON.stringify(b.payloadObj,null,"  ");}if(d!==undefined){b.sigHex=b64utohex(d);}return b};KJUR.jws.JWS.verifyJWT=function(e,l,r){var d=KJUR,j=d.jws,o=j.JWS,n=o.readSafeJSONString,p=o.inArray,f=o.includedArray;var k=e.split(".");var c=k[0];var i=k[1];var m=b64utohex(k[2]);var h=n(b64utoutf8(c));var g=n(b64utoutf8(i));if(h.alg===undefined){return false}if(r.alg===undefined){throw "acceptField.alg shall be specified"}if(!p(h.alg,r.alg)){return false}if(g.iss!==undefined&&typeof r.iss==="object"){if(!p(g.iss,r.iss)){return false}}if(g.sub!==undefined&&typeof r.sub==="object"){if(!p(g.sub,r.sub)){return false}}if(g.aud!==undefined&&typeof r.aud==="object"){if(typeof g.aud=="string"){if(!p(g.aud,r.aud)){return false}}else{if(typeof g.aud=="object"){if(!f(g.aud,r.aud)){return false}}}}var b=j.IntDate.getNow();if(r.verifyAt!==undefined&&typeof r.verifyAt==="number"){b=r.verifyAt;}if(r.gracePeriod===undefined||typeof r.gracePeriod!=="number"){r.gracePeriod=0;}if(g.exp!==undefined&&typeof g.exp=="number"){if(g.exp+r.gracePeriod<b){return false}}if(g.nbf!==undefined&&typeof g.nbf=="number"){if(b<g.nbf-r.gracePeriod){return false}}if(g.iat!==undefined&&typeof g.iat=="number"){if(b<g.iat-r.gracePeriod){return false}}if(g.jti!==undefined&&r.jti!==undefined){if(g.jti!==r.jti){return false}}if(!o.verify(e,l,r.alg)){return false}return true};KJUR.jws.JWS.includedArray=function(b,a){var c=KJUR.jws.JWS.inArray;if(b===null){return false}if(typeof b!=="object"){return false}if(typeof b.length!=="number"){return false}for(var d=0;d<b.length;d++){if(!c(b[d],a)){return false}}return true};KJUR.jws.JWS.inArray=function(d,b){if(b===null){return false}if(typeof b!=="object"){return false}if(typeof b.length!=="number"){return false}for(var c=0;c<b.length;c++){if(b[c]==d){return true}}return false};KJUR.jws.JWS.jwsalg2sigalg={HS256:"HmacSHA256",HS384:"HmacSHA384",HS512:"HmacSHA512",RS256:"SHA256withRSA",RS384:"SHA384withRSA",RS512:"SHA512withRSA",ES256:"SHA256withECDSA",ES384:"SHA384withECDSA",PS256:"SHA256withRSAandMGF1",PS384:"SHA384withRSAandMGF1",PS512:"SHA512withRSAandMGF1",none:"none",};KJUR.jws.JWS.isSafeJSONString=function(c,b,d){var e=null;try{e=jsonParse(c);if(typeof e!="object"){return 0}if(e.constructor===Array){return 0}if(b){b[d]=e;}return 1}catch(a){return 0}};KJUR.jws.JWS.readSafeJSONString=function(b){var c=null;try{c=jsonParse(b);if(typeof c!="object"){return null}if(c.constructor===Array){return null}return c}catch(a){return null}};KJUR.jws.JWS.getEncodedSignatureValueFromJWS=function(b){var a=b.match(/^[^.]+\.[^.]+\.([^.]+)$/);if(a==null){throw "JWS signature is not a form of 'Head.Payload.SigValue'."}return a[1]};KJUR.jws.JWS.getJWKthumbprint=function(d){if(d.kty!=="RSA"&&d.kty!=="EC"&&d.kty!=="oct"){throw "unsupported algorithm for JWK Thumprint"}var a="{";if(d.kty==="RSA"){if(typeof d.n!="string"||typeof d.e!="string"){throw "wrong n and e value for RSA key"}a+='"e":"'+d.e+'",';a+='"kty":"'+d.kty+'",';a+='"n":"'+d.n+'"}';}else{if(d.kty==="EC"){if(typeof d.crv!="string"||typeof d.x!="string"||typeof d.y!="string"){throw "wrong crv, x and y value for EC key"}a+='"crv":"'+d.crv+'",';a+='"kty":"'+d.kty+'",';a+='"x":"'+d.x+'",';a+='"y":"'+d.y+'"}';}else{if(d.kty==="oct"){if(typeof d.k!="string"){throw "wrong k value for oct(symmetric) key"}a+='"kty":"'+d.kty+'",';a+='"k":"'+d.k+'"}';}}}var b=rstrtohex(a);var c=KJUR.crypto.Util.hashHex(b,"sha256");var e=hextob64u(c);return e};KJUR.jws.IntDate={};KJUR.jws.IntDate.get=function(c){var b=KJUR.jws.IntDate,d=b.getNow,a=b.getZulu;if(c=="now"){return d()}else{if(c=="now + 1hour"){return d()+60*60}else{if(c=="now + 1day"){return d()+60*60*24}else{if(c=="now + 1month"){return d()+60*60*24*30}else{if(c=="now + 1year"){return d()+60*60*24*365}else{if(c.match(/Z$/)){return a(c)}else{if(c.match(/^[0-9]+$/)){return parseInt(c)}}}}}}}throw "unsupported format: "+c};KJUR.jws.IntDate.getZulu=function(a){return zulutosec(a)};KJUR.jws.IntDate.getNow=function(){var a=~~(new Date()/1000);return a};KJUR.jws.IntDate.intDate2UTCString=function(a){var b=new Date(a*1000);return b.toUTCString()};KJUR.jws.IntDate.intDate2Zulu=function(e){var i=new Date(e*1000),h=("0000"+i.getUTCFullYear()).slice(-4),g=("00"+(i.getUTCMonth()+1)).slice(-2),b=("00"+i.getUTCDate()).slice(-2),a=("00"+i.getUTCHours()).slice(-2),c=("00"+i.getUTCMinutes()).slice(-2),f=("00"+i.getUTCSeconds()).slice(-2);return h+g+b+a+c+f+"Z"};
+    const { EDSA } = KJUR.crypto;
+    const { DSA } = KJUR.crypto;
+    const { Signature } = KJUR.crypto;
+    const { MessageDigest } =  KJUR.crypto;
+    const { Mac } = KJUR.crypto;
+    const { Cipher } =  KJUR.crypto;
+    const _crypto =  KJUR.crypto;
+    const { jws } = KJUR;
+
+    const AllowedSigningAlgs = ['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512', 'ES256', 'ES384', 'ES512'];
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    function getJoseUtil({ jws, KeyUtil, X509, crypto, hextob64u, b64tohex, AllowedSigningAlgs }) {
+        return class JoseUtil {
+
+            static parseJwt(jwt) {
+                Log.debug("JoseUtil.parseJwt");
+                try {
+                    var token = jws.JWS.parse(jwt);
+                    return {
+                        header: token.headerObj,
+                        payload: token.payloadObj
+                    }
+                } catch (e) {
+                    Log.error(e);
+                }
+            }
+
+            static validateJwt(jwt, key, issuer, audience, clockSkew, now, timeInsensitive) {
+                Log.debug("JoseUtil.validateJwt");
+
+                try {
+                    if (key.kty === "RSA") {
+                        if (key.e && key.n) {
+                            key = KeyUtil.getKey(key);
+                        } else if (key.x5c && key.x5c.length) {
+                            var hex = b64tohex(key.x5c[0]);
+                            key = X509.getPublicKeyFromCertHex(hex);
+                        } else {
+                            Log.error("JoseUtil.validateJwt: RSA key missing key material", key);
+                            return Promise.reject(new Error("RSA key missing key material"));
+                        }
+                    } else if (key.kty === "EC") {
+                        if (key.crv && key.x && key.y) {
+                            key = KeyUtil.getKey(key);
+                        } else {
+                            Log.error("JoseUtil.validateJwt: EC key missing key material", key);
+                            return Promise.reject(new Error("EC key missing key material"));
+                        }
+                    } else {
+                        Log.error("JoseUtil.validateJwt: Unsupported key type", key && key.kty);
+                        return Promise.reject(new Error("Unsupported key type: " + key && key.kty));
+                    }
+
+                    return JoseUtil._validateJwt(jwt, key, issuer, audience, clockSkew, now, timeInsensitive);
+                } catch (e) {
+                    Log.error(e && e.message || e);
+                    return Promise.reject("JWT validation failed");
+                }
+            }
+
+            static validateJwtAttributes(jwt, issuer, audience, clockSkew, now, timeInsensitive) {
+                if (!clockSkew) {
+                    clockSkew = 0;
+                }
+
+                if (!now) {
+                    now = parseInt(Date.now() / 1000);
+                }
+
+                var payload = JoseUtil.parseJwt(jwt).payload;
+
+                if (!payload.iss) {
+                    Log.error("JoseUtil._validateJwt: issuer was not provided");
+                    return Promise.reject(new Error("issuer was not provided"));
+                }
+                if (payload.iss !== issuer) {
+                    Log.error("JoseUtil._validateJwt: Invalid issuer in token", payload.iss);
+                    return Promise.reject(new Error("Invalid issuer in token: " + payload.iss));
+                }
+
+                if (!payload.aud) {
+                    Log.error("JoseUtil._validateJwt: aud was not provided");
+                    return Promise.reject(new Error("aud was not provided"));
+                }
+                var validAudience = payload.aud === audience || (Array.isArray(payload.aud) && payload.aud.indexOf(audience) >= 0);
+                if (!validAudience) {
+                    Log.error("JoseUtil._validateJwt: Invalid audience in token", payload.aud);
+                    return Promise.reject(new Error("Invalid audience in token: " + payload.aud));
+                }
+                if (payload.azp && payload.azp !== audience) {
+                    Log.error("JoseUtil._validateJwt: Invalid azp in token", payload.azp);
+                    return Promise.reject(new Error("Invalid azp in token: " + payload.azp));
+                }
+
+                if (!timeInsensitive) {
+                    var lowerNow = now + clockSkew;
+                    var upperNow = now - clockSkew;
+
+                    if (!payload.iat) {
+                        Log.error("JoseUtil._validateJwt: iat was not provided");
+                        return Promise.reject(new Error("iat was not provided"));
+                    }
+                    if (lowerNow < payload.iat) {
+                        Log.error("JoseUtil._validateJwt: iat is in the future", payload.iat);
+                        return Promise.reject(new Error("iat is in the future: " + payload.iat));
+                    }
+
+                    if (payload.nbf && lowerNow < payload.nbf) {
+                        Log.error("JoseUtil._validateJwt: nbf is in the future", payload.nbf);
+                        return Promise.reject(new Error("nbf is in the future: " + payload.nbf));
+                    }
+
+                    if (!payload.exp) {
+                        Log.error("JoseUtil._validateJwt: exp was not provided");
+                        return Promise.reject(new Error("exp was not provided"));
+                    }
+                    if (payload.exp < upperNow) {
+                        Log.error("JoseUtil._validateJwt: exp is in the past", payload.exp);
+                        return Promise.reject(new Error("exp is in the past:" + payload.exp));
+                    }
+                }
+
+                return Promise.resolve(payload);
+            }
+
+            static _validateJwt(jwt, key, issuer, audience, clockSkew, now, timeInsensitive) {
+
+                return JoseUtil.validateJwtAttributes(jwt, issuer, audience, clockSkew, now, timeInsensitive).then(payload => {
+                    try {
+                        if (!jws.JWS.verify(jwt, key, AllowedSigningAlgs)) {
+                            Log.error("JoseUtil._validateJwt: signature validation failed");
+                            return Promise.reject(new Error("signature validation failed"));
+                        }
+
+                        return payload;
+                    } catch (e) {
+                        Log.error(e && e.message || e);
+                        return Promise.reject(new Error("signature validation failed"));
+                    }
+                });
+            }
+
+            static hashString(value, alg) {
+                try {
+                    return crypto.Util.hashString(value, alg);
+                } catch (e) {
+                    Log.error(e);
+                }
+            }
+
+            static hexToBase64Url(value) {
+                try {
+                    return hextob64u(value);
+                } catch (e) {
+                    Log.error(e);
+                }
+            }
+        }
+    }
+
+    const JoseUtil = getJoseUtil({ jws, KeyUtil: KEYUTIL, X509, crypto: _crypto, hextob64u, b64tohex, AllowedSigningAlgs });
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class UserInfoService {
+        constructor(
+            settings, 
+            JsonServiceCtor = JsonService, 
+            MetadataServiceCtor = MetadataService, 
+            joseUtil = JoseUtil
+        ) {
+            if (!settings) {
+                Log.error("UserInfoService.ctor: No settings passed");
+                throw new Error("settings");
+            }
+
+            this._settings = settings;
+            this._jsonService = new JsonServiceCtor(undefined, undefined, this._getClaimsFromJwt.bind(this));
+            this._metadataService = new MetadataServiceCtor(this._settings);
+            this._joseUtil = joseUtil;
+        }
+
+        getClaims(token) {
+            if (!token) {
+                Log.error("UserInfoService.getClaims: No token passed");
+                return Promise.reject(new Error("A token is required"));
+            }
+
+            return this._metadataService.getUserInfoEndpoint().then(url => {
+                Log.debug("UserInfoService.getClaims: received userinfo url", url);
+
+                return this._jsonService.getJson(url, token).then(claims => {
+                    Log.debug("UserInfoService.getClaims: claims received", claims);
+                    return claims;
+                });
+            });
+        }
+
+        _getClaimsFromJwt(req) {
+            try {
+                let jwt = this._joseUtil.parseJwt(req.responseText);
+                if (!jwt || !jwt.header || !jwt.payload) {
+                    Log.error("UserInfoService._getClaimsFromJwt: Failed to parse JWT", jwt);
+                    return Promise.reject(new Error("Failed to parse id_token"));
+                }
+
+                var kid = jwt.header.kid;
+
+                let issuerPromise;
+                switch (this._settings.userInfoJwtIssuer) {
+                    case 'OP':
+                        issuerPromise = this._metadataService.getIssuer();
+                        break;
+                    case 'ANY':
+                        issuerPromise = Promise.resolve(jwt.payload.iss);
+                        break;
+                    default:
+                        issuerPromise = Promise.resolve(this._settings.userInfoJwtIssuer);
+                        break;
+                }
+
+                return issuerPromise.then(issuer => {
+                    Log.debug("UserInfoService._getClaimsFromJwt: Received issuer:" + issuer);
+
+                    return this._metadataService.getSigningKeys().then(keys => {
+                        if (!keys) {
+                            Log.error("UserInfoService._getClaimsFromJwt: No signing keys from metadata");
+                            return Promise.reject(new Error("No signing keys from metadata"));
+                        }
+
+                        Log.debug("UserInfoService._getClaimsFromJwt: Received signing keys");
+                        let key;
+                        if (!kid) {
+                            keys = this._filterByAlg(keys, jwt.header.alg);
+
+                            if (keys.length > 1) {
+                                Log.error("UserInfoService._getClaimsFromJwt: No kid found in id_token and more than one key found in metadata");
+                                return Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));
+                            }
+                            else {
+                                // kid is mandatory only when there are multiple keys in the referenced JWK Set document
+                                // see http://openid.net/specs/openid-connect-core-1_0.html#Signing
+                                key = keys[0];
+                            }
+                        }
+                        else {
+                            key = keys.filter(key => {
+                                return key.kid === kid;
+                            })[0];
+                        }
+
+                        if (!key) {
+                            Log.error("UserInfoService._getClaimsFromJwt: No key matching kid or alg found in signing keys");
+                            return Promise.reject(new Error("No key matching kid or alg found in signing keys"));
+                        }
+
+                        let audience = this._settings.client_id;
+
+                        let clockSkewInSeconds = this._settings.clockSkew;
+                        Log.debug("UserInfoService._getClaimsFromJwt: Validaing JWT; using clock skew (in seconds) of: ", clockSkewInSeconds);
+
+                        return this._joseUtil.validateJwt(req.responseText, key, issuer, audience, clockSkewInSeconds, undefined, true).then(() => {
+                            Log.debug("UserInfoService._getClaimsFromJwt: JWT validation successful");
+                            return jwt.payload;
+                        });
+                    });
+                });
+                return;
+            }
+            catch (e) {
+                Log.error("UserInfoService._getClaimsFromJwt: Error parsing JWT response", e.message);
+                reject(e);
+                return;
+            }
+        }
+
+        _filterByAlg(keys, alg) {
+            var kty = null;
+            if (alg.startsWith("RS")) {
+                kty = "RSA";
+            }
+            else if (alg.startsWith("PS")) {
+                kty = "PS";
+            }
+            else if (alg.startsWith("ES")) {
+                kty = "EC";
+            }
+            else {
+                Log.debug("UserInfoService._filterByAlg: alg not supported: ", alg);
+                return [];
+            }
+
+            Log.debug("UserInfoService._filterByAlg: Looking for keys that match kty: ", kty);
+
+            keys = keys.filter(key => {
+                return key.kty === kty;
+            });
+
+            Log.debug("UserInfoService._filterByAlg: Number of keys that match kty: ", kty, keys.length);
+
+            return keys;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class TokenClient {
+        constructor(settings, JsonServiceCtor = JsonService, MetadataServiceCtor = MetadataService) {
+            if (!settings) {
+                Log.error("TokenClient.ctor: No settings passed");
+                throw new Error("settings");
+            }
+
+            this._settings = settings;
+            this._jsonService = new JsonServiceCtor();
+            this._metadataService = new MetadataServiceCtor(this._settings);
+        }
+
+        exchangeCode(args = {}) {
+            args = Object.assign({}, args);
+
+            args.grant_type = args.grant_type || "authorization_code";
+            args.client_id = args.client_id || this._settings.client_id;
+            args.redirect_uri = args.redirect_uri || this._settings.redirect_uri;
+
+            if (!args.code) {
+                Log.error("TokenClient.exchangeCode: No code passed");
+                return Promise.reject(new Error("A code is required"));
+            }
+            if (!args.redirect_uri) {
+                Log.error("TokenClient.exchangeCode: No redirect_uri passed");
+                return Promise.reject(new Error("A redirect_uri is required"));
+            }
+            if (!args.code_verifier) {
+                Log.error("TokenClient.exchangeCode: No code_verifier passed");
+                return Promise.reject(new Error("A code_verifier is required"));
+            }
+            if (!args.client_id) {
+                Log.error("TokenClient.exchangeCode: No client_id passed");
+                return Promise.reject(new Error("A client_id is required"));
+            }
+
+            return this._metadataService.getTokenEndpoint(false).then(url => {
+                Log.debug("TokenClient.exchangeCode: Received token endpoint");
+
+                return this._jsonService.postForm(url, args).then(response => {
+                    Log.debug("TokenClient.exchangeCode: response received");
+                    return response;
+                });
+            });
+        }
+
+        exchangeRefreshToken(args = {}) {
+            args = Object.assign({}, args);
+
+            args.grant_type = args.grant_type || "refresh_token";
+            args.client_id = args.client_id || this._settings.client_id;
+            args.client_secret = args.client_secret || this._settings.client_secret;
+
+            if (!args.refresh_token) {
+                Log.error("TokenClient.exchangeRefreshToken: No refresh_token passed");
+                return Promise.reject(new Error("A refresh_token is required"));
+            }
+            if (!args.client_id) {
+                Log.error("TokenClient.exchangeRefreshToken: No client_id passed");
+                return Promise.reject(new Error("A client_id is required"));
+            }
+
+            return this._metadataService.getTokenEndpoint(false).then(url => {
+                Log.debug("TokenClient.exchangeRefreshToken: Received token endpoint");
+
+                return this._jsonService.postForm(url, args).then(response => {
+                    Log.debug("TokenClient.exchangeRefreshToken: response received");
+                    return response;
+                });
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class ErrorResponse extends Error {
+        constructor({error, error_description, error_uri, state, session_state}={}
+        ) {
+             if (!error){
+                Log.error("No error passed to ErrorResponse");
+                throw new Error("error");
+            }
+
+            super(error_description || error);
+
+            this.name = "ErrorResponse";
+
+            this.error = error;
+            this.error_description = error_description;
+            this.error_uri = error_uri;
+
+            this.state = state;
+            this.session_state = session_state;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const ProtocolClaims = ["nonce", "at_hash", "iat", "nbf", "exp", "aud", "iss", "c_hash"];
+
+    class ResponseValidator {
+
+        constructor(settings, 
+            MetadataServiceCtor = MetadataService,
+            UserInfoServiceCtor = UserInfoService, 
+            joseUtil = JoseUtil,
+            TokenClientCtor = TokenClient) {
+            if (!settings) {
+                Log.error("ResponseValidator.ctor: No settings passed to ResponseValidator");
+                throw new Error("settings");
+            }
+
+            this._settings = settings;
+            this._metadataService = new MetadataServiceCtor(this._settings);
+            this._userInfoService = new UserInfoServiceCtor(this._settings);
+            this._joseUtil = joseUtil;
+            this._tokenClient = new TokenClientCtor(this._settings);
+        }
+
+        validateSigninResponse(state, response) {
+            Log.debug("ResponseValidator.validateSigninResponse");
+
+            return this._processSigninParams(state, response).then(response => {
+                Log.debug("ResponseValidator.validateSigninResponse: state processed");
+                return this._validateTokens(state, response).then(response => {
+                    Log.debug("ResponseValidator.validateSigninResponse: tokens validated");
+                    return this._processClaims(state, response).then(response => {
+                        Log.debug("ResponseValidator.validateSigninResponse: claims processed");
+                        return response;
+                    });
+                });
+            });
+        }
+
+        validateSignoutResponse(state, response) {
+            if (state.id !== response.state) {
+                Log.error("ResponseValidator.validateSignoutResponse: State does not match");
+                return Promise.reject(new Error("State does not match"));
+            }
+
+            // now that we know the state matches, take the stored data
+            // and set it into the response so callers can get their state
+            // this is important for both success & error outcomes
+            Log.debug("ResponseValidator.validateSignoutResponse: state validated");
+            response.state = state.data;
+
+            if (response.error) {
+                Log.warn("ResponseValidator.validateSignoutResponse: Response was error", response.error);
+                return Promise.reject(new ErrorResponse(response));
+            }
+
+            return Promise.resolve(response);
+        }
+
+        _processSigninParams(state, response) {
+            if (state.id !== response.state) {
+                Log.error("ResponseValidator._processSigninParams: State does not match");
+                return Promise.reject(new Error("State does not match"));
+            }
+
+            if (!state.client_id) {
+                Log.error("ResponseValidator._processSigninParams: No client_id on state");
+                return Promise.reject(new Error("No client_id on state"));
+            }
+
+            if (!state.authority) {
+                Log.error("ResponseValidator._processSigninParams: No authority on state");
+                return Promise.reject(new Error("No authority on state"));
+            }
+
+            // this allows the authority to be loaded from the signin state
+            if (!this._settings.authority) {
+                this._settings.authority = state.authority;
+            }
+            // ensure we're using the correct authority if the authority is not loaded from signin state
+            else if (this._settings.authority && this._settings.authority !== state.authority) {
+                Log.error("ResponseValidator._processSigninParams: authority mismatch on settings vs. signin state");
+                return Promise.reject(new Error("authority mismatch on settings vs. signin state"));
+            }
+            // this allows the client_id to be loaded from the signin state
+            if (!this._settings.client_id) {
+                this._settings.client_id = state.client_id;
+            }
+            // ensure we're using the correct client_id if the client_id is not loaded from signin state
+            else if (this._settings.client_id && this._settings.client_id !== state.client_id) {
+                Log.error("ResponseValidator._processSigninParams: client_id mismatch on settings vs. signin state");
+                return Promise.reject(new Error("client_id mismatch on settings vs. signin state"));
+            }
+
+            // now that we know the state matches, take the stored data
+            // and set it into the response so callers can get their state
+            // this is important for both success & error outcomes
+            Log.debug("ResponseValidator._processSigninParams: state validated");
+            response.state = state.data;
+
+            if (response.error) {
+                Log.warn("ResponseValidator._processSigninParams: Response was error", response.error);
+                return Promise.reject(new ErrorResponse(response));
+            }
+
+            if (state.nonce && !response.id_token) {
+                Log.error("ResponseValidator._processSigninParams: Expecting id_token in response");
+                return Promise.reject(new Error("No id_token in response"));
+            }
+
+            if (!state.nonce && response.id_token) {
+                Log.error("ResponseValidator._processSigninParams: Not expecting id_token in response");
+                return Promise.reject(new Error("Unexpected id_token in response"));
+            }
+
+            if (state.code_verifier && !response.code) {
+                Log.error("ResponseValidator._processSigninParams: Expecting code in response");
+                return Promise.reject(new Error("No code in response"));
+            }
+
+            if (!state.code_verifier && response.code) {
+                Log.error("ResponseValidator._processSigninParams: Not expecting code in response");
+                return Promise.reject(new Error("Unexpected code in response"));
+            }
+
+            if (!response.scope) {
+                // if there's no scope on the response, then assume all scopes granted (per-spec) and copy over scopes from original request
+                response.scope = state.scope;
+            }
+
+            return Promise.resolve(response);
+        }
+
+        _processClaims(state, response) {
+            if (response.isOpenIdConnect) {
+                Log.debug("ResponseValidator._processClaims: response is OIDC, processing claims");
+
+                response.profile = this._filterProtocolClaims(response.profile);
+
+                if (state.skipUserInfo !== true && this._settings.loadUserInfo && response.access_token) {
+                    Log.debug("ResponseValidator._processClaims: loading user info");
+
+                    return this._userInfoService.getClaims(response.access_token).then(claims => {
+                        Log.debug("ResponseValidator._processClaims: user info claims received from user info endpoint");
+
+                        if (claims.sub !== response.profile.sub) {
+                            Log.error("ResponseValidator._processClaims: sub from user info endpoint does not match sub in access_token");
+                            return Promise.reject(new Error("sub from user info endpoint does not match sub in access_token"));
+                        }
+
+                        response.profile = this._mergeClaims(response.profile, claims);
+                        Log.debug("ResponseValidator._processClaims: user info claims received, updated profile:", response.profile);
+
+                        return response;
+                    });
+                }
+                else {
+                    Log.debug("ResponseValidator._processClaims: not loading user info");
+                }
+            }
+            else {
+                Log.debug("ResponseValidator._processClaims: response is not OIDC, not processing claims");
+            }
+
+            return Promise.resolve(response);
+        }
+
+        _mergeClaims(claims1, claims2) {
+            var result = Object.assign({}, claims1);
+
+            for (let name in claims2) {
+                var values = claims2[name];
+                if (!Array.isArray(values)) {
+                    values = [values];
+                }
+
+                for (let i = 0; i < values.length; i++) {
+                    let value = values[i];
+                    if (!result[name]) {
+                        result[name] = value;
+                    }
+                    else if (Array.isArray(result[name])) {
+                        if (result[name].indexOf(value) < 0) {
+                            result[name].push(value);
+                        }
+                    }
+                    else if (result[name] !== value) {
+                        if (typeof value === 'object') {
+                            result[name] = this._mergeClaims(result[name], value);
+                        } 
+                        else {
+                            result[name] = [result[name], value];
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        _filterProtocolClaims(claims) {
+            Log.debug("ResponseValidator._filterProtocolClaims, incoming claims:", claims);
+
+            var result = Object.assign({}, claims);
+
+            if (this._settings._filterProtocolClaims) {
+                ProtocolClaims.forEach(type => {
+                    delete result[type];
+                });
+
+                Log.debug("ResponseValidator._filterProtocolClaims: protocol claims filtered", result);
+            }
+            else {
+                Log.debug("ResponseValidator._filterProtocolClaims: protocol claims not filtered");
+            }
+
+            return result;
+        }
+
+        _validateTokens(state, response) {
+            if (response.code) {
+                Log.debug("ResponseValidator._validateTokens: Validating code");
+                return this._processCode(state, response);
+            }
+
+            if (response.id_token) {
+                if (response.access_token) {
+                    Log.debug("ResponseValidator._validateTokens: Validating id_token and access_token");
+                    return this._validateIdTokenAndAccessToken(state, response);
+                }
+
+                Log.debug("ResponseValidator._validateTokens: Validating id_token");
+                return this._validateIdToken(state, response);
+            }
+
+            Log.debug("ResponseValidator._validateTokens: No code to process or id_token to validate");
+            return Promise.resolve(response);
+        }
+
+        _processCode(state, response) {
+            var request = {
+                client_id: state.client_id,
+                client_secret: state.client_secret,
+                code : response.code,
+                redirect_uri: state.redirect_uri,
+                code_verifier: state.code_verifier
+            };
+
+            if (state.extraTokenParams && typeof(state.extraTokenParams) === 'object') {
+                Object.assign(request, state.extraTokenParams);
+            }
+            
+            return this._tokenClient.exchangeCode(request).then(tokenResponse => {
+                
+                for(var key in tokenResponse) {
+                    response[key] = tokenResponse[key];
+                }
+
+                if (response.id_token) {
+                    Log.debug("ResponseValidator._processCode: token response successful, processing id_token");
+                    return this._validateIdTokenAttributes(state, response);
+                }
+                else {
+                    Log.debug("ResponseValidator._processCode: token response successful, returning response");
+                }
+                
+                return response;
+            });
+        }
+
+        _validateIdTokenAttributes(state, response) {
+            return this._metadataService.getIssuer().then(issuer => {
+
+                let audience = state.client_id;
+                let clockSkewInSeconds = this._settings.clockSkew;
+                Log.debug("ResponseValidator._validateIdTokenAttributes: Validaing JWT attributes; using clock skew (in seconds) of: ", clockSkewInSeconds);
+
+                return this._joseUtil.validateJwtAttributes(response.id_token, issuer, audience, clockSkewInSeconds).then(payload => {
+                
+                    if (state.nonce && state.nonce !== payload.nonce) {
+                        Log.error("ResponseValidator._validateIdTokenAttributes: Invalid nonce in id_token");
+                        return Promise.reject(new Error("Invalid nonce in id_token"));
+                    }
+
+                    if (!payload.sub) {
+                        Log.error("ResponseValidator._validateIdTokenAttributes: No sub present in id_token");
+                        return Promise.reject(new Error("No sub present in id_token"));
+                    }
+
+                    response.profile = payload;
+                    return response;
+                });
+            });
+        }
+
+        _validateIdTokenAndAccessToken(state, response) {
+            return this._validateIdToken(state, response).then(response => {
+                return this._validateAccessToken(response);
+            });
+        }
+
+        _validateIdToken(state, response) {
+            if (!state.nonce) {
+                Log.error("ResponseValidator._validateIdToken: No nonce on state");
+                return Promise.reject(new Error("No nonce on state"));
+            }
+
+            let jwt = this._joseUtil.parseJwt(response.id_token);
+            if (!jwt || !jwt.header || !jwt.payload) {
+                Log.error("ResponseValidator._validateIdToken: Failed to parse id_token", jwt);
+                return Promise.reject(new Error("Failed to parse id_token"));
+            }
+
+            if (state.nonce !== jwt.payload.nonce) {
+                Log.error("ResponseValidator._validateIdToken: Invalid nonce in id_token");
+                return Promise.reject(new Error("Invalid nonce in id_token"));
+            }
+
+            var kid = jwt.header.kid;
+
+            return this._metadataService.getIssuer().then(issuer => {
+                Log.debug("ResponseValidator._validateIdToken: Received issuer");
+
+                return this._metadataService.getSigningKeys().then(keys => {
+                    if (!keys) {
+                        Log.error("ResponseValidator._validateIdToken: No signing keys from metadata");
+                        return Promise.reject(new Error("No signing keys from metadata"));
+                    }
+
+                    Log.debug("ResponseValidator._validateIdToken: Received signing keys");
+                    let key;
+                    if (!kid) {
+                        keys = this._filterByAlg(keys, jwt.header.alg);
+
+                        if (keys.length > 1) {
+                            Log.error("ResponseValidator._validateIdToken: No kid found in id_token and more than one key found in metadata");
+                            return Promise.reject(new Error("No kid found in id_token and more than one key found in metadata"));
+                        }
+                        else {
+                            // kid is mandatory only when there are multiple keys in the referenced JWK Set document
+                            // see http://openid.net/specs/openid-connect-core-1_0.html#Signing
+                            key = keys[0];
+                        }
+                    }
+                    else {
+                        key = keys.filter(key => {
+                            return key.kid === kid;
+                        })[0];
+                    }
+
+                    if (!key) {
+                        Log.error("ResponseValidator._validateIdToken: No key matching kid or alg found in signing keys");
+                        return Promise.reject(new Error("No key matching kid or alg found in signing keys"));
+                    }
+
+                    let audience = state.client_id;
+
+                    let clockSkewInSeconds = this._settings.clockSkew;
+                    Log.debug("ResponseValidator._validateIdToken: Validaing JWT; using clock skew (in seconds) of: ", clockSkewInSeconds);
+
+                    return this._joseUtil.validateJwt(response.id_token, key, issuer, audience, clockSkewInSeconds).then(()=>{
+                        Log.debug("ResponseValidator._validateIdToken: JWT validation successful");
+
+                        if (!jwt.payload.sub) {
+                            Log.error("ResponseValidator._validateIdToken: No sub present in id_token");
+                            return Promise.reject(new Error("No sub present in id_token"));
+                        }
+
+                        response.profile = jwt.payload;
+
+                        return response;
+                    });
+                });
+            });
+        }
+
+        _filterByAlg(keys, alg){
+            var kty = null;
+            if (alg.startsWith("RS")) {
+                kty = "RSA";
+            }
+            else if (alg.startsWith("PS")) {
+                kty = "PS";
+            }
+            else if (alg.startsWith("ES")) {
+                kty = "EC";
+            }
+            else {
+                Log.debug("ResponseValidator._filterByAlg: alg not supported: ", alg);
+                return [];
+            }
+
+            Log.debug("ResponseValidator._filterByAlg: Looking for keys that match kty: ", kty);
+
+            keys = keys.filter(key => {
+                return key.kty === kty;
+            });
+
+            Log.debug("ResponseValidator._filterByAlg: Number of keys that match kty: ", kty, keys.length);
+
+            return keys;
+        }
+
+        _validateAccessToken(response) {
+            if (!response.profile) {
+                Log.error("ResponseValidator._validateAccessToken: No profile loaded from id_token");
+                return Promise.reject(new Error("No profile loaded from id_token"));
+            }
+
+            if (!response.profile.at_hash) {
+                Log.error("ResponseValidator._validateAccessToken: No at_hash in id_token");
+                return Promise.reject(new Error("No at_hash in id_token"));
+            }
+
+            if (!response.id_token) {
+                Log.error("ResponseValidator._validateAccessToken: No id_token");
+                return Promise.reject(new Error("No id_token"));
+            }
+
+            let jwt = this._joseUtil.parseJwt(response.id_token);
+            if (!jwt || !jwt.header) {
+                Log.error("ResponseValidator._validateAccessToken: Failed to parse id_token", jwt);
+                return Promise.reject(new Error("Failed to parse id_token"));
+            }
+
+            var hashAlg = jwt.header.alg;
+            if (!hashAlg || hashAlg.length !== 5) {
+                Log.error("ResponseValidator._validateAccessToken: Unsupported alg:", hashAlg);
+                return Promise.reject(new Error("Unsupported alg: " + hashAlg));
+            }
+
+            var hashBits = hashAlg.substr(2, 3);
+            if (!hashBits) {
+                Log.error("ResponseValidator._validateAccessToken: Unsupported alg:", hashAlg, hashBits);
+                return Promise.reject(new Error("Unsupported alg: " + hashAlg));
+            }
+
+            hashBits = parseInt(hashBits);
+            if (hashBits !== 256 && hashBits !== 384 && hashBits !== 512) {
+                Log.error("ResponseValidator._validateAccessToken: Unsupported alg:", hashAlg, hashBits);
+                return Promise.reject(new Error("Unsupported alg: " + hashAlg));
+            }
+
+            let sha = "sha" + hashBits;
+            var hash = this._joseUtil.hashString(response.access_token, sha);
+            if (!hash) {
+                Log.error("ResponseValidator._validateAccessToken: access_token hash failed:", sha);
+                return Promise.reject(new Error("Failed to validate at_hash"));
+            }
+
+            var left = hash.substr(0, hash.length / 2);
+            var left_b64u = this._joseUtil.hexToBase64Url(left);
+            if (left_b64u !== response.profile.at_hash) {
+                Log.error("ResponseValidator._validateAccessToken: Failed to validate at_hash", left_b64u, response.profile.at_hash);
+                return Promise.reject(new Error("Failed to validate at_hash"));
+            }
+
+            Log.debug("ResponseValidator._validateAccessToken: success");
+
+            return Promise.resolve(response);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const OidcMetadataUrlPath$1 = '.well-known/openid-configuration';
+
+    const DefaultResponseType = "id_token";
+    const DefaultScope = "openid";
+    const DefaultStaleStateAge = 60 * 15; // seconds
+    const DefaultClockSkewInSeconds = 60 * 5;
+
+    class OidcClientSettings {
+        constructor({
+            // metadata related
+            authority, metadataUrl, metadata, signingKeys,
+            // client related
+            client_id, client_secret, response_type = DefaultResponseType, scope = DefaultScope,
+            redirect_uri, post_logout_redirect_uri,
+            // optional protocol
+            prompt, display, max_age, ui_locales, acr_values, resource, response_mode,
+            // behavior flags
+            filterProtocolClaims = true, loadUserInfo = true,
+            staleStateAge = DefaultStaleStateAge, clockSkew = DefaultClockSkewInSeconds,
+            userInfoJwtIssuer = 'OP',
+            // other behavior
+            stateStore = new WebStorageStateStore(),
+            ResponseValidatorCtor = ResponseValidator,
+            MetadataServiceCtor = MetadataService,
+            // extra query params
+            extraQueryParams = {},
+            extraTokenParams = {}
+        } = {}) {
+
+            this._authority = authority;
+            this._metadataUrl = metadataUrl;
+            this._metadata = metadata;
+            this._signingKeys = signingKeys;
+
+            this._client_id = client_id;
+            this._client_secret = client_secret;
+            this._response_type = response_type;
+            this._scope = scope;
+            this._redirect_uri = redirect_uri;
+            this._post_logout_redirect_uri = post_logout_redirect_uri;
+
+            this._prompt = prompt;
+            this._display = display;
+            this._max_age = max_age;
+            this._ui_locales = ui_locales;
+            this._acr_values = acr_values;
+            this._resource = resource;
+            this._response_mode = response_mode;
+
+            this._filterProtocolClaims = !!filterProtocolClaims;
+            this._loadUserInfo = !!loadUserInfo;
+            this._staleStateAge = staleStateAge;
+            this._clockSkew = clockSkew;
+            this._userInfoJwtIssuer = userInfoJwtIssuer;
+
+            this._stateStore = stateStore;
+            this._validator = new ResponseValidatorCtor(this);
+            this._metadataService = new MetadataServiceCtor(this);
+
+            this._extraQueryParams = typeof extraQueryParams === 'object' ? extraQueryParams : {};
+            this._extraTokenParams = typeof extraTokenParams === 'object' ? extraTokenParams : {};
+        }
+
+        // client config
+        get client_id() {
+            return this._client_id;
+        }
+        set client_id(value) {
+            if (!this._client_id) {
+                // one-time set only
+                this._client_id = value;
+            }
+            else {
+                Log.error("OidcClientSettings.set_client_id: client_id has already been assigned.");
+                throw new Error("client_id has already been assigned.")
+            }
+        }
+        get client_secret() {
+            return this._client_secret;
+        }
+        get response_type() {
+            return this._response_type;
+        }
+        get scope() {
+            return this._scope;
+        }
+        get redirect_uri() {
+            return this._redirect_uri;
+        }
+        get post_logout_redirect_uri() {
+            return this._post_logout_redirect_uri;
+        }
+
+
+        // optional protocol params
+        get prompt() {
+            return this._prompt;
+        }
+        get display() {
+            return this._display;
+        }
+        get max_age() {
+            return this._max_age;
+        }
+        get ui_locales() {
+            return this._ui_locales;
+        }
+        get acr_values() {
+            return this._acr_values;
+        }
+        get resource() {
+            return this._resource;
+        }
+        get response_mode() {
+            return this._response_mode;
+        }
+
+
+        // metadata
+        get authority() {
+            return this._authority;
+        }
+        set authority(value) {
+            if (!this._authority) {
+                // one-time set only
+                this._authority = value;
+            }
+            else {
+                Log.error("OidcClientSettings.set_authority: authority has already been assigned.");
+                throw new Error("authority has already been assigned.")
+            }
+        }
+        get metadataUrl() {
+            if (!this._metadataUrl) {
+                this._metadataUrl = this.authority;
+
+                if (this._metadataUrl && this._metadataUrl.indexOf(OidcMetadataUrlPath$1) < 0) {
+                    if (this._metadataUrl[this._metadataUrl.length - 1] !== '/') {
+                        this._metadataUrl += '/';
+                    }
+                    this._metadataUrl += OidcMetadataUrlPath$1;
+                }
+            }
+
+            return this._metadataUrl;
+        }
+
+        // settable/cachable metadata values
+        get metadata() {
+            return this._metadata;
+        }
+        set metadata(value) {
+            this._metadata = value;
+        }
+
+        get signingKeys() {
+            return this._signingKeys;
+        }
+        set signingKeys(value) {
+            this._signingKeys = value;
+        }
+
+        // behavior flags
+        get filterProtocolClaims() {
+            return this._filterProtocolClaims;
+        }
+        get loadUserInfo() {
+            return this._loadUserInfo;
+        }
+        get staleStateAge() {
+            return this._staleStateAge;
+        }
+        get clockSkew() {
+            return this._clockSkew;
+        }
+        get userInfoJwtIssuer() {
+            return this._userInfoJwtIssuer;
+        }
+
+        get stateStore() {
+            return this._stateStore;
+        }
+        get validator() {
+            return this._validator;
+        }
+        get metadataService() {
+            return this._metadataService;
+        }
+
+        // extra query params
+        get extraQueryParams() {
+            return this._extraQueryParams;
+        }
+        set extraQueryParams(value) {
+            if (typeof value === 'object'){
+                this._extraQueryParams = value;
+            } else {
+                this._extraQueryParams = {};
+            }
+        }
+
+        // extra token params
+        get extraTokenParams() {
+            return this._extraTokenParams;
+        }
+        set extraTokenParams(value) {
+            if (typeof value === 'object'){
+                this._extraTokenParams = value;
+            } else {
+                this._extraTokenParams = {};
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class UrlUtility {
+        static addQueryParam(url, name, value) {
+            if (url.indexOf('?') < 0) {
+                url += "?";
+            }
+
+            if (url[url.length - 1] !== "?") {
+                url += "&";
+            }
+
+            url += encodeURIComponent(name);
+            url += "=";
+            url += encodeURIComponent(value);
+
+            return url;
+        }
+
+        static parseUrlFragment(value, delimiter = "#", global = Global) {
+            if (typeof value !== 'string'){
+                value = global.location.href;
+            }
+
+            var idx = value.lastIndexOf(delimiter);
+            if (idx >= 0) {
+                value = value.substr(idx + 1);
+            }
+
+            if (delimiter === "?") {
+                // if we're doing query, then strip off hash fragment before we parse
+                idx = value.indexOf('#');
+                if (idx >= 0) {
+                    value = value.substr(0, idx);
+                }
+            }
+
+            var params = {},
+                regex = /([^&=]+)=([^&]*)/g,
+                m;
+
+            var counter = 0;
+            while (m = regex.exec(value)) {
+                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+                if (counter++ > 50) {
+                    Log.error("UrlUtility.parseUrlFragment: response exceeded expected number of parameters", value);
+                    return {
+                        error: "Response exceeded expected number of parameters"
+                    };
+                }
+            }
+
+            for (var prop in params) {
+                return params;
+            }
+
+            return {};
+        }
+    }
+
+    var rngBrowser = createCommonjsModule(function (module) {
+    // Unique ID creation requires a high quality random # generator.  In the
+    // browser this is a little complicated due to unknown quality of Math.random()
+    // and inconsistent support for the `crypto` API.  We do the best we can via
+    // feature-detection
+
+    // getRandomValues needs to be invoked in a context where "this" is a Crypto
+    // implementation. Also, find the complete implementation of crypto on IE11.
+    var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
+                          (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
+
+    if (getRandomValues) {
+      // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
+      var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
+
+      module.exports = function whatwgRNG() {
+        getRandomValues(rnds8);
+        return rnds8;
+      };
+    } else {
+      // Math.random()-based (RNG)
+      //
+      // If all else fails, use Math.random().  It's fast, but is of unspecified
+      // quality.
+      var rnds = new Array(16);
+
+      module.exports = function mathRNG() {
+        for (var i = 0, r; i < 16; i++) {
+          if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
+          rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
+        }
+
+        return rnds;
+      };
+    }
     });
 
-    var oidcClient = unwrapExports(oidcClient_min);
+    /**
+     * Convert array of 16 byte values to UUID string format of the form:
+     * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+     */
+    var byteToHex = [];
+    for (var i = 0; i < 256; ++i) {
+      byteToHex[i] = (i + 0x100).toString(16).substr(1);
+    }
+
+    function bytesToUuid(buf, offset) {
+      var i = offset || 0;
+      var bth = byteToHex;
+      // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
+      return ([bth[buf[i++]], bth[buf[i++]], 
+    	bth[buf[i++]], bth[buf[i++]], '-',
+    	bth[buf[i++]], bth[buf[i++]], '-',
+    	bth[buf[i++]], bth[buf[i++]], '-',
+    	bth[buf[i++]], bth[buf[i++]], '-',
+    	bth[buf[i++]], bth[buf[i++]],
+    	bth[buf[i++]], bth[buf[i++]],
+    	bth[buf[i++]], bth[buf[i++]]]).join('');
+    }
+
+    var bytesToUuid_1 = bytesToUuid;
+
+    function v4(options, buf, offset) {
+      var i = buf && offset || 0;
+
+      if (typeof(options) == 'string') {
+        buf = options === 'binary' ? new Array(16) : null;
+        options = null;
+      }
+      options = options || {};
+
+      var rnds = options.random || (options.rng || rngBrowser)();
+
+      // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+      rnds[6] = (rnds[6] & 0x0f) | 0x40;
+      rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+      // Copy bytes to buffer, if provided
+      if (buf) {
+        for (var ii = 0; ii < 16; ++ii) {
+          buf[i + ii] = rnds[ii];
+        }
+      }
+
+      return buf || bytesToUuid_1(rnds);
+    }
+
+    var v4_1 = v4;
+
+    /**
+     * Generates RFC4122 version 4 guid ()
+     */
+
+    function random() {
+      return v4_1().replace(/-/g, '');
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class State {
+        constructor({id, data, created, request_type} = {}) {
+            this._id = id || random();
+            this._data = data;
+
+            if (typeof created === 'number' && created > 0) {
+                this._created = created;
+            }
+            else {
+                this._created = parseInt(Date.now() / 1000);
+            }
+            this._request_type =  request_type;
+        }
+
+        get id() {
+            return this._id;
+        }
+        get data() {
+            return this._data;
+        }
+        get created() {
+            return this._created;
+        }
+        get request_type() {
+            return this._request_type;
+        }
+
+        toStorageString() {
+            Log.debug("State.toStorageString");
+            return JSON.stringify({
+                id: this.id,
+                data: this.data,
+                created: this.created,
+                request_type: this.request_type
+            });
+        }
+
+        static fromStorageString(storageString) {
+            Log.debug("State.fromStorageString");
+            return new State(JSON.parse(storageString));
+        }
+
+        static clearStaleState(storage, age) {
+
+            var cutoff = Date.now() / 1000 - age;
+
+            return storage.getAllKeys().then(keys => {
+                Log.debug("State.clearStaleState: got keys", keys);
+
+                var promises = [];
+                for (let i = 0; i < keys.length; i++) {
+                    let key = keys[i];
+                    var p = storage.get(key).then(item => {
+                        let remove = false;
+
+                        if (item) {
+                            try {
+                                var state = State.fromStorageString(item);
+
+                                Log.debug("State.clearStaleState: got item from key: ", key, state.created);
+
+                                if (state.created <= cutoff) {
+                                    remove = true;
+                                }
+                            }
+                            catch (e) {
+                                Log.error("State.clearStaleState: Error parsing state for key", key, e.message);
+                                remove = true;
+                            }
+                        }
+                        else {
+                            Log.debug("State.clearStaleState: no item in storage for key: ", key);
+                            remove = true;
+                        }
+
+                        if (remove) {
+                            Log.debug("State.clearStaleState: removed item for key: ", key);
+                            return storage.remove(key);
+                        }
+                    });
+
+                    promises.push(p);
+                }
+
+                Log.debug("State.clearStaleState: waiting on promise count:", promises.length);
+                return Promise.all(promises);
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SigninState extends State {
+        constructor({nonce, authority, client_id, redirect_uri, code_verifier, response_mode, client_secret, scope, extraTokenParams, skipUserInfo} = {}) {
+            super(arguments[0]);
+
+            if (nonce === true) {
+                this._nonce = random();
+            }
+            else if (nonce) {
+                this._nonce = nonce;
+            }
+
+            if (code_verifier === true) {
+                // random() produces 32 length
+                this._code_verifier = random() + random() + random();
+            }
+            else if (code_verifier) {
+                this._code_verifier = code_verifier;
+            }
+            
+            if (this.code_verifier) {
+                let hash = JoseUtil.hashString(this.code_verifier, "SHA256");
+                this._code_challenge = JoseUtil.hexToBase64Url(hash);
+            }
+
+            this._redirect_uri = redirect_uri;
+            this._authority = authority;
+            this._client_id = client_id;
+            this._response_mode = response_mode;
+            this._client_secret = client_secret;
+            this._scope = scope;
+            this._extraTokenParams = extraTokenParams;
+            this._skipUserInfo = skipUserInfo;
+        }
+
+        get nonce() {
+            return this._nonce;
+        }
+        get authority() {
+            return this._authority;
+        }
+        get client_id() {
+            return this._client_id;
+        }
+        get redirect_uri() {
+            return this._redirect_uri;
+        }
+        get code_verifier() {
+            return this._code_verifier;
+        }
+        get code_challenge() {
+            return this._code_challenge;
+        }
+        get response_mode() {
+            return this._response_mode;
+        }
+        get client_secret() {
+            return this._client_secret;
+        }
+        get scope() {
+            return this._scope;
+        }
+        get extraTokenParams() {
+            return this._extraTokenParams;
+        }
+        get skipUserInfo() {
+            return this._skipUserInfo;
+        }
+        
+        toStorageString() {
+            Log.debug("SigninState.toStorageString");
+            return JSON.stringify({
+                id: this.id,
+                data: this.data,
+                created: this.created,
+                request_type: this.request_type,
+                nonce: this.nonce,
+                code_verifier: this.code_verifier,
+                redirect_uri: this.redirect_uri,
+                authority: this.authority,
+                client_id: this.client_id,
+                response_mode: this.response_mode,
+                client_secret: this.client_secret,
+                scope: this.scope,
+                extraTokenParams : this.extraTokenParams,
+                skipUserInfo: this.skipUserInfo
+            });
+        }
+
+        static fromStorageString(storageString) {
+            Log.debug("SigninState.fromStorageString");
+            var data = JSON.parse(storageString);
+            return new SigninState(data);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SigninRequest {
+        constructor({
+            // mandatory
+            url, client_id, redirect_uri, response_type, scope, authority,
+            // optional
+            data, prompt, display, max_age, ui_locales, id_token_hint, login_hint, acr_values, resource, response_mode,
+            request, request_uri, extraQueryParams, request_type, client_secret, extraTokenParams, skipUserInfo
+        }) {
+            if (!url) {
+                Log.error("SigninRequest.ctor: No url passed");
+                throw new Error("url");
+            }
+            if (!client_id) {
+                Log.error("SigninRequest.ctor: No client_id passed");
+                throw new Error("client_id");
+            }
+            if (!redirect_uri) {
+                Log.error("SigninRequest.ctor: No redirect_uri passed");
+                throw new Error("redirect_uri");
+            }
+            if (!response_type) {
+                Log.error("SigninRequest.ctor: No response_type passed");
+                throw new Error("response_type");
+            }
+            if (!scope) {
+                Log.error("SigninRequest.ctor: No scope passed");
+                throw new Error("scope");
+            }
+            if (!authority) {
+                Log.error("SigninRequest.ctor: No authority passed");
+                throw new Error("authority");
+            }
+
+            let oidc = SigninRequest.isOidc(response_type);
+            let code = SigninRequest.isCode(response_type);
+
+            if (!response_mode) {
+                response_mode = SigninRequest.isCode(response_type) ? "query" : null;
+            }
+
+            this.state = new SigninState({ nonce: oidc, 
+                data, client_id, authority, redirect_uri, 
+                code_verifier: code, 
+                request_type, response_mode,
+                client_secret, scope, extraTokenParams, skipUserInfo });
+
+            url = UrlUtility.addQueryParam(url, "client_id", client_id);
+            url = UrlUtility.addQueryParam(url, "redirect_uri", redirect_uri);
+            url = UrlUtility.addQueryParam(url, "response_type", response_type);
+            url = UrlUtility.addQueryParam(url, "scope", scope);
+
+            url = UrlUtility.addQueryParam(url, "state", this.state.id);
+            if (oidc) {
+                url = UrlUtility.addQueryParam(url, "nonce", this.state.nonce);
+            }
+            if (code) {
+                url = UrlUtility.addQueryParam(url, "code_challenge", this.state.code_challenge);
+                url = UrlUtility.addQueryParam(url, "code_challenge_method", "S256");
+            }
+
+            var optional = { prompt, display, max_age, ui_locales, id_token_hint, login_hint, acr_values, resource, request, request_uri, response_mode };
+            for(let key in optional){
+                if (optional[key]) {
+                    url = UrlUtility.addQueryParam(url, key, optional[key]);
+                }
+            }
+
+            for(let key in extraQueryParams){
+                url = UrlUtility.addQueryParam(url, key, extraQueryParams[key]);
+            }
+
+            this.url = url;
+        }
+
+        static isOidc(response_type) {
+            var result = response_type.split(/\s+/g).filter(function(item) {
+                return item === "id_token";
+            });
+            return !!(result[0]);
+        }
+
+        static isOAuth(response_type) {
+            var result = response_type.split(/\s+/g).filter(function(item) {
+                return item === "token";
+            });
+            return !!(result[0]);
+        }
+        
+        static isCode(response_type) {
+            var result = response_type.split(/\s+/g).filter(function(item) {
+                return item === "code";
+            });
+            return !!(result[0]);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const OidcScope = "openid";
+
+    class SigninResponse {
+        constructor(url, delimiter = "#") {
+
+            var values = UrlUtility.parseUrlFragment(url, delimiter);
+
+            this.error = values.error;
+            this.error_description = values.error_description;
+            this.error_uri = values.error_uri;
+
+            this.code = values.code;
+            this.state = values.state;
+            this.id_token = values.id_token;
+            this.session_state = values.session_state;
+            this.access_token = values.access_token;
+            this.token_type = values.token_type;
+            this.scope = values.scope;
+            this.profile = undefined; // will be set from ResponseValidator
+
+            this.expires_in = values.expires_in;
+        }
+
+        get expires_in() {
+            if (this.expires_at) {
+                let now = parseInt(Date.now() / 1000);
+                return this.expires_at - now;
+            }
+            return undefined;
+        }
+        set expires_in(value){
+            let expires_in = parseInt(value);
+            if (typeof expires_in === 'number' && expires_in > 0) {
+                let now = parseInt(Date.now() / 1000);
+                this.expires_at = now + expires_in;
+            }
+        }
+
+        get expired() {
+            let expires_in = this.expires_in;
+            if (expires_in !== undefined) {
+                return expires_in <= 0;
+            }
+            return undefined;
+        }
+
+        get scopes() {
+            return (this.scope || "").split(" ");
+        }
+
+        get isOpenIdConnect() {
+            return this.scopes.indexOf(OidcScope) >= 0 || !!this.id_token;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SignoutRequest {
+        constructor({url, id_token_hint, post_logout_redirect_uri, data, extraQueryParams, request_type}) {
+            if (!url) {
+                Log.error("SignoutRequest.ctor: No url passed");
+                throw new Error("url");
+            }
+
+            if (id_token_hint) {
+                url = UrlUtility.addQueryParam(url, "id_token_hint", id_token_hint);
+            }
+
+            if (post_logout_redirect_uri) {
+                url = UrlUtility.addQueryParam(url, "post_logout_redirect_uri", post_logout_redirect_uri);
+
+                if (data) {
+                    this.state = new State({ data, request_type });
+
+                    url = UrlUtility.addQueryParam(url, "state", this.state.id);
+                }
+            }
+
+            for(let key in extraQueryParams){
+                url = UrlUtility.addQueryParam(url, key, extraQueryParams[key]);
+            }
+
+            this.url = url;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SignoutResponse {
+        constructor(url) {
+
+            var values = UrlUtility.parseUrlFragment(url, "?");
+
+            this.error = values.error;
+            this.error_description = values.error_description;
+            this.error_uri = values.error_uri;
+
+            this.state = values.state;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class OidcClient {
+        constructor(settings = {}) {
+            if (settings instanceof OidcClientSettings) {
+                this._settings = settings;
+            }
+            else {
+                this._settings = new OidcClientSettings(settings);
+            }
+        }
+
+        get _stateStore() {
+            return this.settings.stateStore;
+        }
+        get _validator() {
+            return this.settings.validator;
+        }
+        get _metadataService() {
+            return this.settings.metadataService;
+        }
+
+        get settings() {
+            return this._settings;
+        }
+        get metadataService() {
+            return this._metadataService;
+        }
+
+        createSigninRequest({
+            response_type, scope, redirect_uri,
+            // data was meant to be the place a caller could indicate the data to
+            // have round tripped, but people were getting confused, so i added state (since that matches the spec)
+            // and so now if data is not passed, but state is then state will be used
+            data, state, prompt, display, max_age, ui_locales, id_token_hint, login_hint, acr_values,
+            resource, request, request_uri, response_mode, extraQueryParams, extraTokenParams, request_type, skipUserInfo } = {},
+            stateStore
+        ) {
+            Log.debug("OidcClient.createSigninRequest");
+
+            let client_id = this._settings.client_id;
+            response_type = response_type || this._settings.response_type;
+            scope = scope || this._settings.scope;
+            redirect_uri = redirect_uri || this._settings.redirect_uri;
+
+            // id_token_hint, login_hint aren't allowed on _settings
+            prompt = prompt || this._settings.prompt;
+            display = display || this._settings.display;
+            max_age = max_age || this._settings.max_age;
+            ui_locales = ui_locales || this._settings.ui_locales;
+            acr_values = acr_values || this._settings.acr_values;
+            resource = resource || this._settings.resource;
+            response_mode = response_mode || this._settings.response_mode;
+            extraQueryParams = extraQueryParams || this._settings.extraQueryParams;
+            extraTokenParams = extraTokenParams || this._settings.extraTokenParams;
+
+            let authority = this._settings.authority;
+
+            if (SigninRequest.isCode(response_type) && response_type !== "code") {
+                return Promise.reject(new Error("OpenID Connect hybrid flow is not supported"));
+            }
+
+            return this._metadataService.getAuthorizationEndpoint().then(url => {
+                Log.debug("OidcClient.createSigninRequest: Received authorization endpoint", url);
+
+                let signinRequest = new SigninRequest({
+                    url,
+                    client_id,
+                    redirect_uri,
+                    response_type,
+                    scope,
+                    data: data || state,
+                    authority,
+                    prompt, display, max_age, ui_locales, id_token_hint, login_hint, acr_values,
+                    resource, request, request_uri, extraQueryParams, extraTokenParams, request_type, response_mode,
+                    client_secret: this._settings.client_secret,
+                    skipUserInfo
+                });
+
+                var signinState = signinRequest.state;
+                stateStore = stateStore || this._stateStore;
+
+                return stateStore.set(signinState.id, signinState.toStorageString()).then(() => {
+                    return signinRequest;
+                });
+            });
+        }
+
+        readSigninResponseState(url, stateStore, removeState = false) {
+            Log.debug("OidcClient.readSigninResponseState");
+
+            let useQuery = this._settings.response_mode === "query" || 
+                (!this._settings.response_mode && SigninRequest.isCode(this._settings.response_type));
+            let delimiter = useQuery ? "?" : "#";
+
+            var response = new SigninResponse(url, delimiter);
+
+            if (!response.state) {
+                Log.error("OidcClient.readSigninResponseState: No state in response");
+                return Promise.reject(new Error("No state in response"));
+            }
+
+            stateStore = stateStore || this._stateStore;
+
+            var stateApi = removeState ? stateStore.remove.bind(stateStore) : stateStore.get.bind(stateStore);
+
+            return stateApi(response.state).then(storedStateString => {
+                if (!storedStateString) {
+                    Log.error("OidcClient.readSigninResponseState: No matching state found in storage");
+                    throw new Error("No matching state found in storage");
+                }
+
+                let state = SigninState.fromStorageString(storedStateString);
+                return {state, response};
+            });
+        }
+
+        processSigninResponse(url, stateStore) {
+            Log.debug("OidcClient.processSigninResponse");
+
+            return this.readSigninResponseState(url, stateStore, true).then(({state, response}) => {
+                Log.debug("OidcClient.processSigninResponse: Received state from storage; validating response");
+                return this._validator.validateSigninResponse(state, response);
+            });
+        }
+
+        createSignoutRequest({id_token_hint, data, state, post_logout_redirect_uri, extraQueryParams, request_type } = {},
+            stateStore
+        ) {
+            Log.debug("OidcClient.createSignoutRequest");
+
+            post_logout_redirect_uri = post_logout_redirect_uri || this._settings.post_logout_redirect_uri;
+            extraQueryParams = extraQueryParams || this._settings.extraQueryParams;
+
+            return this._metadataService.getEndSessionEndpoint().then(url => {
+                if (!url) {
+                    Log.error("OidcClient.createSignoutRequest: No end session endpoint url returned");
+                    throw new Error("no end session endpoint");
+                }
+
+                Log.debug("OidcClient.createSignoutRequest: Received end session endpoint", url);
+
+                let request = new SignoutRequest({
+                    url,
+                    id_token_hint,
+                    post_logout_redirect_uri,
+                    data: data || state,
+                    extraQueryParams,
+                    request_type
+                });
+
+                var signoutState = request.state;
+                if (signoutState) {
+                    Log.debug("OidcClient.createSignoutRequest: Signout request has state to persist");
+
+                    stateStore = stateStore || this._stateStore;
+                    stateStore.set(signoutState.id, signoutState.toStorageString());
+                }
+
+                return request;
+            });
+        }
+
+        readSignoutResponseState(url, stateStore, removeState = false) {
+            Log.debug("OidcClient.readSignoutResponseState");
+
+            var response = new SignoutResponse(url);
+            if (!response.state) {
+                Log.debug("OidcClient.readSignoutResponseState: No state in response");
+
+                if (response.error) {
+                    Log.warn("OidcClient.readSignoutResponseState: Response was error: ", response.error);
+                    return Promise.reject(new ErrorResponse(response));
+                }
+
+                return Promise.resolve({undefined, response});
+            }
+
+            var stateKey = response.state;
+
+            stateStore = stateStore || this._stateStore;
+
+            var stateApi = removeState ? stateStore.remove.bind(stateStore) : stateStore.get.bind(stateStore);
+            return stateApi(stateKey).then(storedStateString => {
+                if (!storedStateString) {
+                    Log.error("OidcClient.readSignoutResponseState: No matching state found in storage");
+                    throw new Error("No matching state found in storage");
+                }
+
+                let state = State.fromStorageString(storedStateString);
+
+                return {state, response};
+            });
+        }
+
+        processSignoutResponse(url, stateStore) {
+            Log.debug("OidcClient.processSignoutResponse");
+
+            return this.readSignoutResponseState(url, stateStore, true).then(({state, response}) => {
+                if (state) {
+                    Log.debug("OidcClient.processSignoutResponse: Received state from storage; validating response");
+                    return this._validator.validateSignoutResponse(state, response);
+                }
+                else {
+                    Log.debug("OidcClient.processSignoutResponse: No state from storage; skipping validating response");
+                    return response;
+                }
+            });
+        }
+
+        clearStaleState(stateStore) {
+            Log.debug("OidcClient.clearStaleState");
+
+            stateStore = stateStore || this._stateStore;
+
+            return State.clearStaleState(stateStore, this.settings.staleStateAge);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class InMemoryWebStorage{
+        constructor(){
+            this._data = {};
+        }
+
+        getItem(key) {
+            Log.debug("InMemoryWebStorage.getItem", key);
+            return this._data[key];
+        }
+
+        setItem(key, value){
+            Log.debug("InMemoryWebStorage.setItem", key);
+            this._data[key] = value;
+        }
+
+        removeItem(key){
+            Log.debug("InMemoryWebStorage.removeItem", key);
+            delete this._data[key];
+        }
+
+        get length() {
+            return Object.getOwnPropertyNames(this._data).length;
+        }
+
+        key(index) {
+            return Object.getOwnPropertyNames(this._data)[index];
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class RedirectNavigator {
+
+        prepare() {
+            return Promise.resolve(this);
+        }
+
+        navigate(params) {
+            if (!params || !params.url) {
+                Log.error("RedirectNavigator.navigate: No url provided");
+                return Promise.reject(new Error("No url provided"));
+            }
+
+            if (params.useReplaceToNavigate) {
+                window.location.replace(params.url);
+            }
+            else {
+                window.location = params.url;
+            }
+
+            return Promise.resolve();
+        }
+
+        get url() {
+            return window.location.href;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const CheckForPopupClosedInterval = 500;
+    const DefaultPopupFeatures = 'location=no,toolbar=no,width=500,height=500,left=100,top=100;';
+    //const DefaultPopupFeatures = 'location=no,toolbar=no,width=500,height=500,left=100,top=100;resizable=yes';
+
+    const DefaultPopupTarget = "_blank";
+
+    class PopupWindow {
+
+        constructor(params) {
+            this._promise = new Promise((resolve, reject) => {
+                this._resolve = resolve;
+                this._reject = reject;
+            });
+
+            let target = params.popupWindowTarget || DefaultPopupTarget;
+            let features = params.popupWindowFeatures || DefaultPopupFeatures;
+
+            this._popup = window.open('', target, features);
+            if (this._popup) {
+                Log.debug("PopupWindow.ctor: popup successfully created");
+                this._checkForPopupClosedTimer = window.setInterval(this._checkForPopupClosed.bind(this), CheckForPopupClosedInterval);
+            }
+        }
+
+        get promise() {
+            return this._promise;
+        }
+
+        navigate(params) {
+            if (!this._popup) {
+                this._error("PopupWindow.navigate: Error opening popup window");
+            }
+            else if (!params || !params.url) {
+                this._error("PopupWindow.navigate: no url provided");
+                this._error("No url provided");
+            }
+            else {
+                Log.debug("PopupWindow.navigate: Setting URL in popup");
+
+                this._id = params.id;
+                if (this._id) {
+                    window["popupCallback_" + params.id] = this._callback.bind(this);
+                }
+
+                this._popup.focus();
+                this._popup.window.location = params.url;
+            }
+
+            return this.promise;
+        }
+
+        _success(data) {
+            Log.debug("PopupWindow.callback: Successful response from popup window");
+
+            this._cleanup();
+            this._resolve(data);
+        }
+        _error(message) {
+            Log.error("PopupWindow.error: ", message);
+            
+            this._cleanup();
+            this._reject(new Error(message));
+        }
+
+        close() {
+            this._cleanup(false);
+        }
+
+        _cleanup(keepOpen) {
+            Log.debug("PopupWindow.cleanup");
+
+            window.clearInterval(this._checkForPopupClosedTimer);
+            this._checkForPopupClosedTimer = null;
+
+            delete window["popupCallback_" + this._id];
+
+            if (this._popup && !keepOpen) {
+                this._popup.close();
+            }
+            this._popup = null;
+        }
+
+        _checkForPopupClosed() {
+            if (!this._popup || this._popup.closed) {
+                this._error("Popup window closed");
+            }
+        }
+
+        _callback(url, keepOpen) {
+            this._cleanup(keepOpen);
+
+            if (url) {
+                Log.debug("PopupWindow.callback success");
+                this._success({ url: url });
+            }
+            else {
+                Log.debug("PopupWindow.callback: Invalid response from popup");
+                this._error("Invalid response from popup");
+            }
+        }
+
+        static notifyOpener(url, keepOpen, delimiter) {
+            if (window.opener) {
+                url = url || window.location.href;
+                if (url) {
+                    var data = UrlUtility.parseUrlFragment(url, delimiter);
+
+                    if (data.state) {
+                        var name = "popupCallback_" + data.state;
+                        var callback = window.opener[name];
+                        if (callback) {
+                            Log.debug("PopupWindow.notifyOpener: passing url message to opener");
+                            callback(url, keepOpen);
+                        }
+                        else {
+                            Log.warn("PopupWindow.notifyOpener: no matching callback found on opener");
+                        }
+                    }
+                    else {
+                        Log.warn("PopupWindow.notifyOpener: no state found in response url");
+                    }
+                }
+            }
+            else {
+                Log.warn("PopupWindow.notifyOpener: no window.opener. Can't complete notification.");
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class PopupNavigator {
+
+        prepare(params) {
+            let popup = new PopupWindow(params);
+            return Promise.resolve(popup);
+        }
+
+        callback(url, keepOpen, delimiter) {
+            Log.debug("PopupNavigator.callback");
+
+            try {
+                PopupWindow.notifyOpener(url, keepOpen, delimiter);
+                return Promise.resolve();
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const DefaultTimeout = 10000;
+
+    class IFrameWindow {
+
+        constructor(params) {
+            this._promise = new Promise((resolve, reject) => {
+                this._resolve = resolve;
+                this._reject = reject;
+            });
+
+            this._boundMessageEvent = this._message.bind(this);
+            window.addEventListener("message", this._boundMessageEvent, false);
+
+            this._frame = window.document.createElement("iframe");
+
+            // shotgun approach
+            this._frame.style.visibility = "hidden";
+            this._frame.style.position = "absolute";
+            this._frame.style.display = "none";
+            this._frame.style.width = 0;
+            this._frame.style.height = 0;
+
+            window.document.body.appendChild(this._frame);
+        }
+
+        navigate(params) {
+            if (!params || !params.url) {
+                this._error("No url provided");
+            }
+            else {
+                let timeout = params.silentRequestTimeout || DefaultTimeout;
+                Log.debug("IFrameWindow.navigate: Using timeout of:", timeout);
+                this._timer = window.setTimeout(this._timeout.bind(this), timeout);
+                this._frame.src = params.url;
+            }
+
+            return this.promise;
+        }
+
+        get promise() {
+            return this._promise;
+        }
+
+        _success(data) {
+            this._cleanup();
+
+            Log.debug("IFrameWindow: Successful response from frame window");
+            this._resolve(data);
+        }
+        _error(message) {
+            this._cleanup();
+
+            Log.error(message);
+            this._reject(new Error(message));
+        }
+
+        close() {
+            this._cleanup();
+        }
+
+        _cleanup() {
+            if (this._frame) {
+                Log.debug("IFrameWindow: cleanup");
+
+                window.removeEventListener("message", this._boundMessageEvent, false);
+                window.clearTimeout(this._timer);
+                window.document.body.removeChild(this._frame);
+
+                this._timer = null;
+                this._frame = null;
+                this._boundMessageEvent = null;
+            }
+        }
+
+        _timeout() {
+            Log.debug("IFrameWindow.timeout");
+            this._error("Frame window timed out");
+        }
+
+        _message(e) {
+            Log.debug("IFrameWindow.message");
+
+            if (this._timer &&
+                e.origin === this._origin &&
+                e.source === this._frame.contentWindow
+            ) {
+                let url = e.data;
+                if (url) {
+                    this._success({ url: url });
+                }
+                else {
+                    this._error("Invalid response from frame");
+                }
+            }
+        }
+
+        get _origin() {
+            return location.protocol + "//" + location.host;
+        }
+
+        static notifyParent(url) {
+            Log.debug("IFrameWindow.notifyParent");
+            if (window.frameElement) {
+                url = url || window.location.href;
+                if (url) {
+                    Log.debug("IFrameWindow.notifyParent: posting url message to parent");
+                    window.parent.postMessage(url, location.protocol + "//" + location.host);
+                }
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class IFrameNavigator {
+
+        prepare(params) {
+            Log.debug("IFrameNavigator.prepare");
+            let frame = new IFrameWindow(params);
+            return Promise.resolve(frame);
+        }
+
+        callback(url) {
+            Log.debug("IFrameNavigator.callback");
+
+            try {
+                IFrameWindow.notifyParent(url);
+                return Promise.resolve();
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const DefaultAccessTokenExpiringNotificationTime = 60;
+    const DefaultCheckSessionInterval = 2000;
+
+    class UserManagerSettings extends OidcClientSettings {
+        constructor({
+            popup_redirect_uri,
+            popup_post_logout_redirect_uri,
+            popupWindowFeatures,
+            popupWindowTarget,
+            silent_redirect_uri,
+            silentRequestTimeout,
+            automaticSilentRenew = false,
+            validateSubOnSilentRenew = false,
+            includeIdTokenInSilentRenew = true,
+            monitorSession = true,
+            monitorAnonymousSession = false,
+            checkSessionInterval = DefaultCheckSessionInterval,
+            stopCheckSessionOnError = true,
+            query_status_response_type,
+            revokeAccessTokenOnSignout = false,
+            accessTokenExpiringNotificationTime = DefaultAccessTokenExpiringNotificationTime,
+            redirectNavigator = new RedirectNavigator(),
+            popupNavigator = new PopupNavigator(),
+            iframeNavigator = new IFrameNavigator(),
+            userStore = new WebStorageStateStore({ store: Global.sessionStorage })
+        } = {}) {
+            super(arguments[0]);
+
+            this._popup_redirect_uri = popup_redirect_uri;
+            this._popup_post_logout_redirect_uri = popup_post_logout_redirect_uri;
+            this._popupWindowFeatures = popupWindowFeatures;
+            this._popupWindowTarget = popupWindowTarget;
+
+            this._silent_redirect_uri = silent_redirect_uri;
+            this._silentRequestTimeout = silentRequestTimeout;
+            this._automaticSilentRenew = automaticSilentRenew;
+            this._validateSubOnSilentRenew = validateSubOnSilentRenew;
+            this._includeIdTokenInSilentRenew = includeIdTokenInSilentRenew;
+            this._accessTokenExpiringNotificationTime = accessTokenExpiringNotificationTime;
+
+            this._monitorSession = monitorSession;
+            this._monitorAnonymousSession = monitorAnonymousSession;
+            this._checkSessionInterval = checkSessionInterval;
+            this._stopCheckSessionOnError = stopCheckSessionOnError;
+            if (query_status_response_type) {
+                this._query_status_response_type = query_status_response_type;
+            } 
+            else if (arguments[0] && arguments[0].response_type) {
+                this._query_status_response_type = SigninRequest.isOidc(arguments[0].response_type) ? "id_token" : "code";
+            }
+            else {
+                this._query_status_response_type = "id_token";
+            }
+            this._revokeAccessTokenOnSignout = revokeAccessTokenOnSignout;
+
+            this._redirectNavigator = redirectNavigator;
+            this._popupNavigator = popupNavigator;
+            this._iframeNavigator = iframeNavigator;
+
+            this._userStore = userStore;
+        }
+
+        get popup_redirect_uri() {
+            return this._popup_redirect_uri;
+        }
+        get popup_post_logout_redirect_uri() {
+            return this._popup_post_logout_redirect_uri;
+        }
+        get popupWindowFeatures() {
+            return this._popupWindowFeatures;
+        }
+        get popupWindowTarget() {
+            return this._popupWindowTarget;
+        }
+
+        get silent_redirect_uri() {
+            return this._silent_redirect_uri;
+        }
+         get silentRequestTimeout() {
+            return this._silentRequestTimeout;
+        }
+        get automaticSilentRenew() {
+            return this._automaticSilentRenew;
+        }
+        get validateSubOnSilentRenew() {
+            return this._validateSubOnSilentRenew;
+        }
+        get includeIdTokenInSilentRenew() {
+            return this._includeIdTokenInSilentRenew;
+        }
+        get accessTokenExpiringNotificationTime() {
+            return this._accessTokenExpiringNotificationTime;
+        }
+
+        get monitorSession() {
+            return this._monitorSession;
+        }
+        get monitorAnonymousSession() {
+            return this._monitorAnonymousSession;
+        }
+        get checkSessionInterval() {
+            return this._checkSessionInterval;
+        }
+        get stopCheckSessionOnError(){
+            return this._stopCheckSessionOnError;
+        }
+        get query_status_response_type(){
+            return this._query_status_response_type;
+        }
+        get revokeAccessTokenOnSignout() {
+            return this._revokeAccessTokenOnSignout;
+        }
+
+        get redirectNavigator() {
+            return this._redirectNavigator;
+        }
+        get popupNavigator() {
+            return this._popupNavigator;
+        }
+        get iframeNavigator() {
+            return this._iframeNavigator;
+        }
+
+        get userStore() {
+            return this._userStore;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class User {
+        constructor({id_token, session_state, access_token, refresh_token, token_type, scope, profile, expires_at, state}) {
+            this.id_token = id_token;
+            this.session_state = session_state;
+            this.access_token = access_token;
+            this.refresh_token = refresh_token;
+            this.token_type = token_type;
+            this.scope = scope;
+            this.profile = profile;
+            this.expires_at = expires_at;
+            this.state = state;
+        }
+
+        get expires_in() {
+            if (this.expires_at) {
+                let now = parseInt(Date.now() / 1000);
+                return this.expires_at - now;
+            }
+            return undefined;
+        }
+        set expires_in(value) {
+            let expires_in = parseInt(value);
+            if (typeof expires_in === 'number' && expires_in > 0) {
+                let now = parseInt(Date.now() / 1000);
+                this.expires_at = now + expires_in;
+            }
+        }
+
+        get expired() {
+            let expires_in = this.expires_in;
+            if (expires_in !== undefined) {
+                return expires_in <= 0;
+            }
+            return undefined;
+        }
+
+        get scopes() {
+            return (this.scope || "").split(" ");
+        }
+
+        toStorageString() {
+            Log.debug("User.toStorageString");
+            return JSON.stringify({
+                id_token: this.id_token,
+                session_state: this.session_state,
+                access_token: this.access_token,
+                refresh_token: this.refresh_token,
+                token_type: this.token_type,
+                scope: this.scope,
+                profile: this.profile,
+                expires_at: this.expires_at
+            });
+        }
+
+        static fromStorageString(storageString) {
+            Log.debug("User.fromStorageString");
+            return new User(JSON.parse(storageString));
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class Event {
+
+        constructor(name) {
+            this._name = name;
+            this._callbacks = [];
+        }
+
+        addHandler(cb) {
+            this._callbacks.push(cb);
+        }
+
+        removeHandler(cb) {
+            var idx = this._callbacks.findIndex(item => item === cb);
+            if (idx >= 0) {
+                this._callbacks.splice(idx, 1);
+            }
+        }
+
+        raise(...params) {
+            Log.debug("Event: Raising event: " + this._name);
+            for (let i = 0; i < this._callbacks.length; i++) {
+                this._callbacks[i](...params);
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const TimerDuration = 5; // seconds
+
+    class Timer extends Event {
+
+        constructor(name, timer = Global.timer, nowFunc = undefined) {
+            super(name);
+            this._timer = timer;
+
+            if (nowFunc) {
+                this._nowFunc = nowFunc;
+            }
+            else {
+                this._nowFunc = () => Date.now() / 1000;
+            }
+        }
+
+        get now() {
+            return parseInt(this._nowFunc());
+        }
+
+        init(duration) {
+            if (duration <= 0) {
+                duration = 1;
+            }
+            duration = parseInt(duration);
+
+            var expiration = this.now + duration;
+            if (this.expiration === expiration && this._timerHandle) {
+                // no need to reinitialize to same expiration, so bail out
+                Log.debug("Timer.init timer " + this._name + " skipping initialization since already initialized for expiration:", this.expiration);
+                return;
+            }
+
+            this.cancel();
+
+            Log.debug("Timer.init timer " + this._name + " for duration:", duration);
+            this._expiration = expiration;
+
+            // we're using a fairly short timer and then checking the expiration in the
+            // callback to handle scenarios where the browser device sleeps, and then
+            // the timers end up getting delayed.
+            var timerDuration = TimerDuration;
+            if (duration < timerDuration) {
+                timerDuration = duration;
+            }
+            this._timerHandle = this._timer.setInterval(this._callback.bind(this), timerDuration * 1000);
+        }
+        
+        get expiration() {
+            return this._expiration;
+        }
+
+        cancel() {
+            if (this._timerHandle) {
+                Log.debug("Timer.cancel: ", this._name);
+                this._timer.clearInterval(this._timerHandle);
+                this._timerHandle = null;
+            }
+        }
+
+        _callback() {
+            var diff = this._expiration - this.now;
+            Log.debug("Timer.callback; " + this._name + " timer expires in:", diff);
+
+            if (this._expiration <= this.now) {
+                this.cancel();
+                super.raise();
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const DefaultAccessTokenExpiringNotificationTime$1 = 60; // seconds
+
+    class AccessTokenEvents {
+
+        constructor({
+            accessTokenExpiringNotificationTime = DefaultAccessTokenExpiringNotificationTime$1,
+            accessTokenExpiringTimer = new Timer("Access token expiring"),
+            accessTokenExpiredTimer = new Timer("Access token expired")
+        } = {}) {
+            this._accessTokenExpiringNotificationTime = accessTokenExpiringNotificationTime;
+
+            this._accessTokenExpiring = accessTokenExpiringTimer;
+            this._accessTokenExpired = accessTokenExpiredTimer;
+        }
+
+        load(container) {
+            // only register events if there's an access token and it has an expiration
+            if (container.access_token && container.expires_in !== undefined) {
+                let duration = container.expires_in;
+                Log.debug("AccessTokenEvents.load: access token present, remaining duration:", duration);
+
+                if (duration > 0) {
+                    // only register expiring if we still have time
+                    let expiring = duration - this._accessTokenExpiringNotificationTime;
+                    if (expiring <= 0){
+                        expiring = 1;
+                    }
+                    
+                    Log.debug("AccessTokenEvents.load: registering expiring timer in:", expiring);
+                    this._accessTokenExpiring.init(expiring);
+                }
+                else {
+                    Log.debug("AccessTokenEvents.load: canceling existing expiring timer becase we're past expiration.");
+                    this._accessTokenExpiring.cancel();
+                }
+
+                // if it's negative, it will still fire
+                let expired = duration + 1;
+                Log.debug("AccessTokenEvents.load: registering expired timer in:", expired);
+                this._accessTokenExpired.init(expired);
+            }
+            else {
+                this._accessTokenExpiring.cancel();
+                this._accessTokenExpired.cancel();
+            }
+        }
+
+        unload() {
+            Log.debug("AccessTokenEvents.unload: canceling existing access token timers");
+            this._accessTokenExpiring.cancel();
+            this._accessTokenExpired.cancel();
+        }
+
+        addAccessTokenExpiring(cb) {
+            this._accessTokenExpiring.addHandler(cb);
+        }
+        removeAccessTokenExpiring(cb) {
+            this._accessTokenExpiring.removeHandler(cb);
+        }
+
+        addAccessTokenExpired(cb) {
+            this._accessTokenExpired.addHandler(cb);
+        }
+        removeAccessTokenExpired(cb) {
+            this._accessTokenExpired.removeHandler(cb);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class UserManagerEvents extends AccessTokenEvents {
+
+        constructor(settings) {
+            super(settings);
+            this._userLoaded = new Event("User loaded");
+            this._userUnloaded = new Event("User unloaded");
+            this._silentRenewError = new Event("Silent renew error");
+            this._userSignedIn = new Event("User signed in");
+            this._userSignedOut = new Event("User signed out");
+            this._userSessionChanged = new Event("User session changed");
+        }
+
+        load(user, raiseEvent=true) {
+            Log.debug("UserManagerEvents.load");
+            super.load(user);
+            if (raiseEvent) {
+                this._userLoaded.raise(user);
+            }
+        }
+        unload() {
+            Log.debug("UserManagerEvents.unload");
+            super.unload();
+            this._userUnloaded.raise();
+        }
+
+        addUserLoaded(cb) {
+            this._userLoaded.addHandler(cb);
+        }
+        removeUserLoaded(cb) {
+            this._userLoaded.removeHandler(cb);
+        }
+
+        addUserUnloaded(cb) {
+            this._userUnloaded.addHandler(cb);
+        }
+        removeUserUnloaded(cb) {
+            this._userUnloaded.removeHandler(cb);
+        }
+
+        addSilentRenewError(cb) {
+            this._silentRenewError.addHandler(cb);
+        }
+        removeSilentRenewError(cb) {
+            this._silentRenewError.removeHandler(cb);
+        }
+        _raiseSilentRenewError(e) {
+            Log.debug("UserManagerEvents._raiseSilentRenewError", e.message);
+            this._silentRenewError.raise(e);
+        }
+
+        addUserSignedIn(cb) {
+            this._userSignedIn.addHandler(cb);
+        }
+        removeUserSignedIn(cb) {
+            this._userSignedIn.removeHandler(cb);
+        }
+        _raiseUserSignedIn() {
+            Log.debug("UserManagerEvents._raiseUserSignedIn");
+            this._userSignedIn.raise();
+        }
+
+        addUserSignedOut(cb) {
+            this._userSignedOut.addHandler(cb);
+        }
+        removeUserSignedOut(cb) {
+            this._userSignedOut.removeHandler(cb);
+        }
+        _raiseUserSignedOut() {
+            Log.debug("UserManagerEvents._raiseUserSignedOut");
+            this._userSignedOut.raise();
+        }
+
+        addUserSessionChanged(cb) {
+            this._userSessionChanged.addHandler(cb);
+        }
+        removeUserSessionChanged(cb) {
+            this._userSessionChanged.removeHandler(cb);
+        }
+        _raiseUserSessionChanged() {
+            Log.debug("UserManagerEvents._raiseUserSessionChanged");
+            this._userSessionChanged.raise();
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SilentRenewService {
+
+        constructor(userManager) {
+            this._userManager = userManager;
+        }
+
+        start() {
+            if (!this._callback) {
+                this._callback = this._tokenExpiring.bind(this);
+                this._userManager.events.addAccessTokenExpiring(this._callback);
+
+                // this will trigger loading of the user so the expiring events can be initialized
+                this._userManager.getUser().then(user=>{
+                    // deliberate nop
+                }).catch(err=>{
+                    // catch to suppress errors since we're in a ctor
+                    Log.error("SilentRenewService.start: Error from getUser:", err.message);
+                });
+            }
+        }
+
+        stop() {
+            if (this._callback) {
+                this._userManager.events.removeAccessTokenExpiring(this._callback);
+                delete this._callback;
+            }
+        }
+
+        _tokenExpiring() {
+            this._userManager.signinSilent().then(user => {
+                Log.debug("SilentRenewService._tokenExpiring: Silent token renewal successful");
+            }, err => {
+                Log.error("SilentRenewService._tokenExpiring: Error from signinSilent:", err.message);
+                this._userManager.events._raiseSilentRenewError(err);
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const DefaultInterval = 2000;
+
+    class CheckSessionIFrame {
+        constructor(callback, client_id, url, interval, stopOnError = true) {
+            this._callback = callback;
+            this._client_id = client_id;
+            this._url = url;
+            this._interval = interval || DefaultInterval;
+            this._stopOnError = stopOnError;
+
+            var idx = url.indexOf("/", url.indexOf("//") + 2);
+            this._frame_origin = url.substr(0, idx);
+
+            this._frame = window.document.createElement("iframe");
+
+            // shotgun approach
+            this._frame.style.visibility = "hidden";
+            this._frame.style.position = "absolute";
+            this._frame.style.display = "none";
+            this._frame.style.width = 0;
+            this._frame.style.height = 0;
+
+            this._frame.src = url;
+        }
+        load() {
+            return new Promise((resolve) => {
+                this._frame.onload = () => {
+                    resolve();
+                };
+
+                window.document.body.appendChild(this._frame);
+                this._boundMessageEvent = this._message.bind(this);
+                window.addEventListener("message", this._boundMessageEvent, false);
+            });
+        }
+        _message(e) {
+            if (e.origin === this._frame_origin &&
+                e.source === this._frame.contentWindow
+            ) {
+                if (e.data === "error") {
+                    Log.error("CheckSessionIFrame: error message from check session op iframe");
+                    if (this._stopOnError) {
+                        this.stop();
+                    }
+                }
+                else if (e.data === "changed") {
+                    Log.debug("CheckSessionIFrame: changed message from check session op iframe");
+                    this.stop();
+                    this._callback();
+                }
+                else {
+                    Log.debug("CheckSessionIFrame: " + e.data + " message from check session op iframe");
+                }
+            }
+        }
+        start(session_state) {
+            if (this._session_state !== session_state) {
+                Log.debug("CheckSessionIFrame.start");
+
+                this.stop();
+
+                this._session_state = session_state;
+
+                let send = () => {
+                    this._frame.contentWindow.postMessage(this._client_id + " " + this._session_state, this._frame_origin);
+                };
+                
+                // trigger now
+                send();
+
+                // and setup timer
+                this._timer = window.setInterval(send, this._interval);
+            }
+        }
+
+        stop() {
+            this._session_state = null;
+
+            if (this._timer) {
+                Log.debug("CheckSessionIFrame.stop");
+
+                window.clearInterval(this._timer);
+                this._timer = null;
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class SessionMonitor {
+
+        constructor(userManager, CheckSessionIFrameCtor = CheckSessionIFrame, timer = Global.timer) {
+            if (!userManager) {
+                Log.error("SessionMonitor.ctor: No user manager passed to SessionMonitor");
+                throw new Error("userManager");
+            }
+
+            this._userManager = userManager;
+            this._CheckSessionIFrameCtor = CheckSessionIFrameCtor;
+            this._timer = timer;
+
+            this._userManager.events.addUserLoaded(this._start.bind(this));
+            this._userManager.events.addUserUnloaded(this._stop.bind(this));
+
+            this._userManager.getUser().then(user => {
+                // doing this manually here since calling getUser 
+                // doesn't trigger load event.
+                if (user) {
+                    this._start(user);
+                }
+                else if (this._settings.monitorAnonymousSession) {
+                    this._userManager.querySessionStatus().then(session => {
+                        let tmpUser = {
+                            session_state : session.session_state
+                        };
+                        if (session.sub && session.sid) {
+                            tmpUser.profile = {
+                                sub: session.sub,
+                                sid: session.sid
+                            };
+                        }
+                        this._start(tmpUser);
+                    })
+                    .catch(err => {
+                        // catch to suppress errors since we're in a ctor
+                        Log.error("SessionMonitor ctor: error from querySessionStatus:", err.message);
+                    });
+                }
+            }).catch(err => {
+                // catch to suppress errors since we're in a ctor
+                Log.error("SessionMonitor ctor: error from getUser:", err.message);
+            });
+        }
+
+        get _settings() {
+            return this._userManager.settings;
+        }
+        get _metadataService() {
+            return this._userManager.metadataService;
+        }
+        get _client_id() {
+            return this._settings.client_id;
+        }
+        get _checkSessionInterval() {
+            return this._settings.checkSessionInterval;
+        }
+        get _stopCheckSessionOnError() {
+            return this._settings.stopCheckSessionOnError;
+        }
+
+        _start(user) {
+            let session_state = user.session_state;
+
+            if (session_state) {
+                if (user.profile) {
+                    this._sub = user.profile.sub;
+                    this._sid = user.profile.sid;
+                    Log.debug("SessionMonitor._start: session_state:", session_state, ", sub:", this._sub);
+                }
+                else {
+                    this._sub = undefined;
+                    this._sid = undefined;
+                    Log.debug("SessionMonitor._start: session_state:", session_state, ", anonymous user");
+                }
+
+                if (!this._checkSessionIFrame) {
+                    this._metadataService.getCheckSessionIframe().then(url => {
+                        if (url) {
+                            Log.debug("SessionMonitor._start: Initializing check session iframe");
+
+                            let client_id = this._client_id;
+                            let interval = this._checkSessionInterval;
+                            let stopOnError = this._stopCheckSessionOnError;
+
+                            this._checkSessionIFrame = new this._CheckSessionIFrameCtor(this._callback.bind(this), client_id, url, interval, stopOnError);
+                            this._checkSessionIFrame.load().then(() => {
+                                this._checkSessionIFrame.start(session_state);
+                            });
+                        }
+                        else {
+                            Log.warn("SessionMonitor._start: No check session iframe found in the metadata");
+                        }
+                    }).catch(err => {
+                        // catch to suppress errors since we're in non-promise callback
+                        Log.error("SessionMonitor._start: Error from getCheckSessionIframe:", err.message);
+                    });
+                }
+                else {
+                    this._checkSessionIFrame.start(session_state);
+                }
+            }
+        }
+
+        _stop() {
+            this._sub = undefined;
+            this._sid = undefined;
+
+            if (this._checkSessionIFrame) {
+                Log.debug("SessionMonitor._stop");
+                this._checkSessionIFrame.stop();
+            }
+
+            if (this._settings.monitorAnonymousSession) {
+                // using a timer to delay re-initialization to avoid race conditions during signout
+                let timerHandle = this._timer.setInterval(()=>{
+                    this._timer.clearInterval(timerHandle);
+
+                    this._userManager.querySessionStatus().then(session => {
+                        let tmpUser = {
+                            session_state : session.session_state
+                        };
+                        if (session.sub && session.sid) {
+                            tmpUser.profile = {
+                                sub: session.sub,
+                                sid: session.sid
+                            };
+                        }
+                        this._start(tmpUser);
+                    })
+                    .catch(err => {
+                        // catch to suppress errors since we're in a callback
+                        Log.error("SessionMonitor: error from querySessionStatus:", err.message);
+                    });
+
+                }, 1000);
+            }
+        }
+
+        _callback() {
+            this._userManager.querySessionStatus().then(session => {
+                var raiseEvent = true;
+
+                if (session) {
+                    if (session.sub === this._sub) {
+                        raiseEvent = false;
+                        this._checkSessionIFrame.start(session.session_state);
+
+                        if (session.sid === this._sid) {
+                            Log.debug("SessionMonitor._callback: Same sub still logged in at OP, restarting check session iframe; session_state:", session.session_state);
+                        }
+                        else {
+                            Log.debug("SessionMonitor._callback: Same sub still logged in at OP, session state has changed, restarting check session iframe; session_state:", session.session_state);
+                            this._userManager.events._raiseUserSessionChanged();
+                        }
+                    }
+                    else {
+                        Log.debug("SessionMonitor._callback: Different subject signed into OP:", session.sub);
+                    }
+                }
+                else {
+                    Log.debug("SessionMonitor._callback: Subject no longer signed into OP");
+                }
+
+                if (raiseEvent) {
+                    if (this._sub) {
+                        Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed out event");
+                        this._userManager.events._raiseUserSignedOut();
+                    }
+                    else {
+                        Log.debug("SessionMonitor._callback: SessionMonitor._callback; raising signed in event");
+                        this._userManager.events._raiseUserSignedIn();
+                    }
+                }
+            }).catch(err => {
+                if (this._sub) {
+                    Log.debug("SessionMonitor._callback: Error calling queryCurrentSigninSession; raising signed out event", err.message);
+                    this._userManager.events._raiseUserSignedOut();
+                }
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const AccessTokenTypeHint = "access_token";
+    const RefreshTokenTypeHint = "refresh_token";
+
+    class TokenRevocationClient {
+        constructor(settings, XMLHttpRequestCtor = Global.XMLHttpRequest, MetadataServiceCtor = MetadataService) {
+            if (!settings) {
+                Log.error("TokenRevocationClient.ctor: No settings provided");
+                throw new Error("No settings provided.");
+            }
+
+            this._settings = settings;
+            this._XMLHttpRequestCtor = XMLHttpRequestCtor;
+            this._metadataService = new MetadataServiceCtor(this._settings);
+        }
+
+        revoke(token, required, type = "access_token") {
+            if (!token) {
+                Log.error("TokenRevocationClient.revoke: No token provided");
+                throw new Error("No token provided.");
+            }
+
+            if (type !== AccessTokenTypeHint && type != RefreshTokenTypeHint) {
+                Log.error("TokenRevocationClient.revoke: Invalid token type");
+                throw new Error("Invalid token type.");
+            }
+
+            return this._metadataService.getRevocationEndpoint().then(url => {
+                if (!url) {
+                    if (required) {
+                        Log.error("TokenRevocationClient.revoke: Revocation not supported");
+                        throw new Error("Revocation not supported");
+                    }
+
+                    // not required, so don't error and just return
+                    return;
+                }
+
+                Log.debug("TokenRevocationClient.revoke: Revoking " + type);
+                var client_id = this._settings.client_id;
+                var client_secret = this._settings.client_secret;
+                return this._revoke(url, client_id, client_secret, token, type);
+            });
+        }
+
+        _revoke(url, client_id, client_secret, token, type) {
+
+            return new Promise((resolve, reject) => {
+
+                var xhr = new this._XMLHttpRequestCtor();
+                xhr.open("POST", url);
+
+                xhr.onload = () => {
+                    Log.debug("TokenRevocationClient.revoke: HTTP response received, status", xhr.status);
+
+                    if (xhr.status === 200) {
+                        resolve();
+                    }
+                    else {
+                        reject(Error(xhr.statusText + " (" + xhr.status + ")"));
+                    }
+                };
+                xhr.onerror = () => { 
+                    Log.debug("TokenRevocationClient.revoke: Network Error.");
+                    reject("Network Error");
+                };
+
+                var body = "client_id=" + encodeURIComponent(client_id);
+                if (client_secret) {
+                    body += "&client_secret=" + encodeURIComponent(client_secret);
+                }
+                body += "&token_type_hint=" + encodeURIComponent(type);
+                body += "&token=" + encodeURIComponent(token);
+
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.send(body);
+            });
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+
+    class UserManager extends OidcClient {
+        constructor(settings = {},
+            SilentRenewServiceCtor = SilentRenewService,
+            SessionMonitorCtor = SessionMonitor,
+            TokenRevocationClientCtor = TokenRevocationClient,
+            TokenClientCtor = TokenClient,
+            joseUtil = JoseUtil
+        ) {
+
+            if (!(settings instanceof UserManagerSettings)) {
+                settings = new UserManagerSettings(settings);
+            }
+            super(settings);
+
+            this._events = new UserManagerEvents(settings);
+            this._silentRenewService = new SilentRenewServiceCtor(this);
+
+            // order is important for the following properties; these services depend upon the events.
+            if (this.settings.automaticSilentRenew) {
+                Log.debug("UserManager.ctor: automaticSilentRenew is configured, setting up silent renew");
+                this.startSilentRenew();
+            }
+
+            if (this.settings.monitorSession) {
+                Log.debug("UserManager.ctor: monitorSession is configured, setting up session monitor");
+                this._sessionMonitor = new SessionMonitorCtor(this);
+            }
+
+            this._tokenRevocationClient = new TokenRevocationClientCtor(this._settings);
+            this._tokenClient = new TokenClientCtor(this._settings);
+            this._joseUtil = joseUtil;
+        }
+
+        get _redirectNavigator() {
+            return this.settings.redirectNavigator;
+        }
+        get _popupNavigator() {
+            return this.settings.popupNavigator;
+        }
+        get _iframeNavigator() {
+            return this.settings.iframeNavigator;
+        }
+        get _userStore() {
+            return this.settings.userStore;
+        }
+
+        get events() {
+            return this._events;
+        }
+
+        getUser() {
+            return this._loadUser().then(user => {
+                if (user) {
+                    Log.info("UserManager.getUser: user loaded");
+
+                    this._events.load(user, false);
+
+                    return user;
+                }
+                else {
+                    Log.info("UserManager.getUser: user not found in storage");
+                    return null;
+                }
+            });
+        }
+
+        removeUser() {
+            return this.storeUser(null).then(() => {
+                Log.info("UserManager.removeUser: user removed from storage");
+                this._events.unload();
+            });
+        }
+
+        signinRedirect(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "si:r";
+            let navParams = {
+                useReplaceToNavigate : args.useReplaceToNavigate
+            };
+            return this._signinStart(args, this._redirectNavigator, navParams).then(()=>{
+                Log.info("UserManager.signinRedirect: successful");
+            });
+        }
+        signinRedirectCallback(url) {
+            return this._signinEnd(url || this._redirectNavigator.url).then(user => {
+                if (user.profile && user.profile.sub) {
+                    Log.info("UserManager.signinRedirectCallback: successful, signed in sub: ", user.profile.sub);
+                }
+                else {
+                    Log.info("UserManager.signinRedirectCallback: no sub");
+                }
+
+                return user;
+            });
+        }
+
+        signinPopup(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "si:p";
+            let url = args.redirect_uri || this.settings.popup_redirect_uri || this.settings.redirect_uri;
+            if (!url) {
+                Log.error("UserManager.signinPopup: No popup_redirect_uri or redirect_uri configured");
+                return Promise.reject(new Error("No popup_redirect_uri or redirect_uri configured"));
+            }
+
+            args.redirect_uri = url;
+            args.display = "popup";
+
+            return this._signin(args, this._popupNavigator, {
+                startUrl: url,
+                popupWindowFeatures: args.popupWindowFeatures || this.settings.popupWindowFeatures,
+                popupWindowTarget: args.popupWindowTarget || this.settings.popupWindowTarget
+            }).then(user => {
+                if (user) {
+                    if (user.profile && user.profile.sub) {
+                        Log.info("UserManager.signinPopup: signinPopup successful, signed in sub: ", user.profile.sub);
+                    }
+                    else {
+                        Log.info("UserManager.signinPopup: no sub");
+                    }
+                }
+
+                return user;
+            });
+        }
+        signinPopupCallback(url) {
+            return this._signinCallback(url, this._popupNavigator).then(user => {
+                if (user) {
+                    if (user.profile && user.profile.sub) {
+                        Log.info("UserManager.signinPopupCallback: successful, signed in sub: ", user.profile.sub);
+                    }
+                    else {
+                        Log.info("UserManager.signinPopupCallback: no sub");
+                    }
+                }
+
+                return user;
+            }).catch(err=>{
+                Log.error("UserManager.signinPopupCallback error: " + err && err.message);
+            });
+        }
+
+        signinSilent(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "si:s";
+            // first determine if we have a refresh token, or need to use iframe
+            return this._loadUser().then(user => {
+                if (user && user.refresh_token) {
+                    args.refresh_token = user.refresh_token;
+                    return this._useRefreshToken(args);
+                }
+                else {
+                    args.id_token_hint = args.id_token_hint || (this.settings.includeIdTokenInSilentRenew && user && user.id_token);
+                    if (user && this._settings.validateSubOnSilentRenew) {
+                        Log.debug("UserManager.signinSilent, subject prior to silent renew: ", user.profile.sub);
+                        args.current_sub = user.profile.sub;
+                    }
+                    return this._signinSilentIframe(args);
+                }
+            });
+        }
+
+        _useRefreshToken(args = {}) {
+            return this._tokenClient.exchangeRefreshToken(args).then(result => {
+                if (!result) {
+                    Log.error("UserManager._useRefreshToken: No response returned from token endpoint");
+                    return Promise.reject("No response returned from token endpoint");
+                }
+                if (!result.access_token) {
+                    Log.error("UserManager._useRefreshToken: No access token returned from token endpoint");
+                    return Promise.reject("No access token returned from token endpoint");
+                }
+
+                return this._loadUser().then(user => {
+                    if (user) {
+                        let idTokenValidation = Promise.resolve();
+                        if (result.id_token) {
+                            idTokenValidation = this._validateIdTokenFromTokenRefreshToken(user.profile, result.id_token);
+                        }
+
+                        return idTokenValidation.then(() => {
+                            Log.debug("UserManager._useRefreshToken: refresh token response success");
+                            user.id_token = result.id_token;
+                            user.access_token = result.access_token;
+                            user.refresh_token = result.refresh_token || user.refresh_token;
+                            user.expires_in = result.expires_in;
+
+                            return this.storeUser(user).then(()=>{
+                                this._events.load(user);
+                                return user;
+                            });
+                        });
+                    }
+                    else {
+                        return null;
+                    }
+                });
+            });
+        }
+
+        _validateIdTokenFromTokenRefreshToken(profile, id_token) {
+            return this._metadataService.getIssuer().then(issuer => {
+                return this._joseUtil.validateJwtAttributes(id_token, issuer, this._settings.client_id, this._settings.clockSkew).then(payload => {
+                    if (!payload) {
+                        Log.error("UserManager._validateIdTokenFromTokenRefreshToken: Failed to validate id_token");
+                        return Promise.reject(new Error("Failed to validate id_token"));
+                    }
+                    if (payload.sub !== profile.sub) {
+                        Log.error("UserManager._validateIdTokenFromTokenRefreshToken: sub in id_token does not match current sub");
+                        return Promise.reject(new Error("sub in id_token does not match current sub"));
+                    }
+                    if (payload.auth_time && payload.auth_time !== profile.auth_time) {
+                        Log.error("UserManager._validateIdTokenFromTokenRefreshToken: auth_time in id_token does not match original auth_time");
+                        return Promise.reject(new Error("auth_time in id_token does not match original auth_time"));
+                    }
+                    if (payload.azp && payload.azp !== profile.azp) {
+                        Log.error("UserManager._validateIdTokenFromTokenRefreshToken: azp in id_token does not match original azp");
+                        return Promise.reject(new Error("azp in id_token does not match original azp"));
+                    }
+                    if (!payload.azp && profile.azp) {
+                        Log.error("UserManager._validateIdTokenFromTokenRefreshToken: azp not in id_token, but present in original id_token");
+                        return Promise.reject(new Error("azp not in id_token, but present in original id_token"));
+                    }
+                });
+            });
+        }
+        
+        _signinSilentIframe(args = {}) {
+            let url = args.redirect_uri || this.settings.silent_redirect_uri || this.settings.redirect_uri;
+            if (!url) {
+                Log.error("UserManager.signinSilent: No silent_redirect_uri configured");
+                return Promise.reject(new Error("No silent_redirect_uri configured"));
+            }
+
+            args.redirect_uri = url;
+            args.prompt = args.prompt || "none";
+
+            return this._signin(args, this._iframeNavigator, {
+                startUrl: url,
+                silentRequestTimeout: args.silentRequestTimeout || this.settings.silentRequestTimeout
+            }).then(user => {
+                if (user) {
+                    if (user.profile && user.profile.sub) {
+                        Log.info("UserManager.signinSilent: successful, signed in sub: ", user.profile.sub);
+                    }
+                    else {
+                        Log.info("UserManager.signinSilent: no sub");
+                    }
+                }
+
+                return user;
+            });
+        }
+
+        signinSilentCallback(url) {
+            return this._signinCallback(url, this._iframeNavigator).then(user => {
+                if (user) {
+                    if (user.profile && user.profile.sub) {
+                        Log.info("UserManager.signinSilentCallback: successful, signed in sub: ", user.profile.sub);
+                    }
+                    else {
+                        Log.info("UserManager.signinSilentCallback: no sub");
+                    }
+                }
+
+                return user;
+            });
+        }
+
+        signinCallback(url) {
+            return this.readSigninResponseState(url).then(({state, response}) => {
+                if (state.request_type === "si:r") {
+                    return this.signinRedirectCallback(url);
+                }
+                if (state.request_type === "si:p") {
+                    return this.signinPopupCallback(url);
+                }
+                if (state.request_type === "si:s") {
+                    return this.signinSilentCallback(url);
+                }
+                return Promise.reject(new Error("invalid response_type in state"));
+            });
+        }
+
+        signoutCallback(url, keepOpen) {
+            return this.readSignoutResponseState(url).then(({state, response}) => {
+                if (state) {
+                    if (state.request_type === "so:r") {
+                        return this.signoutRedirectCallback(url);
+                    }
+                    if (state.request_type === "so:p") {
+                        return this.signoutPopupCallback(url, keepOpen);
+                    }
+                    return Promise.reject(new Error("invalid response_type in state"));
+                }
+                return response;
+            });
+        }
+
+        querySessionStatus(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "si:s"; // this acts like a signin silent
+            let url = args.redirect_uri || this.settings.silent_redirect_uri || this.settings.redirect_uri;
+            if (!url) {
+                Log.error("UserManager.querySessionStatus: No silent_redirect_uri configured");
+                return Promise.reject(new Error("No silent_redirect_uri configured"));
+            }
+
+            args.redirect_uri = url;
+            args.prompt = "none";
+            args.response_type = args.response_type || this.settings.query_status_response_type;
+            args.scope = args.scope || "openid";
+            args.skipUserInfo = true;
+
+            return this._signinStart(args, this._iframeNavigator, {
+                startUrl: url,
+                silentRequestTimeout: args.silentRequestTimeout || this.settings.silentRequestTimeout
+            }).then(navResponse => {
+                return this.processSigninResponse(navResponse.url).then(signinResponse => {
+                    Log.debug("UserManager.querySessionStatus: got signin response");
+
+                    if (signinResponse.session_state && signinResponse.profile.sub) {
+                        Log.info("UserManager.querySessionStatus: querySessionStatus success for sub: ",  signinResponse.profile.sub);
+                        return {
+                            session_state: signinResponse.session_state,
+                            sub: signinResponse.profile.sub,
+                            sid: signinResponse.profile.sid
+                        };
+                    }
+                    else {
+                        Log.info("querySessionStatus successful, user not authenticated");
+                    }
+                })
+                .catch(err => {
+                    if (err.session_state && this.settings.monitorAnonymousSession) {
+                        if (err.message == "login_required" || 
+                            err.message == "consent_required" || 
+                            err.message == "interaction_required" || 
+                            err.message == "account_selection_required"
+                        ) {
+                            Log.info("UserManager.querySessionStatus: querySessionStatus success for anonymous user");
+                            return {
+                                session_state: err.session_state
+                            };
+                        }
+                    }
+
+                    throw err;
+                });
+            });
+        }
+
+        _signin(args, navigator, navigatorParams = {}) {
+            return this._signinStart(args, navigator, navigatorParams).then(navResponse => {
+                return this._signinEnd(navResponse.url, args);
+            });
+        }
+        _signinStart(args, navigator, navigatorParams = {}) {
+
+            return navigator.prepare(navigatorParams).then(handle => {
+                Log.debug("UserManager._signinStart: got navigator window handle");
+
+                return this.createSigninRequest(args).then(signinRequest => {
+                    Log.debug("UserManager._signinStart: got signin request");
+
+                    navigatorParams.url = signinRequest.url;
+                    navigatorParams.id = signinRequest.state.id;
+
+                    return handle.navigate(navigatorParams);
+                }).catch(err => {
+                    if (handle.close) {
+                        Log.debug("UserManager._signinStart: Error after preparing navigator, closing navigator window");
+                        handle.close();
+                    }
+                    throw err;
+                });
+            });
+        }
+        _signinEnd(url, args = {}) {
+            return this.processSigninResponse(url).then(signinResponse => {
+                Log.debug("UserManager._signinEnd: got signin response");
+
+                let user = new User(signinResponse);
+
+                if (args.current_sub) {
+                    if (args.current_sub !== user.profile.sub) {
+                        Log.debug("UserManager._signinEnd: current user does not match user returned from signin. sub from signin: ", user.profile.sub);
+                        return Promise.reject(new Error("login_required"));
+                    }
+                    else {
+                        Log.debug("UserManager._signinEnd: current user matches user returned from signin");
+                    }
+                }
+
+                return this.storeUser(user).then(() => {
+                    Log.debug("UserManager._signinEnd: user stored");
+
+                    this._events.load(user);
+
+                    return user;
+                });
+            });
+        }
+        _signinCallback(url, navigator) {
+            Log.debug("UserManager._signinCallback");
+            return navigator.callback(url);
+        }
+
+        signoutRedirect(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "so:r";
+            let postLogoutRedirectUri = args.post_logout_redirect_uri || this.settings.post_logout_redirect_uri;
+            if (postLogoutRedirectUri){
+                args.post_logout_redirect_uri = postLogoutRedirectUri;
+            }
+            let navParams = {
+                useReplaceToNavigate : args.useReplaceToNavigate
+            };
+            return this._signoutStart(args, this._redirectNavigator, navParams).then(()=>{
+                Log.info("UserManager.signoutRedirect: successful");
+            });
+        }
+        signoutRedirectCallback(url) {
+            return this._signoutEnd(url || this._redirectNavigator.url).then(response=>{
+                Log.info("UserManager.signoutRedirectCallback: successful");
+                return response;
+            });
+        }
+
+        signoutPopup(args = {}) {
+            args = Object.assign({}, args);
+
+            args.request_type = "so:p";
+            let url = args.post_logout_redirect_uri || this.settings.popup_post_logout_redirect_uri || this.settings.post_logout_redirect_uri;
+            args.post_logout_redirect_uri = url;
+            args.display = "popup";
+            if (args.post_logout_redirect_uri){
+                // we're putting a dummy entry in here because we
+                // need a unique id from the state for notification
+                // to the parent window, which is necessary if we
+                // plan to return back to the client after signout
+                // and so we can close the popup after signout
+                args.state = args.state || {};
+            }
+
+            return this._signout(args, this._popupNavigator, {
+                startUrl: url,
+                popupWindowFeatures: args.popupWindowFeatures || this.settings.popupWindowFeatures,
+                popupWindowTarget: args.popupWindowTarget || this.settings.popupWindowTarget
+            }).then(() => {
+                Log.info("UserManager.signoutPopup: successful");
+            });
+        }
+        signoutPopupCallback(url, keepOpen) {
+            if (typeof(keepOpen) === 'undefined' && typeof(url) === 'boolean') {
+                keepOpen = url;
+                url = null;
+            }
+
+            let delimiter = '?';
+            return this._popupNavigator.callback(url, keepOpen, delimiter).then(() => {
+                Log.info("UserManager.signoutPopupCallback: successful");
+            });
+        }
+
+        _signout(args, navigator, navigatorParams = {}) {
+            return this._signoutStart(args, navigator, navigatorParams).then(navResponse => {
+                return this._signoutEnd(navResponse.url);
+            });
+        }
+        _signoutStart(args = {}, navigator, navigatorParams = {}) {
+            return navigator.prepare(navigatorParams).then(handle => {
+                Log.debug("UserManager._signoutStart: got navigator window handle");
+
+                return this._loadUser().then(user => {
+                    Log.debug("UserManager._signoutStart: loaded current user from storage");
+
+                    var revokePromise = this._settings.revokeAccessTokenOnSignout ? this._revokeInternal(user) : Promise.resolve();
+                    return revokePromise.then(() => {
+
+                        var id_token = args.id_token_hint || user && user.id_token;
+                        if (id_token) {
+                            Log.debug("UserManager._signoutStart: Setting id_token into signout request");
+                            args.id_token_hint = id_token;
+                        }
+
+                        return this.removeUser().then(() => {
+                            Log.debug("UserManager._signoutStart: user removed, creating signout request");
+
+                            return this.createSignoutRequest(args).then(signoutRequest => {
+                                Log.debug("UserManager._signoutStart: got signout request");
+
+                                navigatorParams.url = signoutRequest.url;
+                                if (signoutRequest.state) {
+                                    navigatorParams.id = signoutRequest.state.id;
+                                }
+                                return handle.navigate(navigatorParams);
+                            });
+                        });
+                    });
+                }).catch(err => {
+                    if (handle.close) {
+                        Log.debug("UserManager._signoutStart: Error after preparing navigator, closing navigator window");
+                        handle.close();
+                    }
+                    throw err;
+                });
+            });
+        }
+        _signoutEnd(url) {
+            return this.processSignoutResponse(url).then(signoutResponse => {
+                Log.debug("UserManager._signoutEnd: got signout response");
+
+                return signoutResponse;
+            });
+        }
+
+        revokeAccessToken() {
+            return this._loadUser().then(user => {
+                return this._revokeInternal(user, true).then(success => {
+                    if (success) {
+                        Log.debug("UserManager.revokeAccessToken: removing token properties from user and re-storing");
+
+                        user.access_token = null;
+                        user.refresh_token = null;
+                        user.expires_at = null;
+                        user.token_type = null;
+
+                        return this.storeUser(user).then(() => {
+                            Log.debug("UserManager.revokeAccessToken: user stored");
+                            this._events.load(user);
+                        });
+                    }
+                });
+            }).then(()=>{
+                Log.info("UserManager.revokeAccessToken: access token revoked successfully");
+            });
+        }
+
+        _revokeInternal(user, required) {
+            if (user) {
+                var access_token = user.access_token;
+                var refresh_token = user.refresh_token;
+
+                return this._revokeAccessTokenInternal(access_token, required)
+                    .then(atSuccess => {
+                        return this._revokeRefreshTokenInternal(refresh_token, required)
+                            .then(rtSuccess => {
+                                if (!atSuccess && !rtSuccess) {
+                                    Log.debug("UserManager.revokeAccessToken: no need to revoke due to no token(s), or JWT format");
+                                }
+                                
+                                return atSuccess || rtSuccess;
+                            });
+                    });
+            }
+
+            return Promise.resolve(false);
+        }
+
+        _revokeAccessTokenInternal(access_token, required) {
+            // check for JWT vs. reference token
+            if (!access_token || access_token.indexOf('.') >= 0) {
+                return Promise.resolve(false);
+            }
+
+            return this._tokenRevocationClient.revoke(access_token, required).then(() => true);
+        }
+
+        _revokeRefreshTokenInternal(refresh_token, required) {
+            if (!refresh_token) {
+                return Promise.resolve(false);
+            }
+
+            return this._tokenRevocationClient.revoke(refresh_token, required, "refresh_token").then(() => true);
+        }
+
+        startSilentRenew() {
+            this._silentRenewService.start();
+        }
+
+        stopSilentRenew() {
+            this._silentRenewService.stop();
+        }
+
+        get _userStoreKey() {
+            return `user:${this.settings.authority}:${this.settings.client_id}`;
+        }
+
+        _loadUser() {
+            return this._userStore.get(this._userStoreKey).then(storageString => {
+                if (storageString) {
+                    Log.debug("UserManager._loadUser: user storageString loaded");
+                    return User.fromStorageString(storageString);
+                }
+
+                Log.debug("UserManager._loadUser: no user storageString");
+                return null;
+            });
+        }
+
+        storeUser(user) {
+            if (user) {
+                Log.debug("UserManager.storeUser: storing user");
+
+                var storageString = user.toStorageString();
+                return this._userStore.set(this._userStoreKey, storageString);
+            }
+            else {
+                Log.debug("storeUser.storeUser: removing user");
+                return this._userStore.remove(this._userStoreKey);
+            }
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    const DefaultPopupFeatures$1 = 'location=no,toolbar=no,zoom=no';
+    const DefaultPopupTarget$1 = "_blank";
+
+    class CordovaPopupWindow {
+
+        constructor(params) {
+            this._promise = new Promise((resolve, reject) => {
+                this._resolve = resolve;
+                this._reject = reject;
+            });
+
+            this.features = params.popupWindowFeatures || DefaultPopupFeatures$1;
+            this.target = params.popupWindowTarget || DefaultPopupTarget$1;
+            
+            this.redirect_uri = params.startUrl;
+            Log.debug("CordovaPopupWindow.ctor: redirect_uri: " + this.redirect_uri);
+        }
+
+        _isInAppBrowserInstalled(cordovaMetadata) {
+            return ["cordova-plugin-inappbrowser", "cordova-plugin-inappbrowser.inappbrowser", "org.apache.cordova.inappbrowser"].some(function (name) {
+                return cordovaMetadata.hasOwnProperty(name)
+            })
+        }
+        
+        navigate(params) {
+            if (!params || !params.url) {
+                this._error("No url provided");
+            } else {
+                if (!window.cordova) {
+                    return this._error("cordova is undefined")
+                }
+                
+                var cordovaMetadata = window.cordova.require("cordova/plugin_list").metadata;
+                if (this._isInAppBrowserInstalled(cordovaMetadata) === false) {
+                    return this._error("InAppBrowser plugin not found")
+                }
+                this._popup = cordova.InAppBrowser.open(params.url, this.target, this.features);
+                if (this._popup) {
+                    Log.debug("CordovaPopupWindow.navigate: popup successfully created");
+                    
+                    this._exitCallbackEvent = this._exitCallback.bind(this); 
+                    this._loadStartCallbackEvent = this._loadStartCallback.bind(this);
+                    
+                    this._popup.addEventListener("exit", this._exitCallbackEvent, false);
+                    this._popup.addEventListener("loadstart", this._loadStartCallbackEvent, false);
+                } else {
+                    this._error("Error opening popup window");
+                }
+            }
+            return this.promise;
+        }
+
+        get promise() {
+            return this._promise;
+        }
+
+        _loadStartCallback(event) {
+            if (event.url.indexOf(this.redirect_uri) === 0) {
+                this._success({ url: event.url });
+            }    
+        }
+        _exitCallback(message) {
+            this._error(message);    
+        }
+        
+        _success(data) {
+            this._cleanup();
+
+            Log.debug("CordovaPopupWindow: Successful response from cordova popup window");
+            this._resolve(data);
+        }
+        _error(message) {
+            this._cleanup();
+
+            Log.error(message);
+            this._reject(new Error(message));
+        }
+
+        close() {
+            this._cleanup();
+        }
+
+        _cleanup() {
+            if (this._popup){
+                Log.debug("CordovaPopupWindow: cleaning up popup");
+                this._popup.removeEventListener("exit", this._exitCallbackEvent, false);
+                this._popup.removeEventListener("loadstart", this._loadStartCallbackEvent, false);
+                this._popup.close();
+            }
+            this._popup = null;
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class CordovaPopupNavigator {
+
+        prepare(params) {
+            let popup = new CordovaPopupWindow(params);
+            return Promise.resolve(popup);
+        }
+    }
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    class CordovaIFrameNavigator {
+
+        prepare(params) {
+            params.popupWindowFeatures = 'hidden=yes';
+            let popup = new CordovaPopupWindow(params);
+            return Promise.resolve(popup);
+        }
+    }
+
+    const Version = "1.10.1";
+
+    // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
+
+    var oidcClient = {
+        Version,
+        Log,
+        OidcClient,
+        OidcClientSettings,
+        WebStorageStateStore,
+        InMemoryWebStorage,
+        UserManager,
+        AccessTokenEvents,
+        MetadataService,
+        CordovaPopupNavigator,
+        CordovaIFrameNavigator,
+        CheckSessionIFrame,
+        TokenRevocationClient,
+        SessionMonitor,
+        Global,
+        User
+    };
 
     /* src\components\OidcContext.svelte generated by Svelte v3.23.0 */
 
-    const { Error: Error_1, console: console_1 } = globals;
+    const { Error: Error_1 } = globals;
 
     function create_fragment$1(ctx) {
     	let current;
-    	const default_slot_template = /*$$slots*/ ctx[10].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], null);
+    	const default_slot_template = /*$$slots*/ ctx[11].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[10], null);
 
     	const block = {
     		c: function create() {
@@ -2338,8 +6752,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		},
     		p: function update(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 512) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[9], dirty, null, null);
+    				if (default_slot.p && dirty & /*$$scope*/ 1024) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[10], dirty, null, null);
     				}
     			}
     		},
@@ -2378,6 +6792,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	let { client_id } = $$props;
     	let { redirect_uri } = $$props;
     	let { post_logout_redirect_uri } = $$props;
+    	let { metadata = {} } = $$props;
     	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
     	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
 
@@ -2390,30 +6805,24 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		post_logout_redirect_uri,
     		response_type: "code",
     		scope: "openid profile email",
-    		automaticSilentRenew: true
+    		automaticSilentRenew: true,
+    		metadata
     	};
-
-    	if (issuer.includes("auth0.com")) {
-    		settings.metadata = {
-    			// added to overcome missing value in auth0 .well-known/openid-configuration
-    			// see: https://github.com/IdentityModel/oidc-client-js/issues/1067
-    			// see: https://github.com/IdentityModel/oidc-client-js/pull/1068
-    			end_session_endpoint: `https://dev-hvw40i79.auth0.com/v2/logout?client_id=5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2`
-    		};
-    	}
 
     	const userManager = new UserManager(settings);
 
-    	userManager.events.addUserLoaded(function () {
-    		const user = userManager.getUser();
+    	userManager.events.addUserLoaded(function (user) {
+    		isAuthenticated.set(true);
     		accessToken.set(user.access_token);
     		idToken.set(user.id_token);
     		userInfo.set(user.profile);
     	});
 
     	userManager.events.addUserUnloaded(function () {
+    		isAuthenticated.set(false);
     		idToken.set("");
     		accessToken.set("");
+    		userInfo.set({});
     	});
 
     	userManager.events.addSilentRenewError(function (e) {
@@ -2438,8 +6847,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     		// if code then login success
     		if (params.has("code")) {
-    			// handle the redirect response.
-    			const response = await oidc.signinRedirectCallback();
+    			// handle the callback
+    			const response = await oidc.signinCallback();
 
     			let state = response && response.state || {};
 
@@ -2458,25 +6867,15 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			authError.set(null);
     		}
 
-    		const user = await oidc.getUser();
-
-    		if (user && !!user) {
-    			isAuthenticated.set(true);
-    			console.log("user", user);
-    			accessToken.set(user.access_token);
-    			idToken.set(user.id_token);
-    			userInfo.set(user.profile);
-    		}
-
     		isLoading.set(false);
     	}
 
     	onMount(handleOnMount);
     	onDestroy(handleOnDestroy);
-    	const writable_props = ["issuer", "client_id", "redirect_uri", "post_logout_redirect_uri"];
+    	const writable_props = ["issuer", "client_id", "redirect_uri", "post_logout_redirect_uri", "metadata"];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<OidcContext> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<OidcContext> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
@@ -2487,7 +6886,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		if ("client_id" in $$props) $$invalidate(1, client_id = $$props.client_id);
     		if ("redirect_uri" in $$props) $$invalidate(2, redirect_uri = $$props.redirect_uri);
     		if ("post_logout_redirect_uri" in $$props) $$invalidate(3, post_logout_redirect_uri = $$props.post_logout_redirect_uri);
-    		if ("$$scope" in $$props) $$invalidate(9, $$scope = $$props.$$scope);
+    		if ("metadata" in $$props) $$invalidate(4, metadata = $$props.metadata);
+    		if ("$$scope" in $$props) $$invalidate(10, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({
@@ -2510,6 +6910,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		client_id,
     		redirect_uri,
     		post_logout_redirect_uri,
+    		metadata,
     		settings,
     		userManager,
     		oidcPromise,
@@ -2522,6 +6923,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		if ("client_id" in $$props) $$invalidate(1, client_id = $$props.client_id);
     		if ("redirect_uri" in $$props) $$invalidate(2, redirect_uri = $$props.redirect_uri);
     		if ("post_logout_redirect_uri" in $$props) $$invalidate(3, post_logout_redirect_uri = $$props.post_logout_redirect_uri);
+    		if ("metadata" in $$props) $$invalidate(4, metadata = $$props.metadata);
     		if ("oidcPromise" in $$props) oidcPromise = $$props.oidcPromise;
     	};
 
@@ -2534,8 +6936,9 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		client_id,
     		redirect_uri,
     		post_logout_redirect_uri,
-    		settings,
+    		metadata,
     		UserManager,
+    		settings,
     		userManager,
     		oidcPromise,
     		handleOnMount,
@@ -2552,7 +6955,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			issuer: 0,
     			client_id: 1,
     			redirect_uri: 2,
-    			post_logout_redirect_uri: 3
+    			post_logout_redirect_uri: 3,
+    			metadata: 4
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -2566,19 +6970,19 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		const props = options.props || {};
 
     		if (/*issuer*/ ctx[0] === undefined && !("issuer" in props)) {
-    			console_1.warn("<OidcContext> was created without expected prop 'issuer'");
+    			console.warn("<OidcContext> was created without expected prop 'issuer'");
     		}
 
     		if (/*client_id*/ ctx[1] === undefined && !("client_id" in props)) {
-    			console_1.warn("<OidcContext> was created without expected prop 'client_id'");
+    			console.warn("<OidcContext> was created without expected prop 'client_id'");
     		}
 
     		if (/*redirect_uri*/ ctx[2] === undefined && !("redirect_uri" in props)) {
-    			console_1.warn("<OidcContext> was created without expected prop 'redirect_uri'");
+    			console.warn("<OidcContext> was created without expected prop 'redirect_uri'");
     		}
 
     		if (/*post_logout_redirect_uri*/ ctx[3] === undefined && !("post_logout_redirect_uri" in props)) {
-    			console_1.warn("<OidcContext> was created without expected prop 'post_logout_redirect_uri'");
+    			console.warn("<OidcContext> was created without expected prop 'post_logout_redirect_uri'");
     		}
     	}
 
@@ -2613,53 +7017,63 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	set post_logout_redirect_uri(value) {
     		throw new Error_1("<OidcContext>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get metadata() {
+    		throw new Error_1("<OidcContext>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set metadata(value) {
+    		throw new Error_1("<OidcContext>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
     /* src\App.svelte generated by Svelte v3.23.0 */
 
     const file$1 = "src\\App.svelte";
 
-    // (23:0) <OidcContext   issuer="https://dev-hvw40i79.auth0.com"   client_id="5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2"   redirect_uri="https://darrelopry.com/svelte-oidc"   post_logout_redirect_uri="https://darrelopry.com/svelte-oidc" >
+    // (24:0) <OidcContext   issuer="https://login.microsoftonline.com/757cbf3a-0ef6-4196-8163-947401a97de4/v2.0/"   client_id="82f014e9-8eeb-4003-9ce6-e408682ef523"   redirect_uri="http://localhost:5000/callback"   post_logout_redirect_uri="http://localhost:5000/" >
     function create_default_slot(ctx) {
     	let button0;
     	let t1;
     	let button1;
     	let t3;
+    	let button2;
+    	let t5;
     	let table;
     	let thead;
     	let tr0;
     	let th0;
     	let th1;
-    	let t6;
+    	let t8;
     	let tbody;
     	let tr1;
     	let td0;
     	let td1;
-    	let t8;
-    	let t9;
+    	let t10;
+    	let t11;
     	let tr2;
     	let td2;
     	let td3;
-    	let t11;
-    	let t12;
+    	let t13;
+    	let t14;
     	let tr3;
     	let td4;
     	let td5;
-    	let t14;
-    	let t15;
+    	let t16;
+    	let t17;
     	let tr4;
     	let td6;
     	let td7;
-    	let t17;
-    	let t18;
+    	let t19;
+    	let t20;
     	let tr5;
     	let td8;
     	let td9;
-    	let t20;
+    	let t22;
     	let tr6;
     	let td10;
     	let td11;
-    	let t22;
+    	let t24;
     	let current;
     	let mounted;
     	let dispose;
@@ -2680,6 +7094,9 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			button1 = element("button");
     			button1.textContent = "Logout";
     			t3 = space();
+    			button2 = element("button");
+    			button2.textContent = "refreshToken";
+    			t5 = space();
     			table = element("table");
     			thead = element("thead");
     			tr0 = element("tr");
@@ -2687,136 +7104,142 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			th0.textContent = "store";
     			th1 = element("th");
     			th1.textContent = "value";
-    			t6 = space();
+    			t8 = space();
     			tbody = element("tbody");
     			tr1 = element("tr");
     			td0 = element("td");
     			td0.textContent = "isLoading";
     			td1 = element("td");
-    			t8 = text(/*$isLoading*/ ctx[0]);
-    			t9 = space();
+    			t10 = text(/*$isLoading*/ ctx[0]);
+    			t11 = space();
     			tr2 = element("tr");
     			td2 = element("td");
     			td2.textContent = "isAuthenticated";
     			td3 = element("td");
-    			t11 = text(/*$isAuthenticated*/ ctx[1]);
-    			t12 = space();
+    			t13 = text(/*$isAuthenticated*/ ctx[1]);
+    			t14 = space();
     			tr3 = element("tr");
     			td4 = element("td");
     			td4.textContent = "accessToken";
     			td5 = element("td");
-    			t14 = text(/*$accessToken*/ ctx[2]);
-    			t15 = space();
+    			t16 = text(/*$accessToken*/ ctx[2]);
+    			t17 = space();
     			tr4 = element("tr");
     			td6 = element("td");
     			td6.textContent = "idToken";
     			td7 = element("td");
-    			t17 = text(/*$idToken*/ ctx[3]);
-    			t18 = space();
+    			t19 = text(/*$idToken*/ ctx[3]);
+    			t20 = space();
     			tr5 = element("tr");
     			td8 = element("td");
     			td8.textContent = "userInfo";
     			td9 = element("td");
     			create_component(highlight.$$.fragment);
-    			t20 = space();
+    			t22 = space();
     			tr6 = element("tr");
     			td10 = element("td");
     			td10.textContent = "authError";
     			td11 = element("td");
-    			t22 = text(/*$authError*/ ctx[5]);
+    			t24 = text(/*$authError*/ ctx[5]);
     			attr_dev(button0, "class", "btn");
-    			add_location(button0, file$1, 29, 2, 663);
+    			add_location(button0, file$1, 30, 2, 713);
     			attr_dev(button1, "class", "btn");
-    			add_location(button1, file$1, 30, 2, 743);
+    			add_location(button1, file$1, 31, 2, 793);
+    			attr_dev(button2, "class", "btn");
+    			add_location(button2, file$1, 32, 2, 875);
     			set_style(th0, "width", "20%");
-    			add_location(th0, file$1, 33, 10, 855);
+    			add_location(th0, file$1, 35, 10, 999);
     			set_style(th1, "width", "80%");
-    			add_location(th1, file$1, 33, 44, 889);
-    			add_location(tr0, file$1, 33, 6, 851);
-    			add_location(thead, file$1, 32, 4, 837);
-    			add_location(td0, file$1, 36, 10, 964);
-    			add_location(td1, file$1, 36, 28, 982);
-    			add_location(tr1, file$1, 36, 6, 960);
-    			add_location(td2, file$1, 37, 10, 1019);
-    			add_location(td3, file$1, 37, 34, 1043);
-    			add_location(tr2, file$1, 37, 6, 1015);
-    			add_location(td4, file$1, 38, 10, 1086);
-    			add_location(td5, file$1, 38, 30, 1106);
-    			add_location(tr3, file$1, 38, 6, 1082);
-    			add_location(td6, file$1, 39, 10, 1145);
+    			add_location(th1, file$1, 35, 44, 1033);
+    			add_location(tr0, file$1, 35, 6, 995);
+    			add_location(thead, file$1, 34, 4, 981);
+    			add_location(td0, file$1, 38, 10, 1108);
+    			add_location(td1, file$1, 38, 28, 1126);
+    			add_location(tr1, file$1, 38, 6, 1104);
+    			add_location(td2, file$1, 39, 10, 1163);
+    			add_location(td3, file$1, 39, 34, 1187);
+    			add_location(tr2, file$1, 39, 6, 1159);
+    			add_location(td4, file$1, 40, 10, 1230);
+    			set_style(td5, "word-break", "break-all");
+    			add_location(td5, file$1, 40, 30, 1250);
+    			add_location(tr3, file$1, 40, 6, 1226);
+    			add_location(td6, file$1, 41, 10, 1320);
     			set_style(td7, "word-break", "break-all");
-    			add_location(td7, file$1, 39, 26, 1161);
-    			add_location(tr4, file$1, 39, 6, 1141);
-    			add_location(td8, file$1, 40, 10, 1227);
-    			add_location(td9, file$1, 40, 27, 1244);
-    			add_location(tr5, file$1, 40, 6, 1223);
-    			add_location(td10, file$1, 41, 10, 1346);
-    			add_location(td11, file$1, 41, 28, 1364);
-    			add_location(tr6, file$1, 41, 6, 1342);
-    			add_location(tbody, file$1, 35, 4, 946);
-    			add_location(table, file$1, 31, 2, 825);
+    			add_location(td7, file$1, 41, 26, 1336);
+    			add_location(tr4, file$1, 41, 6, 1316);
+    			add_location(td8, file$1, 42, 10, 1402);
+    			add_location(td9, file$1, 42, 27, 1419);
+    			add_location(tr5, file$1, 42, 6, 1398);
+    			add_location(td10, file$1, 43, 10, 1521);
+    			add_location(td11, file$1, 43, 28, 1539);
+    			add_location(tr6, file$1, 43, 6, 1517);
+    			add_location(tbody, file$1, 37, 4, 1090);
+    			add_location(table, file$1, 33, 2, 969);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button0, anchor);
     			insert_dev(target, t1, anchor);
     			insert_dev(target, button1, anchor);
     			insert_dev(target, t3, anchor);
+    			insert_dev(target, button2, anchor);
+    			insert_dev(target, t5, anchor);
     			insert_dev(target, table, anchor);
     			append_dev(table, thead);
     			append_dev(thead, tr0);
     			append_dev(tr0, th0);
     			append_dev(tr0, th1);
-    			append_dev(table, t6);
+    			append_dev(table, t8);
     			append_dev(table, tbody);
     			append_dev(tbody, tr1);
     			append_dev(tr1, td0);
     			append_dev(tr1, td1);
-    			append_dev(td1, t8);
-    			append_dev(tbody, t9);
+    			append_dev(td1, t10);
+    			append_dev(tbody, t11);
     			append_dev(tbody, tr2);
     			append_dev(tr2, td2);
     			append_dev(tr2, td3);
-    			append_dev(td3, t11);
-    			append_dev(tbody, t12);
+    			append_dev(td3, t13);
+    			append_dev(tbody, t14);
     			append_dev(tbody, tr3);
     			append_dev(tr3, td4);
     			append_dev(tr3, td5);
-    			append_dev(td5, t14);
-    			append_dev(tbody, t15);
+    			append_dev(td5, t16);
+    			append_dev(tbody, t17);
     			append_dev(tbody, tr4);
     			append_dev(tr4, td6);
     			append_dev(tr4, td7);
-    			append_dev(td7, t17);
-    			append_dev(tbody, t18);
+    			append_dev(td7, t19);
+    			append_dev(tbody, t20);
     			append_dev(tbody, tr5);
     			append_dev(tr5, td8);
     			append_dev(tr5, td9);
     			mount_component(highlight, td9, null);
-    			append_dev(tbody, t20);
+    			append_dev(tbody, t22);
     			append_dev(tbody, tr6);
     			append_dev(tr6, td10);
     			append_dev(tr6, td11);
-    			append_dev(td11, t22);
+    			append_dev(td11, t24);
     			current = true;
 
     			if (!mounted) {
     				dispose = [
     					listen_dev(button0, "click", prevent_default(/*click_handler*/ ctx[6]), false, true, false),
-    					listen_dev(button1, "click", prevent_default(/*click_handler_1*/ ctx[7]), false, true, false)
+    					listen_dev(button1, "click", prevent_default(/*click_handler_1*/ ctx[7]), false, true, false),
+    					listen_dev(button2, "click", prevent_default(/*click_handler_2*/ ctx[8]), false, true, false)
     				];
 
     				mounted = true;
     			}
     		},
     		p: function update(ctx, dirty) {
-    			if (!current || dirty & /*$isLoading*/ 1) set_data_dev(t8, /*$isLoading*/ ctx[0]);
-    			if (!current || dirty & /*$isAuthenticated*/ 2) set_data_dev(t11, /*$isAuthenticated*/ ctx[1]);
-    			if (!current || dirty & /*$accessToken*/ 4) set_data_dev(t14, /*$accessToken*/ ctx[2]);
-    			if (!current || dirty & /*$idToken*/ 8) set_data_dev(t17, /*$idToken*/ ctx[3]);
+    			if (!current || dirty & /*$isLoading*/ 1) set_data_dev(t10, /*$isLoading*/ ctx[0]);
+    			if (!current || dirty & /*$isAuthenticated*/ 2) set_data_dev(t13, /*$isAuthenticated*/ ctx[1]);
+    			if (!current || dirty & /*$accessToken*/ 4) set_data_dev(t16, /*$accessToken*/ ctx[2]);
+    			if (!current || dirty & /*$idToken*/ 8) set_data_dev(t19, /*$idToken*/ ctx[3]);
     			const highlight_changes = {};
     			if (dirty & /*$userInfo*/ 16) highlight_changes.code = JSON.stringify(/*$userInfo*/ ctx[4], null, 2) || "";
     			highlight.$set(highlight_changes);
-    			if (!current || dirty & /*$authError*/ 32) set_data_dev(t22, /*$authError*/ ctx[5]);
+    			if (!current || dirty & /*$authError*/ 32) set_data_dev(t24, /*$authError*/ ctx[5]);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -2832,6 +7255,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			if (detaching) detach_dev(t1);
     			if (detaching) detach_dev(button1);
     			if (detaching) detach_dev(t3);
+    			if (detaching) detach_dev(button2);
+    			if (detaching) detach_dev(t5);
     			if (detaching) detach_dev(table);
     			destroy_component(highlight);
     			mounted = false;
@@ -2843,7 +7268,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(23:0) <OidcContext   issuer=\\\"https://dev-hvw40i79.auth0.com\\\"   client_id=\\\"5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2\\\"   redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\"   post_logout_redirect_uri=\\\"https://darrelopry.com/svelte-oidc\\\" >",
+    		source: "(24:0) <OidcContext   issuer=\\\"https://login.microsoftonline.com/757cbf3a-0ef6-4196-8163-947401a97de4/v2.0/\\\"   client_id=\\\"82f014e9-8eeb-4003-9ce6-e408682ef523\\\"   redirect_uri=\\\"http://localhost:5000/callback\\\"   post_logout_redirect_uri=\\\"http://localhost:5000/\\\" >",
     		ctx
     	});
 
@@ -2859,10 +7284,10 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     	const oidccontext = new OidcContext({
     			props: {
-    				issuer: "https://dev-hvw40i79.auth0.com",
-    				client_id: "5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2",
-    				redirect_uri: "https://darrelopry.com/svelte-oidc",
-    				post_logout_redirect_uri: "https://darrelopry.com/svelte-oidc",
+    				issuer: "https://login.microsoftonline.com/757cbf3a-0ef6-4196-8163-947401a97de4/v2.0/",
+    				client_id: "82f014e9-8eeb-4003-9ce6-e408682ef523",
+    				redirect_uri: "http://localhost:5000/callback",
+    				post_logout_redirect_uri: "http://localhost:5000/",
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
     			},
@@ -2877,7 +7302,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			create_component(oidccontext.$$.fragment);
     			html_tag = new HtmlTag(null);
     			attr_dev(div, "class", "container");
-    			add_location(div, file$1, 21, 0, 416);
+    			add_location(div, file$1, 22, 0, 432);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2893,7 +7318,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		p: function update(ctx, [dirty]) {
     			const oidccontext_changes = {};
 
-    			if (dirty & /*$$scope, $authError, $userInfo, $idToken, $accessToken, $isAuthenticated, $isLoading*/ 319) {
+    			if (dirty & /*$$scope, $authError, $userInfo, $idToken, $accessToken, $isAuthenticated, $isLoading*/ 575) {
     				oidccontext_changes.$$scope = { dirty, ctx };
     			}
 
@@ -2957,6 +7382,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	validate_slots("App", $$slots, []);
     	const click_handler = () => login();
     	const click_handler_1 = () => logout();
+    	const click_handler_2 = () => refreshToken();
 
     	$$self.$capture_state = () => ({
     		Highlight,
@@ -2970,6 +7396,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		isLoading,
     		login,
     		logout,
+    		refreshToken,
     		userInfo,
     		$isLoading,
     		$isAuthenticated,
@@ -2987,7 +7414,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		$userInfo,
     		$authError,
     		click_handler,
-    		click_handler_1
+    		click_handler_1,
+    		click_handler_2
     	];
     }
 
