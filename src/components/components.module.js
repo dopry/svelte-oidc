@@ -1,3 +1,13 @@
-export * from './oidc'
-export { default as OidcContext } from './OidcContext.svelte';
+export {
+    default as OidcContext,
+    authError,
+    idToken,
+    accessToken,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    refreshToken,
+    userInfo,
+} from './OidcContext.svelte';
 
