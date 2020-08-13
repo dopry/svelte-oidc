@@ -118,6 +118,10 @@
     // Not all browsers support this, please program defensively!
     const params = new URLSearchParams(window.location.search);
 
+    if (!params.has('error') && !params.has('code') && !$isAuthenticated) {
+        refreshToken();
+    }
+
 	async function handleOnMount() {
 		// on run onMount after oidc
         const oidc = await oidcPromise;
