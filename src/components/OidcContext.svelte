@@ -81,45 +81,46 @@
 	const settings = {
 		authority: issuer,
 		client_id,
-		// response_type: 'id_token token',
 		redirect_uri,
 		post_logout_redirect_uri,
 		response_type: 'code',
 		scope: 'openid profile email',
 		automaticSilentRenew: true,
-        metadata
+		metadata,
 	};
 
 	const userManager = new UserManager(settings);
-    userManager.events.addUserLoaded(function (user) {
+	userManager.events.addUserLoaded(function(user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
 		idToken.set(user.id_token);
 		userInfo.set(user.profile);
 	});
 
-    userManager.events.addUserUnloaded(function () {
+	userManager.events.addUserUnloaded(function(e) {
 		isAuthenticated.set(false);
 		idToken.set('');
 		accessToken.set('');
 		userInfo.set({});
     });
 
-    userManager.events.addSilentRenewError(function (e) {
-        authError.set(`silentRenewError: ${e.message}`);
+	userManager.events.addSilentRenewError(function(e) {
+		authError.set(`SilentRenewError: ${e.message}`);
     });
 
-    let oidcPromise = Promise.resolve(userManager);
 
+    // userManager needs to be wrapped in a promise and the work
+    // needs to be done onMount to otherwise there is an
+    // Error: Function called outside component initialization
+	let oidcPromise = Promise.resolve(userManager);
     setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
 
+    // Not all browsers support this, please program defensively!
+    const params = new URLSearchParams(window.location.search);
 
 	async function handleOnMount() {
 		// on run onMount after oidc
         const oidc = await oidcPromise;
-
-        // Not all browsers support this, please program defensively!
-        const params = new URLSearchParams(window.location.search);
 
 		// Check if something went wrong during login redirect
 		// and extract the error message
@@ -131,13 +132,13 @@
 		if (params.has('code')) {
 			// handle the callback
 			const response = await oidc.signinCallback();
-            let state = (response && response.state) || {}
+			let state = (response && response.state) || {};
 			// Can be smart here and redirect to original path instead of root
             const url = state && state.targetUrl ? state.targetUrl : window.location.pathname;
 			state = { ...state, isRedirectCallback: true };
 
 			// redirect to the last page we were on when login was configured if it was passed.
-            history.replaceState(state, "", url);
+			history.replaceState(state, '', url);
 			// location.href = url;
 			// clear errors on login.
 			authError.set(null);
@@ -150,5 +151,4 @@
 	onDestroy(handleOnDestroy);
 </script>
 
-
-<slot></slot>
+<slot />
