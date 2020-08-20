@@ -74,6 +74,7 @@
 	export let redirect_uri;
 	export let post_logout_redirect_uri;
 	export let metadata = {};
+	export let scope = 'openid profile email';
 
 	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
 	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
@@ -84,7 +85,7 @@
 		redirect_uri,
 		post_logout_redirect_uri,
 		response_type: 'code',
-		scope: 'openid profile email',
+		scope,
 		automaticSilentRenew: true,
 		metadata,
 	};
