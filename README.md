@@ -58,6 +58,32 @@ const metadata = {
 </OidcContext>
 ```
 
+## Sapper/SSR
+
+This component does not natively support SSR nor can it be used for authentication in server side rendered contexts. It
+can be used within SSR applications as long as it is acceptable for all authentication to be client side. In order to
+use for client side auth in an SSR application you will need to ensure it is not rendered server side as follows.
+
+```
+{#if process.browser} <OidcContext> ..... </OidcContext> {/if}
+```
+
+## Contributing
+
+Contributors are Welcome. There is a lot of value in a vendor neutral OIDC component for use by the Svelte and Sapper
+community. As a developer and product manager, I have needed to switch between Okta, Auth0, KeyCloak, IdentityServer,
+and Ory on multiple occasions. Vendor specific libraries are usually riddled with vendor specific assumptions that make
+the migration hard.
+
+**How to Help!**
+
+  * Better Documentation
+  * Helping with the Issue Queue (support, good bug report, resolving bugs)
+  * SSR Support
+  * Automated Testing of all major identity providers
+
+**PRs Welcome!**
+
 ## Docs
 
 ### Components
@@ -88,8 +114,11 @@ const metadata = {
 * OIDC_CONTEXT_CLIENT_PROMISE - key for the OIDC client in setContext/getContext.
 * OIDC_CONTEXT_LOGOUT_URL,
 
+## Development
+npm run showcase:dev
+
 ## Release
 **use semver**
-npm publish
-npm showcase:build
-npm showcase:publish
+1. npm publish
+2. npm showcase:build
+3. npm showcase:publish
