@@ -14,6 +14,7 @@
 	export const idToken = writable('');
 	export const userInfo = writable({});
 	export const authError = writable(null);
+	export const isInitialized = writable(false);
 
 	/**
 	 * Context Keys
@@ -91,6 +92,7 @@
 	};
 
 	const userManager = new UserManager(settings);
+	isInitialized.set(!!userManager);
 	userManager.events.addUserLoaded(function(user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
