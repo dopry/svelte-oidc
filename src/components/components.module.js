@@ -9,5 +9,6 @@ export {
     logout,
     refreshToken,
     userInfo,
+    isInitialized
 } from './OidcContext.svelte';
 
