@@ -27,11 +27,21 @@
 	export const OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI = {};
 
 	/**
-	 * Refresh the accessToken store.
+	 * Refresh the accessToken using the silentRenew method (hidden iframe)
+	 * @return bool indicated whether the token was refreshed, if false error will be set
+	 * in the authError store.
 	 */
 	export async function refreshToken() {
-		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		await oidc.signinSilent();
+		try {
+		  const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
+		  await oidc.signinSilent();
+		  return true;
+		}
+		catch (e) {
+			// set error state for reactive handling
+			authError.set(e.message);
+			return false;
+		}
 	}
 
 	/**
@@ -98,7 +108,7 @@
 		userInfo.set(user.profile);
 	});
 
-	userManager.events.addUserUnloaded(function(e) {
+	userManager.events.addUserUnloaded(function() {
 		isAuthenticated.set(false);
 		idToken.set('');
 		accessToken.set('');
@@ -119,6 +129,8 @@
     // Not all browsers support this, please program defensively!
     const params = new URLSearchParams(window.location.search);
 
+	// Use 'error' and 'code' to test if the component is being executed as a part of a login callback. If we're not
+	// running in a login callback, and the user isn't logged in, see if we can capture their existing session.
     if (!params.has('error') && !params.has('code') && !$isAuthenticated) {
         refreshToken();
     }
@@ -147,6 +159,12 @@
 			// location.href = url;
 			// clear errors on login.
 			authError.set(null);
+		}
+		// if code was not set and there was a state, then we're in an auth callback and there was an error. We still
+		// need to wrap the sign-in silent. We need to sit down and chart out the various success and fail scenarios and
+		// what the uris loook like. I fear this may be problematic in other auth flows in the future.
+		else if (params.has('state')) {
+			const response = await oidc.signinCallback();
 		}
 		isLoading.set(false);
 	}
