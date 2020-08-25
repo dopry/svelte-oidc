@@ -1,5 +1,3 @@
-
-(function(l, r) { if (l.getElementById('livereloadscript')) return; r = l.createElement('script'); r.async = 1; r.src = '//' + (window.location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1'; r.id = 'livereloadscript'; l.getElementsByTagName('head')[0].appendChild(r) })(window.document);
 var app = (function () {
     'use strict';
 
@@ -6687,8 +6685,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     function create_fragment$1(ctx) {
     	let current;
-    	const default_slot_template = /*$$slots*/ ctx[6].default;
-    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[5], null);
+    	const default_slot_template = /*$$slots*/ ctx[7].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[6], null);
 
     	const block = {
     		c: function create() {
@@ -6706,8 +6704,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		},
     		p: function update(ctx, [dirty]) {
     			if (default_slot) {
-    				if (default_slot.p && dirty & /*$$scope*/ 32) {
-    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[5], dirty, null, null);
+    				if (default_slot.p && dirty & /*$$scope*/ 64) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[6], dirty, null, null);
     				}
     			}
     		},
@@ -6748,8 +6746,16 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     const OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI = {};
 
     async function refreshToken() {
-    	const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-    	await oidc.signinSilent();
+    	try {
+    		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
+    		await oidc.signinSilent();
+    		return true;
+    	} catch(e) {
+    		// set error state for reactive handling
+    		authError.set(e.message);
+
+    		return false;
+    	}
     }
 
     async function login(preserveRoute = true, callback_url = null) {
@@ -6783,13 +6789,14 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		$$unsubscribe_isAuthenticated = noop;
 
     	validate_store(isAuthenticated, "isAuthenticated");
-    	component_subscribe($$self, isAuthenticated, $$value => $$invalidate(7, $isAuthenticated = $$value));
+    	component_subscribe($$self, isAuthenticated, $$value => $$invalidate(8, $isAuthenticated = $$value));
     	$$self.$$.on_destroy.push(() => $$unsubscribe_isAuthenticated());
     	let { issuer } = $$props;
     	let { client_id } = $$props;
     	let { redirect_uri } = $$props;
     	let { post_logout_redirect_uri } = $$props;
     	let { metadata = {} } = $$props;
+    	let { scope = "openid profile email" } = $$props;
     	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
     	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
 
@@ -6799,7 +6806,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		redirect_uri,
     		post_logout_redirect_uri,
     		response_type: "code",
-    		scope: "openid profile email",
+    		scope,
     		automaticSilentRenew: true,
     		metadata
     	};
@@ -6813,7 +6820,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		userInfo.set(user.profile);
     	});
 
-    	userManager.events.addUserUnloaded(function (e) {
+    	userManager.events.addUserUnloaded(function () {
     		isAuthenticated.set(false);
     		idToken.set("");
     		accessToken.set("");
@@ -6834,6 +6841,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	// Not all browsers support this, please program defensively!
     	const params = new URLSearchParams(window.location.search);
 
+    	// Use 'error' and 'code' to test if the component is being executed as a part of a login callback. If we're not
+    	// running in a login callback, and the user isn't logged in, see if we can capture their existing session.
     	if (!params.has("error") && !params.has("code") && !$isAuthenticated) {
     		refreshToken();
     	}
@@ -6868,6 +6877,11 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			// location.href = url;
     			// clear errors on login.
     			authError.set(null);
+    		} else // if code was not set and there was a state, then we're in an auth callback and there was an error. We still
+    		// need to wrap the sign-in silent. We need to sit down and chart out the various success and fail scenarios and
+    		// what the uris loook like. I fear this may be problematic in other auth flows in the future.
+    		if (params.has("state")) {
+    			const response = await oidc.signinCallback();
     		}
 
     		isLoading.set(false);
@@ -6875,7 +6889,15 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
 
     	onMount(handleOnMount);
     	onDestroy(handleOnDestroy);
-    	const writable_props = ["issuer", "client_id", "redirect_uri", "post_logout_redirect_uri", "metadata"];
+
+    	const writable_props = [
+    		"issuer",
+    		"client_id",
+    		"redirect_uri",
+    		"post_logout_redirect_uri",
+    		"metadata",
+    		"scope"
+    	];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<OidcContext> was created with unknown prop '${key}'`);
@@ -6890,7 +6912,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		if ("redirect_uri" in $$props) $$invalidate(2, redirect_uri = $$props.redirect_uri);
     		if ("post_logout_redirect_uri" in $$props) $$invalidate(3, post_logout_redirect_uri = $$props.post_logout_redirect_uri);
     		if ("metadata" in $$props) $$invalidate(4, metadata = $$props.metadata);
-    		if ("$$scope" in $$props) $$invalidate(5, $$scope = $$props.$$scope);
+    		if ("scope" in $$props) $$invalidate(5, scope = $$props.scope);
+    		if ("$$scope" in $$props) $$invalidate(6, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({
@@ -6918,6 +6941,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		redirect_uri,
     		post_logout_redirect_uri,
     		metadata,
+    		scope,
     		settings,
     		userManager,
     		oidcPromise,
@@ -6933,6 +6957,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		if ("redirect_uri" in $$props) $$invalidate(2, redirect_uri = $$props.redirect_uri);
     		if ("post_logout_redirect_uri" in $$props) $$invalidate(3, post_logout_redirect_uri = $$props.post_logout_redirect_uri);
     		if ("metadata" in $$props) $$invalidate(4, metadata = $$props.metadata);
+    		if ("scope" in $$props) $$invalidate(5, scope = $$props.scope);
     		if ("oidcPromise" in $$props) oidcPromise = $$props.oidcPromise;
     	};
 
@@ -6946,6 +6971,7 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     		redirect_uri,
     		post_logout_redirect_uri,
     		metadata,
+    		scope,
     		$$scope,
     		$$slots
     	];
@@ -6960,7 +6986,8 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     			client_id: 1,
     			redirect_uri: 2,
     			post_logout_redirect_uri: 3,
-    			metadata: 4
+    			metadata: 4,
+    			scope: 5
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -7027,6 +7054,14 @@ ArduinoÂ® Light Theme - Stefania Mellai <s.mellai@arduino.cc>
     	}
 
     	set metadata(value) {
+    		throw new Error_1("<OidcContext>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	get scope() {
+    		throw new Error_1("<OidcContext>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set scope(value) {
     		throw new Error_1("<OidcContext>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
