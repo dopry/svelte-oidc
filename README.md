@@ -22,7 +22,7 @@ App.svelte
 import {
   OidcContext,
   authError,
-  authToken,
+  accessToken,
   idToken,
   isAuthenticated,
   isLoading,
@@ -44,7 +44,7 @@ const metadata = {
  client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"
  redirect_uri="https://darrelopry.com/svelte-oidc/"
  post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/"
- metdata={metadata}
+ metadata={metadata}
  >
 
   <button on:click|preventDefault='{() => login() }'>Login</button>
