@@ -22,7 +22,7 @@ App.svelte
 import {
   OidcContext,
   authError,
-  acessToken,
+  accessToken,
   idToken,
   isAuthenticated,
   isLoading,
