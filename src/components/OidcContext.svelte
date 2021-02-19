@@ -1,9 +1,7 @@
 <script context="module">
 	import { writable } from 'svelte/store';
-    import { getContext } from 'svelte';
-    import oidcClient from 'oidc-client';
-	const { UserManager } = oidcClient;
-	import { onMount, onDestroy, setContext } from 'svelte';
+    import { UserManager } from 'oidc-client';
+	import { onMount, onDestroy } from 'svelte';
 
 	/**
 	 * Stores
@@ -15,16 +13,11 @@
 	export const userInfo = writable({});
 	export const authError = writable(null);
 
+
 	/**
-	 * Context Keys
-	 *
-	 * using an object literal means the keys are guaranteed not to conflict in any circumstance (since an object only has
-	 * referential equality to itself, i.e. {} !== {} whereas "x" === "x"), even when you have multiple different contexts
-	 * operating across many component layers.
+	 * Context used cross components
 	 */
-	export const OIDC_CONTEXT_CLIENT_PROMISE = {};
-	export const OIDC_CONTEXT_REDIRECT_URI = {};
-	export const OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI = {};
+	let context = {}
 
 	/**
 	 * Refresh the accessToken using the silentRenew method (hidden iframe)
@@ -33,8 +26,7 @@
 	 */
 	export async function refreshToken() {
 		try {
-		  const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		  await oidc.signinSilent();
+		  await context.userManager.signinSilent();
 		  return true;
 		}
 		catch (e) {
@@ -51,8 +43,7 @@
 	 * @param {string} callback_url - explicit path to use for the callback.
 	 */
 	export async function login(preserveRoute = true, callback_url = null) {
-		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		const redirect_uri = callback_url || getContext(OIDC_CONTEXT_REDIRECT_URI) || window.location.href;
+		const redirect_uri = callback_url || context.redirect_uri || window.location.href;
 
 		// try to keep the user on the same page from which they triggered login. If set to false should typically
 		// cause redirect to /.
@@ -62,7 +53,7 @@
 					search: window.location.search,
 			  }
 			: {};
-		await oidc.signinRedirect({ redirect_uri, appState });
+		await context.userManager.signinRedirect({ redirect_uri, appState });
 	}
 
 	/**
@@ -71,9 +62,8 @@
 	 * @param {string} logout_url - specify the url to return to after login.
 	 */
 	export async function logout(logout_url = null) {
-		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		const returnTo = logout_url || getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI) ||	window.location.href;
-		oidc.signoutRedirect({ returnTo });
+		const returnTo = logout_url || context.post_logout_redirect_uri ||	window.location.href;
+		context.userManager.signoutRedirect({ returnTo });
 	}
 </script>
 
@@ -86,8 +76,8 @@
 	export let metadata = {};
 	export let scope = 'openid profile email';
 
-	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
-	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
+	$: context.redirect_uri = redirect_uri
+	$: context.post_logout_redirect_uri = post_logout_redirect_uri
 
 	const settings = {
 		authority: issuer,
@@ -100,13 +90,15 @@
 		metadata,
 	};
 
-	const userManager = new UserManager(settings);
-	userManager.events.addUserLoaded(function(user) {
+	function onUserLoaded(user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
 		idToken.set(user.id_token);
 		userInfo.set(user.profile);
-	});
+	}
+
+	const userManager = new UserManager(settings);
+	userManager.events.addUserLoaded(onUserLoaded);
 
 	userManager.events.addUserUnloaded(function() {
 		isAuthenticated.set(false);
@@ -119,12 +111,7 @@
 		authError.set(`SilentRenewError: ${e.message}`);
     });
 
-
-    // userManager needs to be wrapped in a promise and the work
-    // needs to be done onMount to otherwise there is an
-    // Error: Function called outside component initialization
-	let oidcPromise = Promise.resolve(userManager);
-    setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
+	context.userManager = userManager;
 
     // Not all browsers support this, please program defensively!
     const params = new URLSearchParams(window.location.search);
@@ -136,8 +123,10 @@
     }
 
 	async function handleOnMount() {
-		// on run onMount after oidc
-        const oidc = await oidcPromise;
+		const user = await context.userManager.getUser();
+		if (user) {
+			onUserLoaded(user);
+		}
 
 		// Check if something went wrong during login redirect
 		// and extract the error message
@@ -148,7 +137,7 @@
 		// if code then login success
 		if (params.has('code')) {
 			// handle the callback
-			const response = await oidc.signinCallback();
+			const response = await context.userManager.signinCallback();
 			let state = (response && response.state) || {};
 			// Can be smart here and redirect to original path instead of root
             const url = state && state.targetUrl ? state.targetUrl : window.location.pathname;
@@ -164,8 +153,9 @@
 		// need to wrap the sign-in silent. We need to sit down and chart out the various success and fail scenarios and
 		// what the uris loook like. I fear this may be problematic in other auth flows in the future.
 		else if (params.has('state')) {
-			const response = await oidc.signinCallback();
+			const response = await context.userManager.signinCallback();
 		}
+
 		isLoading.set(false);
 	}
 	async function handleOnDestroy() {}
