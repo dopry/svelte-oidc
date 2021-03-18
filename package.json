@@ -1,6 +1,6 @@
 {
 	"name": "@dopry/svelte-oidc",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": "https://github.com/dopry/svelte-oidc",
 	"description": "Svelte OIDC Component Library",
 	"keywords": [
@@ -45,7 +45,7 @@
 	},
 	"svelte": "src/components/components.module.js",
 	"dependencies": {
-		"oidc-client": "github:dopry/oidc-client-js#merge-settings"
+		"oidc-client": "1.11.5"
 	},
 	"devDependencies": {
 		"@rollup/plugin-node-resolve": "11.2.0",

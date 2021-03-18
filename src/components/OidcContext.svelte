@@ -78,6 +78,24 @@
 		const oidc = await oidcPromise;
 		const returnTo = logout_url || window.location.href;
 		oidc.signoutRedirect({ returnTo });
+		try {
+			const response = await oidc.signoutRedirect({ returnTo });
+		} catch (err) {
+			if (err.message !== 'no end session endpoint') throw err;
+			// this is most likely auth0, so let's try their logout endpoint.
+			// @see: https://auth0.com/docs/api/authentication#logout
+			// this is dirty and hack and reaches into guts of the oidc client
+			// in ways I'd prefer not to.. but auth0 has this annoying non-conforming
+			// session termination.
+			const authority = oidc._settings._authority;
+			if (authority.endsWith('auth0.com')) {
+				const clientId = oidc._settings._client_id;
+				const url = `${authority}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(
+					returnTo
+				)}`;
+				window.location = url;
+			} else throw err
+		}
 	}
 </script>
 
@@ -87,7 +105,7 @@
 	export let client_id;
 	export let redirect_uri;
 	export let post_logout_redirect_uri;
-	export let metadata = {};
+
 	export let scope = 'openid profile email';
 
 	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
@@ -101,7 +119,6 @@
 		response_type: 'code',
 		scope,
 		automaticSilentRenew: true,
-		metadata,
 	};
 
 	const userManager = new UserManager(settings);
