@@ -28,12 +28,14 @@
 
 	/**
 	 * Refresh the accessToken using the silentRenew method (hidden iframe)
+	 * 
+	 * @param {Promise<UserManager>} oidcPromise
 	 * @return bool indicated whether the token was refreshed, if false error will be set
 	 * in the authError store.
 	 */
-	export async function refreshToken() {
+	export async function refreshToken(oidcPromise) {
 		try {
-		  const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
+		  const oidc = await oidcPromise
 		  await oidc.signinSilent();
 		  return true;
 		}
@@ -47,12 +49,13 @@
 	/**
 	 * Initiate Register/Login flow.
 	 *
+	 * @param {Promise<UserManager>} oidcPromise
 	 * @param {boolean} preserveRoute - store current location so callback handler will navigate back to it.
 	 * @param {string} callback_url - explicit path to use for the callback.
 	 */
-	export async function login(preserveRoute = true, callback_url = null) {
-		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		const redirect_uri = callback_url || getContext(OIDC_CONTEXT_REDIRECT_URI) || window.location.href;
+	export async function login(oidcPromise, preserveRoute = true, callback_url = null) {
+		const oidc = await oidcPromise;
+		const redirect_uri = callback_url || window.location.href;
 
 		// try to keep the user on the same page from which they triggered login. If set to false should typically
 		// cause redirect to /.
@@ -67,12 +70,13 @@
 
 	/**
 	 * Log out the current user.
-	 *
+	 * 
+	 * @param {Promise<UserManager>} oidcPromise
 	 * @param {string} logout_url - specify the url to return to after login.
 	 */
-	export async function logout(logout_url = null) {
-		const oidc = await getContext(OIDC_CONTEXT_CLIENT_PROMISE);
-		const returnTo = logout_url || getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI) ||	window.location.href;
+	export async function logout(oidcPromise, logout_url = null) {
+		const oidc = await oidcPromise;
+		const returnTo = logout_url || window.location.href;
 		oidc.signoutRedirect({ returnTo });
 	}
 </script>
@@ -120,9 +124,8 @@
     });
 
 
-    // userManager needs to be wrapped in a promise and the work
-    // needs to be done onMount to otherwise there is an
-    // Error: Function called outside component initialization
+    // does userManager needs to be wrapped in a promise? or is this a left over to maintain
+	// symmetry with the @dopry/svelte-auth0 auth0 implementation
 	let oidcPromise = Promise.resolve(userManager);
     setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
 
@@ -132,7 +135,7 @@
 	// Use 'error' and 'code' to test if the component is being executed as a part of a login callback. If we're not
 	// running in a login callback, and the user isn't logged in, see if we can capture their existing session.
     if (!params.has('error') && !params.has('code') && !$isAuthenticated) {
-        refreshToken();
+        refreshToken(oidcPromise);
     }
 
 	async function handleOnMount() {
@@ -165,6 +168,7 @@
 		// what the uris loook like. I fear this may be problematic in other auth flows in the future.
 		else if (params.has('state')) {
 			const response = await oidc.signinCallback();
+			console.log('oidc.signinCallback::response', response)
 		}
 		isLoading.set(false);
 	}

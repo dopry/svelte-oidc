@@ -4,6 +4,9 @@ import { json } from 'svelte-highlight/languages';
 import { arduinoLight as highlightTheme } from "svelte-highlight/styles";
 import {
   OidcContext,
+  LoginButton,
+  LogoutButton,
+  RefreshTokenButton,
   authError,
   idToken,
   accessToken,
@@ -27,10 +30,9 @@ import {
   redirect_uri="process.env.OIDC_REDIRECT_URI"
   post_logout_redirect_uri="process.env.OIDC_POST_LOGOUT_REDIRECT_URI"
 >
-
-  <button class="btn" on:click|preventDefault='{() => login() }'>Login</button>
-  <button class="btn" on:click|preventDefault='{() => logout() }'>Logout</button>
-  <button class="btn" on:click|preventDefault='{() => refreshToken() }'>refreshToken</button>
+  <LoginButton>Login</LoginButton>
+  <LogoutButton>Logout</LogoutButton>
+  <RefreshTokenButton>refreshToken</RefreshTokenButton>
   <table>
     <thead>
       <tr><th style="width: 20%;">store</th><th style="width: 80%;">value</th></tr>
