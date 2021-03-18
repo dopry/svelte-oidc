@@ -7,6 +7,7 @@ An Oidc Client Component for Svelte.
 ## Getting Started
 
 Setup an OIDC Sever
+
  * https://www.ory.sh/
  * https://www.keycloak.org/
  * https://www.okta.com/
@@ -17,10 +18,13 @@ Setup an OIDC Sever
 `npm install @dopry/svelte-oidc`
 
 App.svelte
-```
+```svelte
 # App.svelte
 import {
   OidcContext,
+  LoginButton,
+  LogoutButton,
+  RefreshTokenButton,
   authError,
   accessToken,
   idToken,
@@ -47,8 +51,9 @@ const metadata = {
  metadata={metadata}
  >
 
-  <button on:click|preventDefault='{() => login() }'>Login</button>
-  <button on:click|preventDefault='{() => logout() }'>Logout</button><br />
+  <LoginButton>Login</LoginButton>
+  <LogoutButton>Logout</LogoutButton>
+  <RefreshTokenButton>RefreshToken<RefreshTokenButton><br />
   <pre>isLoading: {$isLoading}</pre>
   <pre>isAuthenticated: {$isAuthenticated}</pre>
   <pre>authToken: {$accessToken}</pre>
@@ -87,6 +92,7 @@ the migration hard.
 ## Docs
 
 ### Components
+
 * OidcContext - component to initiate the OIDC client. You only need one instance in your DOM tree at the root.
 
   Attributes:
@@ -96,12 +102,27 @@ the migration hard.
   * post_logout_redirect_uri - override the default url that OIDC will redirect to after logout. default: window.location.href
   * metadata - set default metadata or metadata missing from authority.
 
+* LoginButton - log out the current context
+
+  Attributes:
+  * preserve_route - tell the callback handler to return to the current url after login. default: true
+  * callback_url - override the context callback_url
+
+* LogoutButton - log in the current context
+  
+  Attributes:
+  * logout_url - override the context logout_url
+
+* RefreshTokenButton - refresh the current token
+
 ### Functions
-* login(preseveRoute = true, callback_url = null) - begin a user login.
-* logout(logout_url = null) - logout a user.
-* refreshToken - function to refresh a token.
+
+* login(oidcPromise, preseveRoute = true, callback_url = null) - begin a user login.
+* logout(oidcPromise, logout_url = null) - logout a user.
+* refreshToken(oidcPromise) - function to refresh a token.
 
 ### Stores
+
 * isLoading - if true OIDC Context is still loading.
 * isAuthenticated - true if user is currently authenticated
 * accessToken - access token for connecting to apis.
@@ -110,15 +131,19 @@ the migration hard.
 * authError - the last authentication error.
 
 ### Constants
+
 * OIDC_CONTEXT_CALLBACK_URL
 * OIDC_CONTEXT_CLIENT_PROMISE - key for the OIDC client in setContext/getContext.
 * OIDC_CONTEXT_LOGOUT_URL,
 
 ## Development
+
 npm run showcase:dev
 
 ## Release
-**use semver**
+
+use semver
+
 1. npm publish
-2. npm showcase:build
-3. npm showcase:publish
+2. npm run showcase:build
+3. npm run showcase:publish
