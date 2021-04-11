@@ -73,6 +73,18 @@ use for client side auth in an SSR application you will need to ensure it is not
 {#if process.browser} <OidcContext> ..... </OidcContext> {/if}
 ```
 
+## SvelteKit/SSR
+Same as what is needed for Sapper (see above section). To do this, we need to import in the `script` section:
+
+```
+import { browser } from '$app/env';
+```
+
+And in the `main`:
+```
+{#if browser} <OidcContext> ..... </OidcContext> {/if}
+```
+
 ## Contributing
 
 Contributors are Welcome. There is a lot of value in a vendor neutral OIDC component for use by the Svelte and Sapper
