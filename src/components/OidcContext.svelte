@@ -2,7 +2,6 @@
 	import { writable } from 'svelte/store';
     import { getContext } from 'svelte';
     import oidcClient from 'oidc-client';
-	const { UserManager } = oidcClient;
 	import { onMount, onDestroy, setContext } from 'svelte';
 
 	/**
@@ -121,8 +120,8 @@
 		automaticSilentRenew: true,
 	};
 
-	const userManager = new UserManager(settings);
-	userManager.events.addUserLoaded(function(user) {
+	const userManager = new oidcClient.UserManager(settings);
+	userManager.events.addUserLoaded(function (user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
 		idToken.set(user.id_token);
