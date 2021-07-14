@@ -104,7 +104,7 @@
 	export let client_id;
 	export let redirect_uri;
 	export let post_logout_redirect_uri;
-	export let extra_options = {};
+	export let extraOptions = {};
 
 	export let scope = 'openid profile email';
 
@@ -119,7 +119,7 @@
 		response_type: 'code',
 		scope,
 		automaticSilentRenew: true,
-		...extra_options,
+		...extraOptions,
 	};
 
 	const userManager = new oidcClient.UserManager(settings);
