@@ -49,6 +49,10 @@ const metadata = {
  redirect_uri="https://darrelopry.com/svelte-oidc/"
  post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/"
  metadata={metadata}
+ extraOptions={{
+   mergeClaims: true,
+   resource: "some_identifier",
+ }}
  >
 
   <LoginButton>Login</LoginButton>
@@ -113,6 +117,7 @@ the migration hard.
   * redirect_uri -  default: window.location.href
   * post_logout_redirect_uri - override the default url that OIDC will redirect to after logout. default: window.location.href
   * metadata - set default metadata or metadata missing from authority.
+  * extraOptions - An object of extra options that will be passed to the underlying OpenID Connect client. Valid values are available [here](https://github.com/IdentityModel/oidc-client-js/wiki#other-optional-settings).
 
 * LoginButton - log out the current context
 
