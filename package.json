@@ -59,7 +59,7 @@
 		"eslint-plugin-svelte3": "3.1.2",
 		"gh-pages": "3.1.0",
 		"lint-staged": "10.2.11",
-		"postcss": "7.0.32",
+		"postcss": "7.0.36",
 		"postcss-load-config": "2.1.0",
 		"prettier": "2.0.5",
 		"rollup": "2.41.5",
