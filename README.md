@@ -57,7 +57,7 @@ const metadata = {
 
   <LoginButton>Login</LoginButton>
   <LogoutButton>Logout</LogoutButton>
-  <RefreshTokenButton>RefreshToken<RefreshTokenButton><br />
+  <RefreshTokenButton>RefreshToken</RefreshTokenButton><br />
   <pre>isLoading: {$isLoading}</pre>
   <pre>isAuthenticated: {$isAuthenticated}</pre>
   <pre>authToken: {$accessToken}</pre>
