@@ -8,6 +8,8 @@
 
     const oidcPromise = getContext(OIDC_CONTEXT_CLIENT_PROMISE)
     export let logout_url = getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI)
+    export let classes = ''
+    export let styles = ''
 </script>
 
-<button class="btn" on:click|preventDefault='{() => logout(oidcPromise, logout_url) }'><slot></slot></button>
+<button class="btn {classes}" style="{styles} on:click|preventDefault='{() => logout(oidcPromise, logout_url) }'><slot></slot></button>
