@@ -9,6 +9,8 @@
     const oidcPromise = getContext(OIDC_CONTEXT_CLIENT_PROMISE)
     export let callback_url = getContext(OIDC_CONTEXT_REDIRECT_URI)
     export let preserveRoute
+    export let classes = ''
+    export let styles = ''
 </script>
 
-<button class="btn" on:click|preventDefault='{() => login(oidcPromise, preserveRoute, callback_url) }'><slot></slot></button>
+<button class="btn {classes}" style="{styles}" on:click|preventDefault='{() => login(oidcPromise, preserveRoute, callback_url) }'><slot></slot></button>
