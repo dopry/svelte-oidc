@@ -10,6 +10,10 @@
     export let logout_url = getContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI)
     export let classes = ''
     export let styles = ''
+
+    const changeColor = (event) => {
+        styles = 'background-color: ' + event.target.value
+    }
 </script>
 
-<button class="btn {classes}" style="{styles} on:click|preventDefault='{() => logout(oidcPromise, logout_url) }'><slot></slot></button>
+<button class="btn {classes}" style="{styles}" on:click|preventDefault='{() => logout(oidcPromise, logout_url) }'><slot></slot></button>
