@@ -1,7 +1,7 @@
 import { terser } from 'rollup-plugin-terser';
 import commonjs from 'rollup-plugin-commonjs';
 import pkg from './package.json';
-import resolve from 'rollup-plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import svelte from 'rollup-plugin-svelte';
 
 const name = pkg.name
@@ -17,7 +17,7 @@ export default {
 	],
 	plugins: [
 		svelte(),
-		resolve({
+		nodeResolve({
 			browser: true,
 			dedupe: (importee) =>
 				importee === 'svelte' || importee.startsWith('svelte/'),

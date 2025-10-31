@@ -2,3 +2,4 @@
 - Prefer Svelte idioms and best practices.
 - Maintain organized imports and code style in line with the surrounding context or any changes.
 - Use https://www.conventionalcommits.org/en/v1.0.0/ style commit messages.
+- Create commits for each logical change. For example, if you run into an issue with lint, building, or testing that are external to a change, then fix those issues in separate commits before committing your main changes with an explanatory message of why they were necessary.
