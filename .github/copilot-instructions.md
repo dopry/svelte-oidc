@@ -1,0 +1,4 @@
+- Make the most minimal changes necessary to implement any request. 
+- Prefer Svelte idioms and best practices.
+- Maintain organized imports and code style in line with the surrounding context or any changes.
+- Use https://www.conventionalcommits.org/en/v1.0.0/ style commit messages.
