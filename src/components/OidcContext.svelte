@@ -75,9 +75,8 @@
 	export async function logout(oidcPromise, logout_url = null) {
 		const oidc = await oidcPromise;
 		const returnTo = logout_url || window.location.href;
-		oidc.signoutRedirect({ returnTo });
 		try {
-			const response = await oidc.signoutRedirect({ returnTo });
+			await oidc.signoutRedirect({ returnTo });
 		} catch (err) {
 			if (err.message !== 'no end session endpoint') throw err;
 			// this is most likely auth0, so let's try their logout endpoint.
