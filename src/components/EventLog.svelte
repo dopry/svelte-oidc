@@ -1,7 +1,7 @@
 <script>
 
 import { getContext, onDestroy, onMount } from 'svelte';
-import { OIDC_CONTEXT_CLIENT_PROMISE } from './components.module.js';
+import { OIDC_CONTEXT_CLIENT_PROMISE } from './OidcContext.svelte';
 
 let logs = [];
 let userManager;
