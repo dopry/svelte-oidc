@@ -1,8 +1,7 @@
 <script context="module">
+	import oidcClient from 'oidc-client';
+	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
-    import { getContext } from 'svelte';
-    import oidcClient from 'oidc-client';
-	import { onMount, onDestroy, setContext } from 'svelte';
 
 	/**
 	 * Stores
