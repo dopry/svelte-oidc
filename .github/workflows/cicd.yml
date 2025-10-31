@@ -3,12 +3,21 @@ name: CI/CD
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+      - next
+      - '+([0-9])?(.{+([0-9]),x}).x'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 jobs:
-  lint:
+  lint-test-build-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout code
@@ -23,5 +32,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
+      - name: Lint code
         run: npm run lint
+
+      # - if: false  
+      #   # Disabled until tests are implemented
+      #   name: Unit Tests
+      #   run: npm run test:unit
+        
+      - name: Build
+        run: npm run build
+
+      # - if: false 
+      #   # Disabled until tests are implemented
+      #   name: E2E Tests
+      #   run: npm run test:e2e
+        
+      - name: Release
+        # currently this causes a second build due to the prepublishOnly script. 
+        # that's okay we want that to happen to prevent publishing stale local builds.
+        # we should maybe look for a way to set an ENV var to skip the build in CI
+        # if performance becomes an issue.
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
