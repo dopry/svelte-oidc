@@ -157,10 +157,19 @@ the migration hard.
 
 npm run showcase:dev
 
+## Pull Requests
+
+- create feature branches
+- use https://www.conventionalcommits.org/en/v1.0.0/ style commit messages.
+- keep changes minimal and focused
+- provide instructions/support for testing or end to end tests. 
+
 ## Release
 
-use semver
+This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and package publishing.
 
-1. npm publish
+in `main`, `next`, or a version branch:
+
+1. npx semantic-release
 2. npm run showcase:build
 3. npm run showcase:publish
