@@ -3,16 +3,17 @@ import { Highlight } from 'svelte-highlight';
 import { json } from 'svelte-highlight/languages';
 import { arduinoLight as highlightTheme } from "svelte-highlight/styles";
 import {
-  OidcContext,
-  LoginButton,
-  LogoutButton,
-  RefreshTokenButton,
-  authError,
-  idToken,
-  accessToken,
-  isAuthenticated,
-  isLoading,
-  userInfo,
+	EventLog,
+	LoginButton,
+	LogoutButton,
+	OidcContext,
+	RefreshTokenButton,
+	accessToken,
+	authError,
+	idToken,
+	isAuthenticated,
+	isLoading,
+	userInfo,
 } from './components/components.module.js';
 
 let styles = ""
@@ -25,8 +26,6 @@ const changeColor = (event) => {
 const addClass = () => {
   classes = 'red'
 }
-
-
 </script>
 
 <svelte:head>
@@ -63,9 +62,6 @@ const addClass = () => {
     </div>
   </div>
   <div class="row">
-
-  </div>
-  <div class="row">
     <table>
       <thead>
       <tr><th style="width: 20%;">store</th><th style="width: 80%;">value</th></tr>
@@ -79,6 +75,9 @@ const addClass = () => {
       <tr><td>authError</td><td>{$authError}</td></tr>
       </tbody>
     </table>
+  </div>
+   <div class="row">
+    <EventLog />
   </div>
 </OidcContext>
 </div>
