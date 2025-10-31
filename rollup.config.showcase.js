@@ -2,7 +2,7 @@ import replace from '@rollup/plugin-replace';
 import pkg from './package.json';
 import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
-import resolve from 'rollup-plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import svelte from 'rollup-plugin-svelte';
 
 const production = !process.env.ROLLUP_WATCH;
@@ -21,8 +21,8 @@ export default {
 			'process.env.OIDC_POST_LOGOUT_REDIRECT_URI': process.env.OIDC_POST_LOGOUT_REDIRECT_URI ||  defaultPostLogoutRedirectUri,
 			'pkg.version': pkg.version
 		}),
-		svelte({ dev: true }),
-		resolve({
+		svelte({ compilerOptions: { dev: true } }),
+		nodeResolve({
 			browser: true,
 			dedupe: (importee) =>
 				importee === 'svelte' || importee.startsWith('svelte/'),
