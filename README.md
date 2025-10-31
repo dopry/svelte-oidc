@@ -159,8 +159,27 @@ npm run showcase:dev
 
 ## Release
 
-use semver
+This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and package publishing.
 
-1. npm publish
-2. npm run showcase:build
-3. npm run showcase:publish
+### Automated Releases
+
+Releases are automatically created when commits are pushed to the `main` or `master` branch. The version number is determined by the commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+- `fix:` - creates a patch release (e.g., 1.0.1)
+- `feat:` - creates a minor release (e.g., 1.1.0)
+- `BREAKING CHANGE:` in commit footer - creates a major release (e.g., 2.0.0)
+
+### Manual Release
+
+To manually trigger a release (requires proper credentials):
+
+```bash
+npm run semantic-release
+```
+
+### After Release
+
+After a release is published, update the showcase:
+
+1. `npm run showcase:build`
+2. `npm run showcase:publish`
