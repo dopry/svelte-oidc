@@ -15,6 +15,7 @@ export default {
 	output:  { sourcemap: true,	format: 'iife',	name: 'app', file: 'public/bundle.js'  },
 	plugins: [
 		replace({
+			"preventAssignment": true,
 			'process.env.OIDC_ISSUER': process.env.OIDC_ISSUER || "https://dev-hvw40i79.auth0.com",
 			'process.env.OIDC_CLIENT_ID': process.env.OIDC_CLIENT_ID || "5m4i3ZD9M3NqX4qQsB0nsBmCXb6OXBN2",
 			'process.env.OIDC_REDIRECT_URI': process.env.OIDC_REDIRECT_URI ||  defaultRedirectUri,
