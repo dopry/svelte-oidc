@@ -2,8 +2,11 @@
 **/dist/**
 **/node_modules/**
 
-cypress/videos
-cypress/screenshots
 /public/bundle.*
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
 
 .idea
