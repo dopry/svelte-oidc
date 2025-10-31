@@ -1,5 +1,5 @@
 <script context="module">
-	import oidcClient from 'oidc-client';
+	import { UserManager } from 'oidc-client-ts';
 	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
@@ -120,7 +120,7 @@
 		...extraOptions,
 	};
 
-	const userManager = new oidcClient.UserManager(settings);
+	const userManager = new UserManager(settings);
 	userManager.events.addUserLoaded(function (user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
