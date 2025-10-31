@@ -76,5 +76,8 @@ const addClass = () => {
       </tbody>
     </table>
   </div>
+   <div class="row">
+    <EventLog />
+  </div>
 </OidcContext>
 </div>

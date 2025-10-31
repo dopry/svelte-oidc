@@ -1,3 +1,4 @@
+export { default as EventLog } from './EventLog.svelte';
 export { default as LoginButton } from './LoginButton.svelte';
 export { default as LogoutButton } from './LogoutButton.svelte';
 export {
