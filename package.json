@@ -16,7 +16,7 @@
 		"showcase:publish": "gh-pages -d public",
 		"showcase:build": "rollup -c rollup.config.showcase.js",
 		"showcase:dev": "rollup -c rollup.config.showcase.js -w ",
-		"start": "sirv public -s",
+		"start": "sirv public -s --port 5000",
 		"test:e2e": "playwright test",
 		"test:e2e:headed": "playwright test --headed",
 		"test:e2e:ui": "playwright test --ui"
@@ -68,7 +68,7 @@
 		"rollup-plugin-svelte": "7.2.3",
 		"rollup-plugin-terser": "7.0.2",
 		"semantic-release": "25.0.1",
-		"sirv-cli": "1.0.6",
+		"sirv-cli": "3.0.1",
 		"svelte": "3.49.0",
 		"svelte-highlight": "0.7.1",
 		"svelte-preprocess": "4.6.9"
