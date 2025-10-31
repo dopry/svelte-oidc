@@ -8,12 +8,12 @@ module.exports = {
 	overrides: [
 		{
 			files: '*.svelte',
-			processor: 'svelte3/svelte3',
+			processor: 'svelte/svelte',
 		},
 	],
 	parserOptions: {
 		ecmaVersion: 2019,
 		sourceType: 'module',
 	},
-	plugins: ['svelte3'],
+	plugins: ['svelte'],
 };
