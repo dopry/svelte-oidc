@@ -3,9 +3,8 @@ module.exports = {
 		browser: true,
 		node: true,
 		es6: true,
-		'cypress/globals': true,
 	},
-	extends: ['eslint:recommended', 'plugin:cypress/recommended', 'prettier'],
+	extends: ['eslint:recommended', 'prettier'],
 	overrides: [
 		{
 			files: '*.svelte',
@@ -16,5 +15,5 @@ module.exports = {
 		ecmaVersion: 2019,
 		sourceType: 'module',
 	},
-	plugins: ['svelte3', 'cypress'],
+	plugins: ['svelte3'],
 };

@@ -164,6 +164,26 @@ npm run showcase:dev
 - keep changes minimal and focused
 - provide instructions/support for testing or end to end tests. 
 
+## Testing
+
+This project uses Playwright for end-to-end testing. To run the tests:
+
+1. Install Playwright browsers (only needed once):
+   ```
+   npx playwright install chromium
+   ```
+
+2. Run tests
+   ```
+   npm run test:e2e
+   ```
+
+Additional test commands:
+- `npm run test:e2e:headed` - Run tests in headed mode (see the browser)
+- `npm run test:e2e:ui` - Run tests in UI mode (interactive)
+
+The test suite will automatically start the showcase dev server before running tests.
+
 ## Release
 
 This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and package publishing.

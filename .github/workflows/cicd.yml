@@ -35,24 +35,24 @@ jobs:
       - name: Lint code
         run: npm run lint
 
-      # - if: false  
-      #   # Disabled until tests are implemented
-      #   name: Unit Tests
-      #   run: npm run test:unit
+      # Disabled until tests are implemented
+      # name: Unit Tests
+      # run: npm run test:unit
         
       - name: Build
         run: npm run build
 
-      # - if: false 
-      #   # Disabled until tests are implemented
-      #   name: E2E Tests
-      #   run: npm run test:e2e
+      - name: playwright install, required for e2e tests
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E Tests
+        run: npm run test:e2e
         
+      # release does a second build due to the prepublishOnly script. 
+      # that's okay we want that to happen to prevent publishing stale local builds.
+      # if performance becomes an issue, we can look into preventing the double build.
       - name: Release
-        # currently this causes a second build due to the prepublishOnly script. 
-        # that's okay we want that to happen to prevent publishing stale local builds.
-        # we should maybe look for a way to set an ENV var to skip the build in CI
-        # if performance becomes an issue.
+        if: github.event_name == 'push'
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
