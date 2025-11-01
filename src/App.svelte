@@ -14,7 +14,7 @@ import {
 	isAuthenticated,
 	isLoading,
 	userInfo,
-} from './components/components.module.js';
+} from './lib/index.js';
 
 let styles = ""
 let classes = ""

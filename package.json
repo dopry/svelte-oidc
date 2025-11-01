@@ -46,7 +46,7 @@
 			"git add"
 		]
 	},
-	"svelte": "src/components/components.module.js",
+	"svelte": "src/lib/index.js",
 	"dependencies": {
 		"oidc-client-ts": "^3.3.0"
 	},

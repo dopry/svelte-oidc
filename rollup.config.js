@@ -11,7 +11,7 @@ const name = pkg.name
 	.replace(/-\w/g, (m) => m[1].toUpperCase());
 
 export default {
-	input: 'src/components/components.module.js',
+	input: 'src/lib/index.js',
 	output: [
 		{ file: pkg.module,	format: 'es', sourcemap: true, name },
 		{ file: pkg.main, format: 'umd', sourcemap: true, name }

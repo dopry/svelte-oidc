@@ -26,7 +26,7 @@
 
 	/**
 	 * Refresh the accessToken using the silentRenew method (hidden iframe)
-	 * 
+	 *
 	 * @param {Promise<UserManager>} oidcPromise
 	 * @return bool indicated whether the token was refreshed, if false error will be set
 	 * in the authError store.
@@ -68,7 +68,7 @@
 
 	/**
 	 * Log out the current user.
-	 * 
+	 *
 	 * @param {Promise<UserManager>} oidcPromise
 	 * @param {string} logout_url - specify the url to return to after login.
 	 */
