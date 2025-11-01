@@ -2,6 +2,10 @@
 	"name": "@dopry/svelte-oidc",
 	"version": "0.0.0-semantic-release.0",
 	"repository": "https://github.com/dopry/svelte-oidc",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/dopry/svelte-oidc.git"
+	},
 	"description": "Svelte OIDC Component Library",
 	"keywords": [
 		"svelte"
