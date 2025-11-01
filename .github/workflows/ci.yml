@@ -15,6 +15,11 @@ permissions:
   pull-requests: write
   id-token: write
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-test-build-release:
     runs-on: ubuntu-latest
