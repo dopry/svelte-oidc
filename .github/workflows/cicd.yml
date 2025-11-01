@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -38,7 +38,7 @@ jobs:
       # Disabled until tests are implemented
       # name: Unit Tests
       # run: npm run test:unit
-        
+
       - name: Build
         run: npm run build
 
@@ -47,8 +47,8 @@ jobs:
 
       - name: E2E Tests
         run: npm run test:e2e
-        
-      # release does a second build due to the prepublishOnly script. 
+
+      # release does a second build due to the prepublishOnly script.
       # that's okay we want that to happen to prevent publishing stale local builds.
       # if performance becomes an issue, we can look into preventing the double build.
       - name: Release
