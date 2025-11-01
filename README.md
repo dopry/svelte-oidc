@@ -1,195 +1,58 @@
-# svelte-oidc
+# Svelte library
 
-An Oidc Client Component for Svelte.
+Everything you need to build a Svelte library, powered by [`sv`](https://npmjs.com/package/sv).
 
-[Try out the demo](https://darrelopry.com/svelte-oidc/)
+Read more about creating a library [in the docs](https://svelte.dev/docs/kit/packaging).
 
-## Getting Started
+## Creating a project
 
-Setup an OIDC Sever
+If you're seeing this, you've probably already done this step. Congrats!
 
- * https://www.ory.sh/
- * https://www.keycloak.org/
- * https://www.okta.com/
- * http://auth0.com/
+```sh
+# create a new project in the current directory
+npx sv create
 
- Get the authority and client_id
-
-`npm install @dopry/svelte-oidc`
-
-App.svelte
-```svelte
-# App.svelte
-import {
-  OidcContext,
-  LoginButton,
-  LogoutButton,
-  RefreshTokenButton,
-  authError,
-  accessToken,
-  idToken,
-  isAuthenticated,
-  isLoading,
-  login,
-  logout,
-  userInfo,
-} from '@dopry/svelte-oidc';
-
-const metadata = {
-            // added to overcome missing value in auth0 .well-known/openid-configuration
-            // see: https://github.com/IdentityModel/oidc-client-js/issues/1067
-            // see: https://github.com/IdentityModel/oidc-client-js/pull/1068
-            end_session_endpoint: `process.env.OIDC_ISSUER/v2/logout?client_id=process.env.OIDC_CLIENT_ID`,
-        };
-</script>
-
-<OidcContext
- issuer="https://dev-hvw40i79.auth0.com"
- client_id="aOijZt2ug6Ovgzp0HXdF23B6zxwA6PaP"
- redirect_uri="https://darrelopry.com/svelte-oidc/"
- post_logout_redirect_uri="https://darrelopry.com/svelte-oidc/"
- metadata={metadata}
- extraOptions={{
-   mergeClaims: true,
-   resource: "some_identifier",
- }}
- >
-
-  <LoginButton>Login</LoginButton>
-  <LogoutButton>Logout</LogoutButton>
-  <RefreshTokenButton>RefreshToken</RefreshTokenButton><br />
-  <pre>isLoading: {$isLoading}</pre>
-  <pre>isAuthenticated: {$isAuthenticated}</pre>
-  <pre>authToken: {$accessToken}</pre>
-  <pre>idToken: {$idToken}</pre>
-  <pre>userInfo: {JSON.stringify($userInfo, null, 2)}</pre>
-  <pre>authError: {$authError}</pre>
-</OidcContext>
+# create a new project in my-app
+npx sv create my-app
 ```
 
-## Sapper/SSR
+## Developing
 
-This component does not natively support SSR nor can it be used for authentication in server side rendered contexts. It
-can be used within SSR applications as long as it is acceptable for all authentication to be client side. In order to
-use for client side auth in an SSR application you will need to ensure it is not rendered server side as follows.
+Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
-```
-{#if process.browser} <OidcContext> ..... </OidcContext> {/if}
-```
+```sh
+npm run dev
 
-## SvelteKit/SSR
-Same as what is needed for Sapper (see above section). To do this, we need to import in the `script` section:
-
-```
-import { browser } from '$app/env';
+# or start the server and open the app in a new browser tab
+npm run dev -- --open
 ```
 
-And in the `main`:
+Everything inside `src/lib` is part of your library, everything inside `src/routes` can be used as a showcase or preview app.
+
+## Building
+
+To build your library:
+
+```sh
+npm pack
 ```
-{#if browser} <OidcContext> ..... </OidcContext> {/if}
+
+To create a production version of your showcase app:
+
+```sh
+npm run build
 ```
 
-## Contributing
+You can preview the production build with `npm run preview`.
 
-Contributors are Welcome. There is a lot of value in a vendor neutral OIDC component for use by the Svelte and Sapper
-community. As a developer and product manager, I have needed to switch between Okta, Auth0, KeyCloak, IdentityServer,
-and Ory on multiple occasions. Vendor specific libraries are usually riddled with vendor specific assumptions that make
-the migration hard.
+> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
 
-**How to Help!**
+## Publishing
 
-  * Better Documentation
-  * Helping with the Issue Queue (support, good bug report, resolving bugs)
-  * SSR Support
-  * Automated Testing of all major identity providers
+Go into the `package.json` and give your package the desired name through the `"name"` option. Also consider adding a `"license"` field and point it to a `LICENSE` file which you can create from a template (one popular option is the [MIT license](https://opensource.org/license/mit/)).
 
-**PRs Welcome!**
+To publish your library to [npm](https://www.npmjs.com):
 
-## Docs
-
-### Components
-
-* OidcContext - component to initiate the OIDC client. You only need one instance in your DOM tree at the root.
-
-  Attributes:
-  * issuer - OIDC Authority/issuer/base url for .well-known/openid-configuration
-  * client_id - OAuth ClientId
-  * redirect_uri -  default: window.location.href
-  * post_logout_redirect_uri - override the default url that OIDC will redirect to after logout. default: window.location.href
-  * metadata - set default metadata or metadata missing from authority.
-  * extraOptions - An object of extra options that will be passed to the underlying OpenID Connect client. Valid values are available [here](https://github.com/IdentityModel/oidc-client-js/wiki#other-optional-settings).
-
-* LoginButton - log out the current context
-
-  Attributes:
-  * preserve_route - tell the callback handler to return to the current url after login. default: true
-  * callback_url - override the context callback_url
-
-* LogoutButton - log in the current context
-  
-  Attributes:
-  * logout_url - override the context logout_url
-
-* RefreshTokenButton - refresh the current token
-
-### Functions
-
-* login(oidcPromise, preseveRoute = true, callback_url = null) - begin a user login.
-* logout(oidcPromise, logout_url = null) - logout a user.
-* refreshToken(oidcPromise) - function to refresh a token.
-
-### Stores
-
-* isLoading - if true OIDC Context is still loading.
-* isAuthenticated - true if user is currently authenticated
-* accessToken - access token for connecting to apis.
-* idToken - identity token for getting user info easily.
-* userInfo - the currently logged in user's info from OIDC userInfo endpoint
-* authError - the last authentication error.
-
-### Constants
-
-* OIDC_CONTEXT_CALLBACK_URL
-* OIDC_CONTEXT_CLIENT_PROMISE - key for the OIDC client in setContext/getContext.
-* OIDC_CONTEXT_LOGOUT_URL,
-
-## Development
-
-npm run showcase:dev
-
-## Pull Requests
-
-- create feature branches
-- use https://www.conventionalcommits.org/en/v1.0.0/ style commit messages.
-- keep changes minimal and focused
-- provide instructions/support for testing or end to end tests. 
-
-## Testing
-
-This project uses Playwright for end-to-end testing. To run the tests:
-
-1. Install Playwright browsers (only needed once):
-   ```
-   npx playwright install chromium
-   ```
-
-2. Run tests
-   ```
-   npm run test:e2e
-   ```
-
-Additional test commands:
-- `npm run test:e2e:headed` - Run tests in headed mode (see the browser)
-- `npm run test:e2e:ui` - Run tests in UI mode (interactive)
-
-The test suite will automatically start the showcase dev server before running tests.
-
-## Release
-
-This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and package publishing.
-
-in `main`, `next`, or a version branch:
-
-1. npx semantic-release
-2. npm run showcase:build
-3. npm run showcase:publish
+```sh
+npm publish
+```

@@ -1,7 +1,7 @@
 <script>
-import { Highlight } from 'svelte-highlight';
-import { json } from 'svelte-highlight/languages';
-import { arduinoLight as highlightTheme } from "svelte-highlight/styles";
+import { browser } from '$app/environment';
+import { Highlight } from "svelte-highlight";
+import json from "svelte-highlight/languages/json";
 import {
 	EventLog,
 	LoginButton,
@@ -14,7 +14,7 @@ import {
 	isAuthenticated,
 	isLoading,
 	userInfo,
-} from './components/components.module.js';
+} from '../lib/index.js';
 
 let styles = ""
 let classes = ""
@@ -28,16 +28,13 @@ const addClass = () => {
 }
 </script>
 
-<svelte:head>
-  {@html highlightTheme}
-</svelte:head>
-
 <div class="container">
+{#if browser}
 <OidcContext
-  issuer="process.env.OIDC_ISSUER"
-  client_id="process.env.OIDC_CLIENT_ID"
-  redirect_uri="process.env.OIDC_REDIRECT_URI"
-  post_logout_redirect_uri="process.env.OIDC_POST_LOGOUT_REDIRECT_URI"
+  issuer={process.env.OIDC_ISSUER}
+  client_id={process.env.OIDC_CLIENT_ID}
+  redirect_uri={process.env.OIDC_REDIRECT_URI}
+  post_logout_redirect_uri={process.env.OIDC_POST_LOGOUT_REDIRECT_URI}
 >
   <div class="row">
     <div class="col s12 m6">
@@ -80,4 +77,5 @@ const addClass = () => {
     <EventLog />
   </div>
 </OidcContext>
+{/if}
 </div>

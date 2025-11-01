@@ -1,14 +1,16 @@
-<script>
+<script lang="ts">
 
+import type { User, UserManager } from 'oidc-client-ts';
 import { getContext, onDestroy, onMount } from 'svelte';
 import { OIDC_CONTEXT_CLIENT_PROMISE } from './OidcContext.svelte';
 
-let logs = [];
-let userManager;
-let userLoadedHandler, userUnloadedHandler;
+let logs: string[] = [];
+let userManager: UserManager | undefined = undefined;
+let userLoadedHandler: (user: User) => void;
+let userUnloadedHandler: () => void;
 
 // getContext must be called at the top level
-const oidcPromise = getContext(OIDC_CONTEXT_CLIENT_PROMISE);
+const oidcPromise = getContext<Promise<UserManager>>(OIDC_CONTEXT_CLIENT_PROMISE);
 
 onMount(async () => {
   userManager = await oidcPromise;

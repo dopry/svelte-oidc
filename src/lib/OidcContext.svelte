@@ -1,4 +1,4 @@
-<script context="module">
+<script context="module" lang="ts">
 	import { UserManager } from 'oidc-client-ts';
 	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -11,7 +11,7 @@
 	export const accessToken = writable('');
 	export const idToken = writable('');
 	export const userInfo = writable({});
-	export const authError = writable(null);
+	export const authError = writable('');
 
 	/**
 	 * Context Keys
@@ -26,12 +26,12 @@
 
 	/**
 	 * Refresh the accessToken using the silentRenew method (hidden iframe)
-	 * 
+	 *
 	 * @param {Promise<UserManager>} oidcPromise
 	 * @return bool indicated whether the token was refreshed, if false error will be set
 	 * in the authError store.
 	 */
-	export async function refreshToken(oidcPromise) {
+	export async function refreshToken(oidcPromise: Promise<UserManager>): Promise<boolean> {
 		try {
 		  const oidc = await oidcPromise
 		  await oidc.signinSilent();
@@ -39,7 +39,7 @@
 		}
 		catch (e) {
 			// set error state for reactive handling
-			authError.set(e.message);
+			authError.set(e instanceof Error ? e.message : String(e) || 'Unknown error during silent token refresh');
 			return false;
 		}
 	}
@@ -49,48 +49,48 @@
 	 *
 	 * @param {Promise<UserManager>} oidcPromise
 	 * @param {boolean} preserveRoute - store current location so callback handler will navigate back to it.
-	 * @param {string} callback_url - explicit path to use for the callback.
+	 * @param {string | null} callback_url - explicit path to use for the callback.
 	 */
-	export async function login(oidcPromise, preserveRoute = true, callback_url = null) {
+	export async function login(oidcPromise: Promise<UserManager>, preserveRoute = true, callback_url = null) {
 		const oidc = await oidcPromise;
 		const redirect_uri = callback_url || window.location.href;
 
 		// try to keep the user on the same page from which they triggered login. If set to false should typically
 		// cause redirect to /.
-		const appState = preserveRoute
+		const state = preserveRoute
 			? {
 					pathname: window.location.pathname,
 					search: window.location.search,
 			  }
 			: {};
-		await oidc.signinRedirect({ redirect_uri, appState });
+		await oidc.signinRedirect({ redirect_uri, state });
 	}
 
 	/**
 	 * Log out the current user.
-	 * 
+	 *
 	 * @param {Promise<UserManager>} oidcPromise
-	 * @param {string} logout_url - specify the url to return to after login.
+	 * @param {string | null} logout_url - specify the url to return to after login.
 	 */
-	export async function logout(oidcPromise, logout_url = null) {
+	export async function logout(oidcPromise: Promise<UserManager>, logout_url = null) {
 		const oidc = await oidcPromise;
-		const returnTo = logout_url || window.location.href;
+		const post_logout_redirect_uri = logout_url || window.location.href;
 		try {
-			await oidc.signoutRedirect({ returnTo });
+			await oidc.signoutRedirect({ post_logout_redirect_uri });
 		} catch (err) {
-			if (err.message !== 'no end session endpoint') throw err;
+			if (err instanceof Error && err.message !== 'no end session endpoint') throw err;
 			// this is most likely auth0, so let's try their logout endpoint.
 			// @see: https://auth0.com/docs/api/authentication#logout
 			// this is dirty and hack and reaches into guts of the oidc client
 			// in ways I'd prefer not to.. but auth0 has this annoying non-conforming
 			// session termination.
-			const authority = oidc._settings._authority;
+			const authority = oidc.settings.authority;
 			if (authority.endsWith('auth0.com')) {
-				const clientId = oidc._settings._client_id;
+				const clientId = oidc.settings.client_id;
 				const url = `${authority}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(
-					returnTo
+					post_logout_redirect_uri
 				)}`;
-				window.location = url;
+				window.location.assign(url);
 			} else throw err
 		}
 	}
@@ -124,7 +124,7 @@
 	userManager.events.addUserLoaded(function (user) {
 		isAuthenticated.set(true);
 		accessToken.set(user.access_token);
-		idToken.set(user.id_token);
+		idToken.set(user.id_token || '');
 		userInfo.set(user.profile);
 	});
 
@@ -136,7 +136,8 @@
     });
 
 	userManager.events.addSilentRenewError(function(e) {
-		authError.set(`SilentRenewError: ${e.message}`);
+		const message = e instanceof Error ? e.message : String(e) || 'Unknown error';
+		authError.set(`SilentRenewError: ${message}`);
     });
 
 
@@ -161,14 +162,14 @@
 		// Check if something went wrong during login redirect
 		// and extract the error message
 		if (params.has('error')) {
-			authError.set(new Error(params.get('error_description')));
+			authError.set(params.get('error_description') || params.get('error') || 'Unknown error during login');
 		}
 
 		// if code then login success
 		if (params.has('code')) {
 			// handle the callback
 			const response = await oidc.signinCallback();
-			let state = (response && response.state) || {};
+			let state: { targetUrl?: string, isRedirectCallback?: boolean } = (response && response.state) || {};
 			// Can be smart here and redirect to original path instead of root
             const url = state && state.targetUrl ? state.targetUrl : window.location.pathname;
 			state = { ...state, isRedirectCallback: true };
@@ -177,7 +178,7 @@
 			history.replaceState(state, '', url);
 			// location.href = url;
 			// clear errors on login.
-			authError.set(null);
+			authError.set('');
 		}
 		// if code was not set and there was a state, then we're in an auth callback and there was an error. We still
 		// need to wrap the sign-in silent. We need to sit down and chart out the various success and fail scenarios and

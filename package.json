@@ -1,76 +1,72 @@
 {
 	"name": "@dopry/svelte-oidc",
-	"version": "0.0.0-semantic-release.0",
-	"repository": "https://github.com/dopry/svelte-oidc",
-	"description": "Svelte OIDC Component Library",
+	"version": "0.0.0-semantic.0",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build && npm run prepack",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"prepack": "svelte-kit sync && svelte-package && publint",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint .",
+		"test:e2e": "playwright test",
+		"test": "npm run test:e2e && npm run test:unit -- --run",
+		"test:unit": "vitest",
+		"prepublishOnly": "npm run build"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"sideEffects": [
+		"**/*.css"
+	],
+	"svelte": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"svelte": "./dist/index.js"
+		}
+	},
+	"peerDependencies": {
+		"svelte": "^5.0.0"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.4.0",
+		"@eslint/js": "^9.38.0",
+		"@playwright/test": "^1.56.1",
+		"@sveltejs/adapter-auto": "^7.0.0",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.47.1",
+		"@sveltejs/package": "^2.5.4",
+		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@types/node": "^22",
+		"@vitest/browser": "^3.2.4",
+		"eslint": "^9.38.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.12.4",
+		"globals": "^16.4.0",
+		"playwright": "^1.56.1",
+		"prettier": "^3.6.2",
+		"prettier-plugin-svelte": "^3.4.0",
+		"publint": "^0.3.14",
+		"svelte": "^5.41.0",
+		"svelte-check": "^4.3.3",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.46.1",
+		"vite": "^7.1.10",
+		"vitest": "^3.2.4",
+		"vitest-browser-svelte": "^1.1.0"
+	},
 	"keywords": [
 		"svelte"
 	],
-	"license": "MIT",
-	"main": "dist/index.min.js",
-	"module": "dist/index.min.mjs",
-	"scripts": {
-		"build": "rollup -c",
-		"lint": "eslint --color --ignore-path .gitignore .",
-		"prepublishOnly": "npm run build",
-		"showcase:publish": "gh-pages -d public",
-		"showcase:build": "rollup -c rollup.config.showcase.js",
-		"showcase:dev": "rollup -c rollup.config.showcase.js -w ",
-		"start": "sirv public -s --port 5000",
-		"test:e2e": "playwright test",
-		"test:e2e:headed": "playwright test --headed",
-		"test:e2e:ui": "playwright test --ui"
-	},
-	"browserslist": [
-		"defaults"
-	],
-	"files": [
-		"src",
-		"dist"
-	],
-	"husky": {
-		"hooks": {
-			"pre-commit": "lint-staged"
-		}
-	},
-	"lint-staged": {
-		"*.{html, css, scss, stylus, js, ts, json, yml, md}": [
-			"prettier --write",
-			"git add"
-		],
-		"*.{js, svelte}": [
-			"eslint --fix",
-			"git add"
-		]
-	},
-	"svelte": "src/components/components.module.js",
 	"dependencies": {
-		"eslint-plugin-svelte": "3.13.0",
 		"oidc-client-ts": "^3.3.0"
-	},
-	"devDependencies": {
-		"@playwright/test": "1.56.1",
-		"@rollup/plugin-node-resolve": "11.2.1",
-		"@rollup/plugin-replace": "2.4.2",
-		"@semantic-release/github": "12.0.0",
-		"@semantic-release/npm": "13.1.1",
-		"autoprefixer": "10.4.21",
-		"eslint": "8.57.1",
-		"eslint-config-prettier": "10.1.8",
-		"gh-pages": "6.3.0",
-		"postcss": "8.5.6",
-		"postcss-load-config": "3.1.4",
-		"prettier": "3.6.2",
-		"rollup": "2.79.2",
-		"rollup-plugin-babel": "4.4.0",
-		"rollup-plugin-commonjs": "10.1.0",
-		"rollup-plugin-livereload": "2.0.5",
-		"rollup-plugin-svelte": "7.2.3",
-		"rollup-plugin-terser": "7.0.2",
-		"semantic-release": "25.0.1",
-		"sirv-cli": "3.0.1",
-		"svelte": "^4.0.0",
-		"svelte-highlight": "0.7.1",
-		"svelte-preprocess": "^5.0.3"
 	}
 }
