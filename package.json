@@ -12,6 +12,15 @@
 	"license": "MIT",
 	"main": "dist/index.min.js",
 	"module": "dist/index.min.mjs",
+	"exports": {
+		".": {
+			"import": "./dist/index.min.mjs",
+			"require": "./dist/index.min.js",
+			"svelte": "./src/lib/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"svelte": "src/lib/index.js",
 	"scripts": {
 		"build": "rollup -c",
 		"lint": "eslint --color --ignore-path .gitignore .",
@@ -46,7 +55,6 @@
 			"git add"
 		]
 	},
-	"svelte": "src/lib/index.js",
 	"dependencies": {
 		"oidc-client-ts": "^3.3.0"
 	},
