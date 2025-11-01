@@ -1,4 +1,9 @@
 module.exports = {
+	parser: '@typescript-eslint/parser',
+	plugins: [
+		'svelte3',
+		'@typescript-eslint'
+	],
 	env: {
 		browser: true,
 		node: true,
@@ -15,5 +20,7 @@ module.exports = {
 		ecmaVersion: 2019,
 		sourceType: 'module',
 	},
-	plugins: ['svelte3'],
+	settings: {
+		'svelte3/typescript': true
+	}
 };
