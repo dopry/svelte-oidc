@@ -34,6 +34,10 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      # Ensure npm 11.5.1 or later is installed for npm trusted publishing
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm ci
 
@@ -65,4 +69,3 @@ jobs:
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
