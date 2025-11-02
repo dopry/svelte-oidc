@@ -107,6 +107,10 @@ the migration hard.
 
 ## Docs
 
+Refer to https://svelte.dev/docs/kit/packaging#TypeScript for general svelte packaging guidelines. This project
+predates that, but I'm working to bring it fully inline with a contemporary sveltekit library and svelte ecosystem
+tooling.
+
 ### Components
 
 * OidcContext - component to initiate the OIDC client. You only need one instance in your DOM tree at the root.
@@ -126,7 +130,7 @@ the migration hard.
   * callback_url - override the context callback_url
 
 * LogoutButton - log in the current context
-  
+
   Attributes:
   * logout_url - override the context logout_url
 
@@ -162,7 +166,7 @@ npm run showcase:dev
 - create feature branches
 - use https://www.conventionalcommits.org/en/v1.0.0/ style commit messages.
 - keep changes minimal and focused
-- provide instructions/support for testing or end to end tests. 
+- provide instructions/support for testing or end to end tests.
 
 ## Testing
 
