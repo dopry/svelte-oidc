@@ -1,4 +1,4 @@
-<script context="module">
+<script context="module" lang="ts">
 	import { UserManager } from 'oidc-client-ts';
 	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
@@ -31,7 +31,7 @@
 	 * @return bool indicated whether the token was refreshed, if false error will be set
 	 * in the authError store.
 	 */
-	export async function refreshToken(oidcPromise) {
+	export async function refreshToken(oidcPromise: Promise<UserManager>): Promise<boolean> {
 		try {
 		  const oidc = await oidcPromise
 		  await oidc.signinSilent();
@@ -47,64 +47,64 @@
 	/**
 	 * Initiate Register/Login flow.
 	 *
-	 * @param {Promise<UserManager>} oidcPromise
-	 * @param {boolean} preserveRoute - store current location so callback handler will navigate back to it.
-	 * @param {string} callback_url - explicit path to use for the callback.
+	 * @param oidcPromise
+	 * @param preserveRoute - store current location so callback handler will navigate back to it.
+	 * @param callback_url - explicit path to use for the callback.
 	 */
-	export async function login(oidcPromise, preserveRoute = true, callback_url = null) {
+	export async function login(oidcPromise: Promise<UserManager>, preserveRoute = true, callback_url?: string): Promise<void> {
 		const oidc = await oidcPromise;
 		const redirect_uri = callback_url || window.location.href;
 
 		// try to keep the user on the same page from which they triggered login. If set to false should typically
 		// cause redirect to /.
-		const appState = preserveRoute
+		const state = preserveRoute
 			? {
 					pathname: window.location.pathname,
 					search: window.location.search,
 			  }
 			: {};
-		await oidc.signinRedirect({ redirect_uri, appState });
+		await oidc.signinRedirect({ redirect_uri, state });
 	}
 
 	/**
 	 * Log out the current user.
 	 *
-	 * @param {Promise<UserManager>} oidcPromise
-	 * @param {string} logout_url - specify the url to return to after login.
+	 * @param oidcPromise
+	 * @param logout_url - specify the url to return to after login.
 	 */
-	export async function logout(oidcPromise, logout_url = null) {
+	export async function logout(oidcPromise: Promise<UserManager>, logout_url?: string): Promise<void> {
 		const oidc = await oidcPromise;
-		const returnTo = logout_url || window.location.href;
+		const post_logout_redirect_uri = logout_url || window.location.href;
 		try {
-			await oidc.signoutRedirect({ returnTo });
+			await oidc.signoutRedirect({ post_logout_redirect_uri });
 		} catch (err) {
-			if (err.message !== 'no end session endpoint') throw err;
+			if (!err.message?.toLowerCase().includes('no end session endpoint')) throw err;
 			// this is most likely auth0, so let's try their logout endpoint.
 			// @see: https://auth0.com/docs/api/authentication#logout
 			// this is dirty and hack and reaches into guts of the oidc client
 			// in ways I'd prefer not to.. but auth0 has this annoying non-conforming
 			// session termination.
-			const authority = oidc._settings._authority;
+			const authority = oidc.settings.authority;
 			if (authority.endsWith('auth0.com')) {
-				const clientId = oidc._settings._client_id;
+				const clientId = oidc.settings.client_id;
 				const url = `${authority}/v2/logout?client_id=${clientId}&returnTo=${encodeURIComponent(
-					returnTo
+					post_logout_redirect_uri
 				)}`;
-				window.location = url;
-			} else throw err
+				window.location.assign(url);
+			} else throw err;
 		}
 	}
 </script>
 
-<script>
+<script lang="ts">
 	// props.
-	export let issuer;
-	export let client_id;
-	export let redirect_uri;
-	export let post_logout_redirect_uri;
-	export let extraOptions = {};
+	export let issuer: string;
+	export let client_id: string;
+	export let redirect_uri: string;
+	export let post_logout_redirect_uri: string;
+	export let extraOptions: Record<string, unknown> = {};
 
-	export let scope = 'openid profile email';
+	export let scope: string = 'openid profile email';
 
 	setContext(OIDC_CONTEXT_REDIRECT_URI, redirect_uri);
 	setContext(OIDC_CONTEXT_POST_LOGOUT_REDIRECT_URI, post_logout_redirect_uri);
@@ -168,7 +168,7 @@
 		if (params.has('code')) {
 			// handle the callback
 			const response = await oidc.signinCallback();
-			let state = (response && response.state) || {};
+			let state: { targetUrl?: string; isRedirectCallback?: boolean } = (response && response.state) || {};
 			// Can be smart here and redirect to original path instead of root
             const url = state && state.targetUrl ? state.targetUrl : window.location.pathname;
 			state = { ...state, isRedirectCallback: true };
