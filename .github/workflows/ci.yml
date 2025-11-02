@@ -23,7 +23,6 @@ concurrency:
 jobs:
   lint-test-build-release:
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/playwright:v1.56.1-noble
 
     steps:
       - name: Checkout code
@@ -48,9 +47,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      # this is not needed when using the playwright container; it has browsers pre-installed
-      # - name: playwright install, required for e2e tests
-      #   run: npx playwright install chromium --with-deps
+      - name: playwright install, required for e2e tests
+        run: npx playwright install chromium --with-deps
 
       - name: E2E Tests
         run: npm run test:e2e
