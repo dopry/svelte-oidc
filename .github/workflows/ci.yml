@@ -47,11 +47,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: playwright install, required for e2e tests
-        run: npx playwright install chromium --with-deps
+      # this is not needed when using the playwright container; it has browsers pre-installed
+      # - name: playwright install, required for e2e tests
+      #   run: npx playwright install chromium --with-deps
 
       - name: E2E Tests
-        run: npm run test:e2e
+        uses: docker://mcr.microsoft.com/playwright:v1.56.1-noble
+        with:
+          args: npm run test:e2e
+
 
       # release does a second build due to the prepublishOnly script.
       # that's okay we want that to happen to prevent publishing stale local builds.
