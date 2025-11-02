@@ -1,12 +1,25 @@
+test-results
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+/dist
+
+# OS
 .DS_Store
-**/dist/**
-**/node_modules/**
+Thumbs.db
 
-/public/bundle.*
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
 
-# Playwright
-/test-results/
-/playwright-report/
-/playwright/.cache/
-
-.idea
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
