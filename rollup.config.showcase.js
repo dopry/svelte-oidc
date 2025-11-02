@@ -1,7 +1,9 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
+import autoprefixer from 'autoprefixer';
 import commonjs from 'rollup-plugin-commonjs';
 import livereload from 'rollup-plugin-livereload';
+import postcss from 'rollup-plugin-postcss';
 import svelte from 'rollup-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess/dist/autoProcess';
 import pkg from './package.json';
@@ -24,9 +26,15 @@ export default {
 			'pkg.version': pkg.version
 		}),
 		svelte({
-			preprocess: sveltePreprocess({ sourceMap: !production }),
-			compilerOptions: { dev: true }
+			preprocess: sveltePreprocess({
+				sourceMap: !production,
+				// process css in svelte components with postcss
+				postcss: { plugins: [autoprefixer()] },
+			}),
+			compilerOptions: { dev: true },
 		}),
+		// handle the css emitted from svelte components
+		postcss({ minimize: true }),
 		nodeResolve({
 			browser: true,
 			dedupe: (importee) =>
