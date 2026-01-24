@@ -3,6 +3,7 @@
 	import { onDestroy, onMount, setContext } from 'svelte';
 	import { writable } from 'svelte/store';
 
+	export type Prompt = 'login' | 'create' | 'none' | 'consent' | 'select_account' | undefined;
 	/**
 	 * Stores
 	 */
@@ -34,8 +35,8 @@
 	export async function refreshToken(oidcPromise: Promise<UserManager>): Promise<boolean> {
 		try {
 		  const oidc = await oidcPromise
-		  await oidc.signinSilent();
-		  return true;
+			await oidc.signinSilent();
+			return true;
 		}
 		catch (e) {
 			// set error state for reactive handling
@@ -50,8 +51,10 @@
 	 * @param oidcPromise
 	 * @param preserveRoute - store current location so callback handler will navigate back to it.
 	 * @param callback_url - explicit path to use for the callback.
+	 * @param prompt - optional OIDC prompt value controlling whether the user is prompted to log in,
+	 *                 create a new account, or reuse an existing session, depending on the identity provider.
 	 */
-	export async function login(oidcPromise: Promise<UserManager>, preserveRoute = true, callback_url?: string): Promise<void> {
+	export async function login(oidcPromise: Promise<UserManager>, preserveRoute = true, callback_url?: string, prompt?: Prompt): Promise<void> {
 		const oidc = await oidcPromise;
 		const redirect_uri = callback_url || window.location.href;
 
@@ -61,9 +64,9 @@
 			? {
 					pathname: window.location.pathname,
 					search: window.location.search,
-			  }
+				}
 			: {};
-		await oidc.signinRedirect({ redirect_uri, state });
+		await oidc.signinRedirect({ redirect_uri, state, prompt });
 	}
 
 	/**
@@ -128,35 +131,35 @@
 		userInfo.set(user.profile);
 	});
 
-	userManager.events.addUserUnloaded(function() {
+	userManager.events.addUserUnloaded(function () {
 		isAuthenticated.set(false);
 		idToken.set('');
 		accessToken.set('');
 		userInfo.set({});
-    });
+	});
 
-	userManager.events.addSilentRenewError(function(e) {
+	userManager.events.addSilentRenewError(function (e) {
 		authError.set(`SilentRenewError: ${e.message}`);
-    });
+	});
 
 
-    // does userManager needs to be wrapped in a promise? or is this a left over to maintain
+	// does userManager needs to be wrapped in a promise? or is this a left over to maintain
 	// symmetry with the @dopry/svelte-auth0 auth0 implementation
 	let oidcPromise = Promise.resolve(userManager);
-    setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
+	setContext(OIDC_CONTEXT_CLIENT_PROMISE, oidcPromise);
 
-    // Not all browsers support this, please program defensively!
-    const params = new URLSearchParams(window.location.search);
+	// Not all browsers support this, please program defensively!
+	const params = new URLSearchParams(window.location.search);
 
 	// Use 'error' and 'code' to test if the component is being executed as a part of a login callback. If we're not
 	// running in a login callback, and the user isn't logged in, see if we can capture their existing session.
-    if (!params.has('error') && !params.has('code') && !$isAuthenticated) {
-        refreshToken(oidcPromise);
-    }
+	if (!params.has('error') && !params.has('code') && !$isAuthenticated) {
+		refreshToken(oidcPromise);
+	}
 
 	async function handleOnMount() {
 		// on run onMount after oidc
-        const oidc = await oidcPromise;
+		const oidc = await oidcPromise;
 
 		// Check if something went wrong during login redirect
 		// and extract the error message

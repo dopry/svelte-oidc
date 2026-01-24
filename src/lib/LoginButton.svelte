@@ -11,6 +11,7 @@
     export let preserveRoute
     export let classes = ''
     export let styles = ''
+    export let prompt
 </script>
 
-<button class="btn {classes}" style="{styles}" on:click|preventDefault='{() => login(oidcPromise, preserveRoute, callback_url) }'><slot></slot></button>
+<button class="btn {classes}" style="{styles}" on:click|preventDefault='{() => login(oidcPromise, preserveRoute, callback_url, prompt) }'><slot></slot></button>

@@ -128,6 +128,12 @@ tooling.
   Attributes:
   * preserve_route - tell the callback handler to return to the current url after login. default: true
   * callback_url - override the context callback_url
+  * prompt - optional OIDC `prompt` parameter controlling whether and how the user is prompted to authenticate or authorize.  If omitted (`undefined`), the identity provider's default behavior is used. Supported values are:
+    * 'login'          — force the user to re-authenticate.
+    * 'create'         — request creation of a new user account (if supported).
+    * 'none'           — do not display any user interaction (fail if interaction is required).
+    * 'consent'        — prompt the user for consent.
+    * 'select_account' — prompt the user to select an account.
 
 * LogoutButton - log in the current context
 
