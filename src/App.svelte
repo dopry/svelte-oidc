@@ -41,6 +41,7 @@ const addClass = () => {
 >
   <div class="row">
     <div class="col s12 m6">
+      <LoginButton styles="{styles}" classes="{classes}" prompt="create">Register</LoginButton>
       <LoginButton styles="{styles}" classes="{classes}">Login</LoginButton>
       <LogoutButton styles="{styles}" classes="{classes}">Logout</LogoutButton>
       <RefreshTokenButton styles="{styles}" classes="{classes}">refreshToken</RefreshTokenButton>
